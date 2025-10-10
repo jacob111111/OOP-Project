@@ -1,9 +1,9 @@
-package pieces;
+package piece;
 
 /**
- * Pawn piece class.
+ * Queen piece class.
  * TODO: Add class description and usage details.
  */
-public class Pawn {
+public class Queen {
     
 }

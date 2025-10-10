@@ -1,9 +1,9 @@
-package pieces;
+package piece;
 
 /**
- * Bishop piece class.
+ * Knight piece class.
  * TODO: Add class description and usage details.
  */
-public class Bishop {
+public class Knight {
     
 }
