@@ -15,17 +15,22 @@ public abstract class Player {
     private Color color;
     private List<Piece> pieces;
 
-    public Player(Color color) {
-        this.color = color;
+    public Player() { // Pieces are only initialized when color is set
         this.pieces = new ArrayList<Piece>();
-        initializePiecePositions();
+        this.color = null;
     }
+    
+    public void setColor(Color color) { 
+        this.color = color; 
+        initializePiecePositions(); 
+    }
+
+    public Color getColor() { return color; }
 
     public abstract boolean makeMove(int newX, int newY);
     //public abstract Position[] possibleMoves();
 
     private void initializePiecePositions() {
-        if (this.color == Color.WHITE) {} 
-        else {}
+
     }
 }
