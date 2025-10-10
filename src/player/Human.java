@@ -1,5 +1,9 @@
 package player;
 
-public class Human extends Player {
+/**
+ * Human player class.
+ * TODO: Add class description and usage details.
+ */
+public class Human extends Player{
     
 }

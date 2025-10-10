@@ -1,5 +1,9 @@
 package player;
 
-public class AI extends Player {
+/**
+ * AI player class.
+ * TODO: Add class description and usage details.
+ */
+public class AI extends Player{
     
 }
