@@ -13,10 +13,10 @@ import utils.Position;
 
 public abstract class Player {
     private Color color;
-    private ArrayList<Piece> pieces;
+    private ArrayList<Piece> currentPieces;
 
     public Player() { // Pieces are only initialized when color is set
-        this.pieces = new ArrayList<Piece>();
+        this.currentPieces = new ArrayList<Piece>();
         this.color = null;
     }
     
@@ -28,8 +28,18 @@ public abstract class Player {
     public Color getColor() { return color; }
 
     public abstract boolean makeMove(int newX, int newY);
-    public abstract ArrayList<Position> possibleMoves();
 
+
+/**
+    * Piece ID's are constant across all instances of players.
+ * WHITE: No Offset    BLACK: Offset by 16
+ * King: 0             King: 16
+ * Queen: 1            Queen: 17
+ * Rook: 2-3           Rook: 18-19
+ * Bishop: 4-5         Bishop: 20-21
+ * Knight: 6-7         Knight: 22-23
+ * Pawn: 8-15          Pawn: 24-31
+ */
     private void initializePieces() {
         int ID = 0;
         if(color == Color.BLACK) {ID += 16; } 
@@ -37,20 +47,20 @@ public abstract class Player {
         int colorOffset = (color == Color.WHITE) ? 0 : 7;
         int pawnRow = (color == Color.WHITE) ? 1 : 6;
         
-        pieces.add(new King(color, new Position(4, colorOffset), ID++));
-        pieces.add(new Queen(color, new Position(3, colorOffset), ID++));
+        currentPieces.add(new King(color, new Position(4, colorOffset), ID++));
+        currentPieces.add(new Queen(color, new Position(3, colorOffset), ID++));
 
-        pieces.add(new Rook(color, new Position(0, colorOffset), ID++));
-        pieces.add(new Rook(color, new Position(7, colorOffset), ID++));
+        currentPieces.add(new Rook(color, new Position(0, colorOffset), ID++));
+        currentPieces.add(new Rook(color, new Position(7, colorOffset), ID++));
 
-        pieces.add(new Bishop(color, new Position(2, colorOffset), ID++));
-        pieces.add(new Bishop(color, new Position(5, colorOffset), ID++));
+        currentPieces.add(new Bishop(color, new Position(2, colorOffset), ID++));
+        currentPieces.add(new Bishop(color, new Position(5, colorOffset), ID++));
 
-        pieces.add(new Knight(color, new Position(1, colorOffset), ID++));
-        pieces.add(new Knight(color, new Position(6, colorOffset), ID++));
+        currentPieces.add(new Knight(color, new Position(1, colorOffset), ID++));
+        currentPieces.add(new Knight(color, new Position(6, colorOffset), ID++));
 
         for(int i = 0; i < 8; i++) {
-            pieces.add(new Pawn(color, new Position(i, pawnRow), ID++));
+            currentPieces.add(new Pawn(color, new Position(i, pawnRow), ID++));
         }
     }
 }
