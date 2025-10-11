@@ -15,21 +15,35 @@ import utils.Color;
 
 public class Board {
     //private int length, width;
-    public Player playerA, playerB;
+    public Player white, black;
     private Dictionary<Piece, Integer> whiteHasCaptured = new Hashtable<>();
     private Dictionary<Piece, Integer> blackHasCaptured = new Hashtable<>();
 
     //Basic constructors
-    public Board(boolean isPvP, Color decideWhite){
+    public Board(boolean isPvP, Color P1Color){
+        
         if(isPvP){
-            this.playerA = new Human();
-            this.playerB = new Human();
+            this.white = new Human();
+            this.black = new Human();
         }else{
-            this.playerA = new Human();
-            this.playerB = new AI();
+            Random rand = new Random();
+            if(P1Color == Color.RANDOM){
+                if(rand.nextBoolean()){ //user wins coin filp
+                    P1Color = Color.WHITE;
+                }else{
+                    P1Color = Color.BLACK;
+                }
+            }
+            if(P1Color == Color.WHITE){ //user chooses white
+                this.white = new Human();
+                this.black = new AI();
+            }else{  //user chooses black
+                this.white = new AI();
+                this.black = new Human();
+            }
         }
-        whoFirst(decideWhite);
     }
+    
 
     //getters
     public Dictionary<Piece, Integer> getWhiteCaptures(){
@@ -38,63 +52,32 @@ public class Board {
     public Dictionary<Piece, Integer> getBlackCaptures(){
         return blackHasCaptured;
     }
+
     //setters
-    
-
-
-    //Utils
-    private void whoFirst(Color whoFirst){
-        Random rand = new Random();
-       
-        switch(whoFirst){
-            case Color.WHITE: //user chooses white
-                playerA.setColor(Color.WHITE);
-                playerB.setColor(Color.BLACK);
-                break;
-            case Color.BLACK:  //user chooses black
-                playerA.setColor(Color.BLACK);
-                playerB.setColor(Color.WHITE);
-                break;
-            case Color.RANDOM:
-                if(rand.nextBoolean()){ //user wins coin filp
-                    playerA.setColor(Color.WHITE);
-                    playerB.setColor(Color.BLACK);
-                }else{  //user looses coin filp
-                    playerA.setColor(Color.BLACK);
-                    playerB.setColor(Color.WHITE);
-                }
-                break;
-        }
+    public void addPieceToCaptures(Dictionary<Piece, Integer> capturesDict){
+        
     }
 
 
+    //Methods
+    public void displayBoard(boolean whitesMove){        
+        if(whitesMove){//display white on the bottom (so print black first)
+
+        }else{
+
+        }
+        /*
+         * for(exisitng peices){
+         * go through all exisiting peices and put them on the board using there built in position
+         * }
+         * [p1 - r1c1, p2 - r1c3, p3 - r1c4, ]
+         * 
+         */
+    }
+}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
                         //variable board area constructors - for shits and giggles
     // public Board(AI aiPlayer, Human humanPlayer, int whoFirst, int legnth, int width){
     //     whoFirst(aiPlayer, humanPlayer, whoFirst);
@@ -106,4 +89,3 @@ public class Board {
     //     this.length = length;
     //     this.width = width;
     // }
-}
