@@ -13,6 +13,7 @@ public abstract class Piece {
     protected Color color;
     protected Position position;
     protected ArrayList<Position> possibleMoves;
+    protected String name = "";
     final private int ID;
 
     public Piece(Color color, Position position, int ID) {
@@ -22,10 +23,13 @@ public abstract class Piece {
         this.possibleMoves = new ArrayList<Position>();
     }
 
+    //getters
     public Color getColor() {return color; }
     public Position getPosition() {return position; }
     public int getID() {return ID; }
+    public String getName(){return name; }
 
+    //setters
     public void setPosition(int x, int y) {
         this.position.setX(x);
         this.position.setY(y);

@@ -19,7 +19,6 @@ public class Board {
     public Player white, black;
     private Dictionary<Piece, Integer> whiteHasCaptured = new Hashtable<>();
     private Dictionary<Piece, Integer> blackHasCaptured = new Hashtable<>();
-    private int BoardSize = 64;
 
     //Basic constructors
     public Board(boolean isPvP, Color P1Color){
@@ -63,18 +62,23 @@ public class Board {
 
 
     //Methods
-    public void displayBoard(boolean whitesMove){ 
+    public void displayBoard(Color whosMove){ 
         ArrayList<Piece> allCurrentPieces = new ArrayList<>(white.getCurrentPieces());
         allCurrentPieces.addAll(black.getCurrentPieces());
+        //call Piceces sortByRowCol()
 
-        
-        if(whitesMove){//display white on the bottom (so print black first)
-            for(int p=0; p<BoardSize; p++){
-                
-            }
-        }else{
-            for(int p=0; p< white.getCurrentPieces().size(); p++){
+        StringBuilder tempRow = new StringBuilder();
 
+        //display white on the bottom (so print black first)
+        for(int rowNum=0; rowNum< allCurrentPieces.size(); rowNum++){
+                while(allCurrentPieces.get(rowNum).getPosition().getX() == rowNum){
+                    tempRow.append(rowNum);
+                    tempRow.append(allCurrentPieces.get(rowNum).getName());
+                    rowNum++;
+                }
+                if(whosMove == Color.BLACK){
+                    tempRow.reverse();
+                }
             }
         }
 
@@ -86,7 +90,7 @@ public class Board {
          * 
          */
     }
-}
+
 
 
 
