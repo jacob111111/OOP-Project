@@ -28,7 +28,7 @@ public abstract class Player {
     public Color getColor() { return color; }
 
     public abstract boolean makeMove(int newX, int newY);
-    //public abstract Position[] possibleMoves();
+    public abstract ArrayList<Position> possibleMoves();
 
     private void initializePieces() {
         int ID = 0;
