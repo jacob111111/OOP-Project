@@ -1,5 +1,6 @@
 package board;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Random;
@@ -18,26 +19,28 @@ public class Board {
     public Player white, black;
     private Dictionary<Piece, Integer> whiteHasCaptured = new Hashtable<>();
     private Dictionary<Piece, Integer> blackHasCaptured = new Hashtable<>();
+    private int BoardSize = 64;
 
     //Basic constructors
     public Board(boolean isPvP, Color P1Color){
-        
         if(isPvP){
             this.white = new Human();
             this.black = new Human();
         }else{
             Random rand = new Random();
-            if(P1Color == Color.RANDOM){
-                if(rand.nextBoolean()){ //user wins coin filp
+            if(P1Color == Color.RANDOM){ //coin flip decides users (p1's) color
+                if(rand.nextBoolean()){
                     P1Color = Color.WHITE;
                 }else{
                     P1Color = Color.BLACK;
                 }
             }
-            if(P1Color == Color.WHITE){ //user chooses white
+            if(P1Color == Color.WHITE){ 
+                //user chooses white
                 this.white = new Human();
                 this.black = new AI();
-            }else{  //user chooses black
+            }else{  
+                //user chooses black
                 this.white = new AI();
                 this.black = new Human();
             }
@@ -54,18 +57,27 @@ public class Board {
     }
 
     //setters
-    public void addPieceToCaptures(Dictionary<Piece, Integer> capturesDict){
-        
+    public void addPieceToCaptures(Dictionary<Piece, Integer> dict, Piece capPiece){
+        dict.put(capPiece, capPiece.getID());
     }
 
 
     //Methods
-    public void displayBoard(boolean whitesMove){        
+    public void displayBoard(boolean whitesMove){ 
+        ArrayList<Piece> allCurrentPieces = new ArrayList<>(white.getCurrentPieces());
+        allCurrentPieces.addAll(black.getCurrentPieces());
+
+        
         if(whitesMove){//display white on the bottom (so print black first)
-
+            for(int p=0; p<BoardSize; p++){
+                
+            }
         }else{
+            for(int p=0; p< white.getCurrentPieces().size(); p++){
 
+            }
         }
+
         /*
          * for(exisitng peices){
          * go through all exisiting peices and put them on the board using there built in position

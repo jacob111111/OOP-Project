@@ -24,9 +24,11 @@ public abstract class Player {
         this.color = color; 
         initializePieces(); 
     }
-
+    //getters
     public Color getColor() { return color; }
+    public ArrayList<Piece> getCurrentPieces(){ return currentPieces; }
 
+    //setters
     public abstract boolean makeMove(int newX, int newY);
 
 
