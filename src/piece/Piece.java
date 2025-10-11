@@ -12,9 +12,9 @@ public abstract class Piece {
     private Position position;
     final private int ID;
 
-    public Piece(Color color, int x, int y, int ID) {
+    public Piece(Color color, Position position, int ID) {
         this.color = color;
-        this.position = new Position(x, y);
+        this.position = position;
         this.ID = ID;
     }
 
