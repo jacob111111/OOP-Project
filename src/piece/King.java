@@ -14,8 +14,11 @@ public class King extends Piece {
         super(color, position, ID);
     }
 
-    public boolean canMove(int newX, int newY) {
-        return false;
+    @Override
+    public void findPossibleMoves() {
+        possibleMoves.clear();
+        int x = position.getX();
+        int y = position.getY();
     }
     public boolean canCastle() {
         return false;

@@ -11,8 +11,11 @@ public class Queen extends Piece {
     public Queen(Color color, Position position, int ID) {
         super(color, position, ID);
     }
-
-    public boolean canMove(int newX, int newY) {
-        return false;
+    
+    @Override
+    public void findPossibleMoves() {
+        possibleMoves.clear();
+        int x = position.getX();
+        int y = position.getY();
     }
 }

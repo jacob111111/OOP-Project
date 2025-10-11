@@ -1,5 +1,7 @@
 package piece;
 
+import java.util.ArrayList;
+
 import utils.Color;
 import utils.Position;
 
@@ -8,14 +10,16 @@ import utils.Position;
  * TODO: Add class description and usage details.
  */
 public abstract class Piece {
-    private Color color;
-    private Position position;
+    protected Color color;
+    protected Position position;
+    protected ArrayList<Position> possibleMoves;
     final private int ID;
 
     public Piece(Color color, Position position, int ID) {
         this.color = color;
         this.position = position;
         this.ID = ID;
+        this.possibleMoves = new ArrayList<Position>();
     }
 
     public Color getColor() {return color; }
@@ -27,5 +31,18 @@ public abstract class Piece {
         this.position.setY(y);
     }
 
-    public abstract boolean canMove(int newX, int newY);
+
+    /**
+     * on move() - check if new position is in possible, True, update position and recalculate possible moves, False, do nothing
+     * on findPossibleMoves() - calculate possible moves based on current position and store in possibleMoves variable
+     */
+    public boolean move(Position newPos) {
+        if(possibleMoves.contains(newPos)) {
+            setPosition(newPos.getX(), newPos.getY());
+            return true;
+        }
+        return false;
+    }
+
+    public abstract void findPossibleMoves();
 }

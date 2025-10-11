@@ -12,8 +12,8 @@ import utils.Color;
 import utils.Position;
 
 public abstract class Player {
-    private Color color;
-    private ArrayList<Piece> currentPieces;
+    protected Color color;
+    protected ArrayList<Piece> currentPieces;
 
     public Player() { // Pieces are only initialized when color is set
         this.currentPieces = new ArrayList<Piece>();
@@ -29,7 +29,7 @@ public abstract class Player {
     public ArrayList<Piece> getCurrentPieces(){ return currentPieces; }
 
     //setters
-    public abstract boolean makeMove(int newX, int newY);
+    public abstract boolean makeMove(Position newPosition, int pieceID);
 
 
 /**
