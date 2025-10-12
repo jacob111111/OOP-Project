@@ -8,6 +8,7 @@ import java.util.Random;
 import piece.*;
 import player.*;
 import utils.Color;
+import utils.Position;
 
 /**
  * Board class representing the game board.
@@ -15,11 +16,10 @@ import utils.Color;
  */
 
 public class Board {
-    //private int length, width;
-    public Player white, black;
+    protected Player white, black;
     private Dictionary<Piece, Integer> whiteHasCaptured = new Hashtable<>();
     private Dictionary<Piece, Integer> blackHasCaptured = new Hashtable<>();
-
+    
     //Basic constructors
     public Board(boolean isPvP, Color P1Color){
         if(isPvP){
@@ -48,12 +48,10 @@ public class Board {
     
 
     //getters
-    public Dictionary<Piece, Integer> getWhiteCaptures(){
-        return whiteHasCaptured;
+    public Dictionary<Piece, Integer> getCaptures(Color colorOfPiece){ 
+        return colorOfPiece == Color.WHITE ? whiteHasCaptured : blackHasCaptured; 
     }
-    public Dictionary<Piece, Integer> getBlackCaptures(){
-        return blackHasCaptured;
-    }
+    public Player getPlayer(Color colorOfPiece){ return colorOfPiece == Color.WHITE ? white : black; }
 
     //setters
     public void addPieceToCaptures(Dictionary<Piece, Integer> dict, Piece capPiece){
@@ -62,6 +60,13 @@ public class Board {
 
 
     //Methods
+    public Position movePiece(Position possibleMove, Piece pieceToMove){
+        if(pieceToMove.findPossibleMoves().contains(possibleMove)){
+
+        }
+    }
+
+
     public void displayBoard(Color whosMove){ 
         ArrayList<Piece> allCurrentPieces = new ArrayList<>(white.getCurrentPieces());
         allCurrentPieces.addAll(black.getCurrentPieces());
