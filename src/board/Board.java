@@ -51,6 +51,7 @@ public class Board {
     public Dictionary<Piece, Integer> getCaptures(Color colorOfPiece){ 
         return colorOfPiece == Color.WHITE ? whiteHasCaptured : blackHasCaptured; 
     }
+
     public Player getPlayer(Color colorOfPiece){ return colorOfPiece == Color.WHITE ? white : black; }
 
     //setters
@@ -58,14 +59,39 @@ public class Board {
         dict.put(capPiece, capPiece.getID());
     }
 
-
     //Methods
     public Position movePiece(Position possibleMove, Piece pieceToMove){
-        if(pieceToMove.findPossibleMoves().contains(possibleMove)){
+        if(pieceToMove.getPossibleMoves().contains(possibleMove)){
+            if(checkYourself()){ pieceToMove.setPosition(possibleMove); }
 
         }
     }
 
+    //is the move the player is trying to make going to them in check
+private boolean checkYourself(Piece movingPiece, Position newPosition) {
+    // Find your king's position after the theoretical move
+    Position kingPos = findKingPosition(movingPiece.getColor());
+    
+    // Check each opponent piece type efficiently
+    for (Piece opponentPiece : getOpponentPieces(movingPiece.getColor())) {
+        if (canPieceAttackPosition(opponentPiece, kingPos)) {
+            return false; // Move puts king in check
+        }
+    }
+    return true; // Move is safe
+}
+
+private boolean canPieceAttackPosition(Piece piece, Position target) {
+    int id = piece.getID();
+    switch(id) {
+        case id % piece.getHash():   return checkPawnAttack(piece, target); //
+        case id % piece.getHash():   return checkRookAttack(piece, target);
+        case id % piece.getHash(): return checkBishopAttack(piece, target);
+        case id % piece.getHash():  return checkQueenAttack(piece, target);
+        case id % piece.getHash(): return checkKnightAttack(piece, target);
+        case id % piece.getHash():   return checkKingAttack(piece, target);
+    }
+}
 
     public void displayBoard(Color whosMove){ 
         ArrayList<Piece> allCurrentPieces = new ArrayList<>(white.getCurrentPieces());
@@ -94,6 +120,14 @@ public class Board {
          * [p1 - r1c1, p2 - r1c3, p3 - r1c4, ]
          * 
          */
+
+
+         //Helper functions
+         private Position findKingPosition(Piece piece){
+            Color playerColor = piece.getColor();
+            //Piece king = piece.getId(hash = undecided + color offset);
+            return king.getPosition();
+        }
     }
 
 

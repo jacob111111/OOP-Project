@@ -27,7 +27,6 @@ public abstract class Player {
     //getters
     public Color getColor() { return color; }
     public ArrayList<Piece> getCurrentPieces(){ return currentPieces; }
-
     //setters
     // Allows the player to input a move and attempts to execute it on the board
     public abstract boolean makeMove(Position newPosition, int pieceID);
