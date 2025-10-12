@@ -30,11 +30,14 @@ public abstract class Piece {
         findPossibleMoves();
     }
 
+    //getters
     public Color getColor() {return color; }
     public Position getPosition() {return position; }
     public int getID() {return ID; }
     public ArrayList<Position> getPossibleMoves() { return possibleMoves; }
+    public String getDisplaySymbol(){return displaySymbol.toString(); }
 
+    //setters
     public void setPosition(int x, int y) {
         this.position.setX(x);
         this.position.setY(y);
@@ -42,7 +45,7 @@ public abstract class Piece {
 
 
     /**
-     * on move() - check if new position is in possible, True, update position and recalculate possible moves, False, do nothing
+     * on move() - check if new position is inpossible, True, update position and recalculate possible moves, False, do nothing
      * on findPossibleMoves() - calculate possible moves based on current position and store in possibleMoves variable
      */
     public boolean move(Position newPos) {
