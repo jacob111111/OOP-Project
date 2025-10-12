@@ -13,18 +13,27 @@ public abstract class Piece {
     protected Color color;
     protected Position position;
     protected ArrayList<Position> possibleMoves;
+    private StringBuilder displaySymbol = new StringBuilder();
     final private int ID;
 
     public Piece(Color color, Position position, int ID) {
         this.color = color;
         this.position = position;
         this.ID = ID;
+        if(color == Color.WHITE) {
+            this.displaySymbol.append("w");
+        } else {
+            this.displaySymbol.append("b");
+        }
+        // In all other pieces, run super constructor first, then append specific symbol
         this.possibleMoves = new ArrayList<Position>();
+        findPossibleMoves();
     }
 
     public Color getColor() {return color; }
     public Position getPosition() {return position; }
     public int getID() {return ID; }
+    public ArrayList<Position> getPossibleMoves() { return possibleMoves; }
 
     public void setPosition(int x, int y) {
         this.position.setX(x);

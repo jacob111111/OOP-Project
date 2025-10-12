@@ -15,7 +15,7 @@ public abstract class Player {
     protected Color color;
     protected ArrayList<Piece> currentPieces;
 
-    public Player() { // Pieces are only initialized when color is set
+    public Player() { // Initial piece positions are only initialized when color is set
         this.currentPieces = new ArrayList<Piece>();
         this.color = null;
     }
@@ -29,9 +29,15 @@ public abstract class Player {
     public ArrayList<Piece> getCurrentPieces(){ return currentPieces; }
 
     //setters
+    // Allows the player to input a move and attempts to execute it on the board
     public abstract boolean makeMove(Position newPosition, int pieceID);
 
-
+    public void sortCurrentPieces() {
+        piece -> piece.getPosition().getY();
+        (piece1, piece2) -> {
+            // comparison logic here
+        }
+    }
 /**
     * Piece ID's are constant across all instances of players.
  * WHITE: No Offset    BLACK: Offset by 16
@@ -41,6 +47,7 @@ public abstract class Player {
  * Bishop: 4-5         Bishop: 20-21
  * Knight: 6-7         Knight: 22-23
  * Pawn: 8-15          Pawn: 24-31
+ * Pawn promotion ID will be offset again
  */
     private void initializePieces() {
         int ID = 0;
