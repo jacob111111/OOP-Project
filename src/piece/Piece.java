@@ -38,9 +38,8 @@ public abstract class Piece {
     public String getDisplaySymbol(){return displaySymbol.toString(); }
 
     //setters
-    public void setPosition(int x, int y) {
-        this.position.setX(x);
-        this.position.setY(y);
+    public void setPosition(Position newPos) {
+        this.position = newPos;
     }
 
 
@@ -50,7 +49,7 @@ public abstract class Piece {
      */
     public boolean move(Position newPos) {
         if(possibleMoves.contains(newPos)) {
-            setPosition(newPos.getX(), newPos.getY());
+            setPosition(newPos);
             return true;
         }
         return false;
