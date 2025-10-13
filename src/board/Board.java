@@ -23,8 +23,8 @@ public class Board {
     //Basic constructors
     public Board(boolean isPvP, Color P1Color){
         if(isPvP){
-            this.white = new Human();
-            this.black = new Human();
+            this.white = new Human(Color.WHITE);
+            this.black = new Human(Color.BLACK);
         }else{
             Random rand = new Random();
             if(P1Color == Color.RANDOM){ //coin flip decides users (p1's) color
@@ -36,12 +36,12 @@ public class Board {
             }
             if(P1Color == Color.WHITE){ 
                 //user chooses white
-                this.white = new Human();
-                this.black = new AI();
+                this.white = new Human(Color.WHITE);
+                this.black = new AI(Color.BLACK);
             }else{  
                 //user chooses black
-                this.white = new AI();
-                this.black = new Human();
+                this.white = new AI(Color.WHITE);
+                this.black = new Human(Color.BLACK);
             }
         }
     }
@@ -60,38 +60,7 @@ public class Board {
     }
 
     //Methods
-    public Position movePiece(Position possibleMove, Piece pieceToMove){
-        if(pieceToMove.getPossibleMoves().contains(possibleMove)){
-            if(checkYourself()){ pieceToMove.setPosition(possibleMove); }
 
-        }
-    }
-
-    //is the move the player is trying to make going to them in check
-private boolean checkYourself(Piece movingPiece, Position newPosition) {
-    // Find your king's position after the theoretical move
-    Position kingPos = findKingPosition(movingPiece.getColor());
-    
-    // Check each opponent piece type efficiently
-    for (Piece opponentPiece : getOpponentPieces(movingPiece.getColor())) {
-        if (canPieceAttackPosition(opponentPiece, kingPos)) {
-            return false; // Move puts king in check
-        }
-    }
-    return true; // Move is safe
-}
-
-private boolean canPieceAttackPosition(Piece piece, Position target) {
-    int id = piece.getID();
-    switch(id) {
-        case id % piece.getHash():   return checkPawnAttack(piece, target); //
-        case id % piece.getHash():   return checkRookAttack(piece, target);
-        case id % piece.getHash(): return checkBishopAttack(piece, target);
-        case id % piece.getHash():  return checkQueenAttack(piece, target);
-        case id % piece.getHash(): return checkKnightAttack(piece, target);
-        case id % piece.getHash():   return checkKingAttack(piece, target);
-    }
-}
 
     public void displayBoard(Color whosMove){ 
         ArrayList<Piece> allCurrentPieces = new ArrayList<>(white.getCurrentPieces());
@@ -123,11 +92,7 @@ private boolean canPieceAttackPosition(Piece piece, Position target) {
 
 
          //Helper functions
-         private Position findKingPosition(Piece piece){
-            Color playerColor = piece.getColor();
-            //Piece king = piece.getId(hash = undecided + color offset);
-            return king.getPosition();
-        }
+  
     }
 
 

@@ -8,8 +8,8 @@ import utils.Position;
  * TODO: Add class description and usage details.
  */
 public class Knight extends Piece {
-    public Knight(Color color, Position position, int ID) {
-        super(color, position, ID);
+    public Knight(Color color, Position position) {
+        super(color, position);
     }
 
     @Override

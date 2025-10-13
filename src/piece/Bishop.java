@@ -8,8 +8,8 @@ import utils.Position;
  * TODO: Add class description and usage details.
  */
 public class Bishop extends Piece {
-    public Bishop(Color color, Position position, int ID) {
-        super(color, position, ID);
+    public Bishop(Color color, Position position) {
+        super(color, position);
     }
 
     @Override

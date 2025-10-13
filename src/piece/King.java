@@ -9,9 +9,9 @@ import utils.Position;
  * King piece class.
  * TODO: Add class description and usage details.
  */
-public class King extends Piece {
-    public King(Color color, Position position, int ID) {
-        super(color, position, ID);
+public class King extends Piece { // In all other pieces, run super constructor first, then append specific symbol
+    public King(Color color, Position position) {
+        super(color, position);
     }
 
     @Override

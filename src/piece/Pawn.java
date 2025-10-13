@@ -8,8 +8,8 @@ import utils.Position;
  * TODO: Add class description and usage details.
  */
 public class Pawn extends Piece {
-    public Pawn(Color color, Position position, int ID) {
-        super(color, position, ID);
+    public Pawn(Color color, Position position) {
+        super(color, position);
     }
 
     @Override
