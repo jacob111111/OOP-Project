@@ -13,7 +13,7 @@ public abstract class Piece {
     protected Color color;
     protected Position position;
     protected ArrayList<Position> possibleMoves;
-    private StringBuilder displaySymbol = new StringBuilder();
+    protected StringBuilder displaySymbol = new StringBuilder();
 
     public Piece(Color color, Position position) {  // In all other pieces, run super constructor first, then append specific symbol
         this.color = color;

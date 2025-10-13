@@ -46,11 +46,16 @@ public abstract class Player {
 
     //helpers
     public void sortCurrentPieces() {
-        currentPieces.sort((piece1, piece2) -> {
-            // comparison logic here
-            return piece1.getPosition().getY() - piece2.getPosition().getY();
-        });
-    }
+    currentPieces.sort((piece1, piece2) -> {
+        // First compare by y-coordinate (max to min)
+        int yComparison = piece2.getPosition().getY() - piece1.getPosition().getY();
+        if (yComparison != 0) {
+            return yComparison;
+        }
+        // If y-coordinates are equal, compare by x-coordinate (min to max)
+        return piece1.getPosition().getX() - piece2.getPosition().getX();
+    });
+}
 
     private void initializePieces() {
         int colorOffset = (color == Color.WHITE) ? 0 : 7;
