@@ -32,14 +32,23 @@ public abstract class Piece {
     public Position getPosition() {return position; }
     public ArrayList<Position> getPossibleMoves() { return possibleMoves; }
     public String getDisplaySymbol(){return displaySymbol.toString(); }
+    public String getName() { return this.getClass().getSimpleName(); }
+    public int getID() { return this.hashCode(); }
 
     //setters
     public boolean move(Position newPos) {
         if(possibleMoves.contains(newPos)) {
             this.position = newPos;
+            findPossibleMoves(); // Recalculate possible moves after moving
             return true;
         }
         return false;
+    }
+    
+    // Direct position setter for board management (bypasses move validation)
+    public void setPosition(Position newPos) {
+        this.position = newPos;
+        findPossibleMoves(); // Recalculate possible moves after moving
     }
 
     public abstract void findPossibleMoves();
