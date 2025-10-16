@@ -34,9 +34,8 @@ public class Player {
     }
     
     //setters
-    // Allows the player to input a move and attempts to execute it on the board
     public boolean movePiece(Position possibleMove, Piece pieceToMove){
-        if(pieceToMove.getPossibleMoves().contains(possibleMove)){ // move can be made
+        if(pieceToMove.getPossibleMoves().contains(possibleMove)){
             pieceToMove.move(possibleMove);
             return true;
         }
@@ -53,18 +52,9 @@ public class Player {
             return rowCompare != 0 ? rowCompare : pos1.getX() - pos2.getX();
         });
     }
-    
 
-    /* JACOB LOOK AT THIS OMG ITS GONNA EXPLODE WAHHHHHHH
-     * Because currentPieces is sorted by row and column, 
-     * would keeping a tally of how many pieces are in each row allow for a faster
-     *  lookup in findPieceat 
-     * For ex: If we know ther are 4 things in row 1, 
-     * and we need something in row 2, can immediatlly skip to the 3rd index
-     */
-    // Binary search for piece at position
     public Piece findPieceAt(Position target) {
-        sortCurrentPieces(); // Ensure list is sorted
+        sortCurrentPieces();
         int left = 0, right = currentPieces.size() - 1;
         
         while (left <= right) {

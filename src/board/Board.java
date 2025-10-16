@@ -79,10 +79,10 @@ public class Board {
     }
     public boolean getCheckMate(){ return checkMate;}
 
-    // Call this method whenever a piece moves to keep index updated
     public void updatePiecePosition(Piece piece, Position oldPos, Position newPos) {
         positionIndex.remove(oldPos);
         positionIndex.put(newPos, piece);
+        piece.setPosition(newPos);
     }
     
     // Method to handle captures while maintaining index
@@ -111,8 +111,8 @@ public class Board {
 
     //Methods
     public void displayBoard(Color whosMove){ 
-        System.out.println("  a b c d e f g h");
-        
+        System.out.println("  a  b  c  d  e  f  g  h");
+
         // Display board from black's perspective (rank 8 to 1) or white's (rank 1 to 8)
         //something neat i found you could do to reduce the amount of for loops you write. absolutely awful to look at though
         for(int rank = (whosMove == Color.WHITE ? 7 : 0); whosMove == Color.WHITE ? rank >= 0 : rank < 8; rank += (whosMove == Color.WHITE ? -1 : 1)) {
@@ -131,7 +131,7 @@ public class Board {
             }
             System.out.println();
         }
-        System.out.println("  a b c d e f g h");
+        System.out.println(" a  b  c  d  e  f  g  h");
     }
 }
 

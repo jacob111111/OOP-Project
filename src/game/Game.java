@@ -61,10 +61,8 @@ public abstract class Game {
     }
 
     public void end(Color winner){
-
+        System.out.println("Game over! The winner is " + winner);
     }
     public abstract void play();
-    
-    // Abstract methods that subclasses need to implement
     public abstract void turn();
 }

@@ -37,7 +37,6 @@ public class Console extends Game {
 
     @Override
     public void turn() {
-        // Get the current player
         System.out.println(WhosTurn + "'s turn");
         System.out.println("");
         Player player = board.getPlayer(WhosTurn);
@@ -56,47 +55,42 @@ public class Console extends Game {
         
         if (fromPosition == null || toPosition == null) {
             System.out.println("Invalid move notation! Use format like 'e2 e4'");
-            return; // Don't switch turns, let player try again
+            return;
         }
         
-        // Get the piece at the starting position
         Piece pieceToMove = board.getPieceAt(fromPosition);
         
         if (pieceToMove == null) {
             System.out.println("No piece at position " + fromSquare + "!");
-            return; // Don't switch turns, let player try again
+            return;
         }
         
-        // Check if the piece belongs to the current player
         if (pieceToMove.getColor() != WhosTurn) {
             System.out.println("That piece doesn't belong to you!");
-            return; // Don't switch turns, let player try again
+            return;
         }
-        
-        // Attempt to move the piece
+
         boolean moveSuccessful = player.movePiece(toPosition, pieceToMove);
         
         if (!moveSuccessful) {
             System.out.println("Invalid move! That piece cannot move to " + toSquare);
-            return; // Don't switch turns, let player try again
+            return;
         }
         
+        board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
         System.out.println("Move successful: " + fromSquare + " to " + toSquare);
         
         // Check for checkmate before switching turns
         if(board.getCheckMate()) {
-            // The current player is in checkmate, so the other player wins
             winner = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
             System.out.println("Checkmate! " + winner + " wins!");
             return;
         }
         
-        // Switch to the other player's turn
         if (WhosTurn == Color.WHITE) {
             WhosTurn = Color.BLACK;
-        } else {
-            WhosTurn = Color.WHITE;
-        }
+} 
+        else { WhosTurn = Color.WHITE; }
         
     }
     
