@@ -77,6 +77,7 @@ public class Board {
     public boolean isSquareEmpty(Position pos) {
         return positionIndex.get(pos) == null;
     }
+    public boolean getCheckMate(){ return checkMate;}
 
     // Call this method whenever a piece moves to keep index updated
     public void updatePiecePosition(Piece piece, Position oldPos, Position newPos) {
