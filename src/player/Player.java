@@ -63,7 +63,7 @@ public abstract class Player {
      * For ex: If we know ther are 4 things in row 1, 
      * and we need something in row 2, can immediatlly skip to the 3rd index
      */
-    // Binary search for piece at position - O(log n) instead of O(n)
+    // Binary search for piece at position
     public Piece findPieceAt(Position target) {
         sortCurrentPieces(); // Ensure list is sorted
         int left = 0, right = currentPieces.size() - 1;
