@@ -2,10 +2,11 @@
  * Main class for the application.
  * TODO: Add class description and usage details.
  */
-import board.*;
-import player.*;
+import java.util.Scanner;
 import game.*;
-import piece.*;
+
 public class Main {
-    
+    public static void main(String[] args) {
+
+    }
 }

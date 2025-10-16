@@ -87,6 +87,7 @@ public class Board {
     }
     
     // Method to handle captures while maintaining index
+    // Called once valid capture confirmed
     public void capturePiece(Piece capturingPiece, Position capturePos) {
         Piece capturedPiece = positionIndex.get(capturePos);
         if (capturedPiece != null) {
