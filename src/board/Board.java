@@ -27,8 +27,8 @@ public class Board {
     //Basic constructors
     public Board(boolean isPvP, Color P1Color){
         if(isPvP){
-            this.white = new Human(Color.WHITE);
-            this.black = new Human(Color.BLACK);
+            this.white = new Player(Color.WHITE);
+            this.black = new Player(Color.BLACK);
             this.checkMate = false;
         }else{
             Random rand = new Random();
@@ -41,12 +41,12 @@ public class Board {
             }
             if(P1Color == Color.WHITE){ 
                 //user chooses white
-                this.white = new Human(Color.WHITE);
+                this.white = new Player(Color.WHITE);
                 this.black = new AI(Color.BLACK);
             }else{  
                 //user chooses black
                 this.white = new AI(Color.WHITE);
-                this.black = new Human(Color.BLACK);
+                this.black = new Player(Color.BLACK);
             }
         }
         
@@ -138,13 +138,13 @@ public class Board {
 
 
                         //variable board area constructors - for shits and giggles
-    // public Board(AI aiPlayer, Human humanPlayer, int whoFirst, int legnth, int width){
-    //     whoFirst(aiPlayer, humanPlayer, whoFirst);
+    // public Board(AI aiPlayer, Player PlayerPlayer, int whoFirst, int legnth, int width){
+    //     whoFirst(aiPlayer, PlayerPlayer, whoFirst);
     //     this.length = length;
     //     this.width = width;
     // }
-    // public Board(Human humanPlayer1, Human humanPlayer2, int whoFirst, int legnth, int width){
-    //     whoFirst(humanPlayer1, humanPlayer2, whoFirst);
+    // public Board(Player PlayerPlayer1, Player PlayerPlayer2, int whoFirst, int legnth, int width){
+    //     whoFirst(PlayerPlayer1, PlayerPlayer2, whoFirst);
     //     this.length = length;
     //     this.width = width;
     // }

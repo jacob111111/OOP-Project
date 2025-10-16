@@ -1,8 +1,7 @@
 package player;
-// Will have Human and AI players
 /**
- * Player base class.
- * TODO: Add class description and usage details.
+ * Player class.
+ * Represents a player in the game, either human or AI.
  */
 
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ import piece.*;
 import utils.Color;
 import utils.Position;
 
-public abstract class Player {
+public class Player {
     protected Color color;
     protected ArrayList<Piece> currentPieces;
 

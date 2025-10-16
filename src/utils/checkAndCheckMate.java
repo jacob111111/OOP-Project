@@ -10,6 +10,9 @@ import piece.Rook;
 
 public class checkAndCheckMate extends Board{
     
+    public checkAndCheckMate(boolean isPvP, Color p1Color) {
+        super(isPvP, p1Color);
+    }
     //Helper functions
     private boolean canPieceAttackKing(Piece opponentPiece, Position kingPos){
         if (opponentPiece instanceof Queen) {

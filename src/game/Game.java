@@ -3,7 +3,6 @@ package game;
 import java.util.Scanner;
 
 import board.Board;
-import player.*;
 import utils.Color;
 import utils.GameType;
 
@@ -23,12 +22,14 @@ public abstract class Game {
         this.scnr = scnr;
     }
 
+    //getters
+    public Color getWinner() { return winner; }
+
     //setter
     public void setWinner(Color winnerColor){ this.winner = winnerColor; } 
 
     //methods
-    public static Game createGame(){
-        Scanner scnr = new Scanner(System.in);
+    public Game createGame(){
         System.out.println("What type of game do you want to play?");
         System.out.println("1. Console   2. Player vs AI   3. Player vs Player ");
         System.out.print("Input 1-3: ");
@@ -65,6 +66,5 @@ public abstract class Game {
     public abstract void play();
     
     // Abstract methods that subclasses need to implement
-    public abstract Color getWinner();
     public abstract void turn();
 }
