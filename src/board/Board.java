@@ -21,7 +21,7 @@ public class Board {
     protected Player white, black;
     private Dictionary<Piece, Integer> whiteHasCaptured = new Hashtable<>();
     private Dictionary<Piece, Integer> blackHasCaptured = new Hashtable<>();
-    
+    protected boolean checkMate;
     private Map<Position, Piece> positionIndex = new HashMap<>();
     
     //Basic constructors
@@ -29,6 +29,7 @@ public class Board {
         if(isPvP){
             this.white = new Human(Color.WHITE);
             this.black = new Human(Color.BLACK);
+            this.checkMate = false;
         }else{
             Random rand = new Random();
             if(P1Color == Color.RANDOM){ //coin flip decides users (p1's) color
@@ -50,10 +51,6 @@ public class Board {
         }
         
         // Initialize position index for O(1) lookups
-        initializePositionIndex();
-    }
-    
-    private void initializePositionIndex() {
         // Add all white pieces to index
         for (Piece piece : white.getCurrentPieces()) {
             positionIndex.put(piece.getPosition(), piece);
@@ -63,6 +60,7 @@ public class Board {
             positionIndex.put(piece.getPosition(), piece);
         }
     }
+
     
     //getters
     public Dictionary<Piece, Integer> getCaptures(Color colorOfPiece){ 
@@ -79,7 +77,7 @@ public class Board {
     public boolean isSquareEmpty(Position pos) {
         return positionIndex.get(pos) == null;
     }
-    
+
     // Call this method whenever a piece moves to keep index updated
     public void updatePiecePosition(Piece piece, Position oldPos, Position newPos) {
         positionIndex.remove(oldPos);
@@ -105,7 +103,7 @@ public class Board {
         positionIndex.put(capturePos, capturingPiece);
     }
 
-    //setters
+   
     public void addPieceToCaptures(Dictionary<Piece, Integer> dict, Piece capPiece){
         dict.put(capPiece, capPiece.hashCode()); // Using hashCode as piece ID
     }
@@ -133,48 +131,6 @@ public class Board {
             System.out.println();
         }
         System.out.println("  a b c d e f g h");
-    }
-
-    //Helper functions
-    private boolean canPieceAttackKing(Piece opponentPiece, Position kingPos){
-        if (opponentPiece instanceof Queen) {
-            return checkQueenAttack(opponentPiece, kingPos);
-        } else if (opponentPiece instanceof Rook) {
-            return checkRookAttack(opponentPiece, kingPos);
-        } else if (opponentPiece instanceof Bishop) {
-            return checkBishopAttack(opponentPiece, kingPos);
-        } else if (opponentPiece instanceof Knight) {
-            return checkKnightAttack(opponentPiece, kingPos);
-        } else if (opponentPiece instanceof Pawn) {
-            return checkPawnAttack(opponentPiece, kingPos);
-        }
-        return false;
-    }
-    
-    // Stub implementations - you'll need to implement these based on piece movement rules
-    private boolean checkQueenAttack(Piece queen, Position kingPos) {
-        // TODO: Implement queen attack logic (combines rook + bishop)
-        return false;
-    }
-    
-    private boolean checkRookAttack(Piece rook, Position kingPos) {
-        // TODO: Implement rook attack logic (horizontal/vertical lines)
-        return false;
-    }
-    
-    private boolean checkBishopAttack(Piece bishop, Position kingPos) {
-        // TODO: Implement bishop attack logic (diagonal lines)
-        return false;
-    }
-    
-    private boolean checkKnightAttack(Piece knight, Position kingPos) {
-        // TODO: Implement knight attack logic (L-shaped moves)
-        return false;
-    }
-    
-    private boolean checkPawnAttack(Piece pawn, Position kingPos) {
-        // TODO: Implement pawn attack logic (diagonal captures)
-        return false;
     }
 }
 
