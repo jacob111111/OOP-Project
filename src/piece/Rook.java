@@ -3,19 +3,16 @@ package piece;
 import utils.Color;
 import utils.Position;
 
-/**
- * Rook piece class.
- * TODO: Add class description and usage details.
- */
-public class Rook extends Piece {
+public class Rook extends LinearPiece {
+    private static final int[][] ROOK_DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    
     public Rook(Color color, Position position) {
         super(color, position);
+        this.displaySymbol.append("R");
     }
 
     @Override
     public void findPossibleMoves() {
-        possibleMoves.clear();
-        int x = position.getX();
-        int y = position.getY();
+        addMovesInDirections(ROOK_DIRECTIONS);
     }
 }

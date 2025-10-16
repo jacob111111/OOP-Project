@@ -9,6 +9,7 @@ import utils.Position;
  * Pieces base class.
  * TODO: Add class description and usage details.
  */
+
 public abstract class Piece {
     protected Color color;
     protected Position position;
