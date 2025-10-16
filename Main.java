@@ -1,12 +1,27 @@
 /**
- * Main class for the application.
- * TODO: Add class description and usage details.
+ * Main entry point for the Chess Game application.
+ * 
+ * This class handles the initial game setup, including game mode selection,
+ * player color choice, and game initialization. It provides a console-based
+ * interface for users to start playing chess.
+ * 
+ 
  */
 import java.util.Scanner;
 import game.*;
 import utils.Color;
 
 public class Main {
+    
+    /**
+     * Main method that starts the chess game application.
+     * 
+     * Presents the user with game mode options (Console PVP, LAN, Player vs AI),
+     * allows color selection, and initializes the appropriate game instance.
+     * Currently, only console mode is fully implemented.
+     * 
+     * @param args Command line arguments (not used)
+     */
     public static void main(String[] args) {
         Game game = null; 
         Scanner scnr = new Scanner(System.in);

@@ -4,23 +4,42 @@ import utils.Color;
 import utils.Position;
 
 /**
- * King piece class.
- * TODO: Add class description and usage details.
+ * Represents the King piece in chess.
+ * 
+ * The King can move one square in any direction (horizontal, vertical, or diagonal).
+ * This is the most important piece in chess - the game is lost when the king is
+ * checkmated. The king also participates in the special castling move (not yet implemented).
+ * 
  */
-
 public class King extends Piece {
+    /** All possible movement directions for a king (8 directions: horizontal, vertical, diagonal) */
     private static final int[][] KING_DIRECTIONS = {
         {1, 0}, {-1, 0}, {0, 1}, {0, -1},    // Horizontal/vertical
         {1, 1}, {1, -1}, {-1, 1}, {-1, -1}   // Diagonals
     };
 
+    /** Tracks whether this king has moved (used for castling rules) */
     private boolean hasMoved = false;
 
+    /**
+     * Creates a new King piece with the specified color and position.
+     * 
+     * @param color The color of the king (WHITE or BLACK)
+     * @param position The initial position of the king on the board
+     */
     public King(Color color, Position position) {
         super(color, position);
         this.displaySymbol.append("K");
     }
 
+    /**
+     * Calculates all possible moves for the king from its current position.
+     * 
+     * The king can move one square in any of eight directions (horizontal, vertical, diagonal).
+     * Also includes castling moves if the king hasn't moved yet. Note that this method
+     * only calculates basic movement - additional validation for check/checkmate and
+     * castling prerequisites is handled elsewhere.
+     */
     @Override
     public void findPossibleMoves() {
         possibleMoves.clear();
@@ -48,7 +67,17 @@ public class King extends Piece {
         }
     }
 
-    // Getter and Setter for hasMoved
+    /**
+     * Sets whether this king has moved (affects castling eligibility).
+     * 
+     * @param hasMoved true if the king has moved, false otherwise
+     */
     public void setHasMoved(boolean hasMoved) { this.hasMoved = hasMoved; }
+    
+    /**
+     * Gets whether this king has moved from its starting position.
+     * 
+     * @return true if the king has moved, false if it's still in starting position
+     */
     public boolean getHasMoved() { return hasMoved; }
 }

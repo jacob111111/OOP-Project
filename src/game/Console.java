@@ -2,24 +2,43 @@ package game;
 
 import java.util.Scanner;
 import utils.Color;
-import utils.GameType;
 import utils.Position;
 import player.Player;
 import piece.Piece;
 
 /**
- * Console class for console-based gameplay.
- * TODO: Add class description and usage details.
+ * Console-based implementation of the chess game.
+ * 
+ * This class provides a text-based user interface for playing chess in the console.
+ * It handles user input for moves, displays the board, validates moves, and manages
+ * turn progression. Players enter moves using standard chess notation (e.g., "e2 e4").
+ * 
+ * The class extends the Game base class and implements the console-specific
+ * versions of the abstract methods for game flow and turn management.
+ * 
  */
 public class Console extends Game {
+    /** The winner of the console game */
     private Color winner;
     
+    /**
+     * Creates a new Console game instance.
+     * 
+     * @param isPvP true for Player vs Player mode, false for single player
+     * @param p1Color the color that player 1 will control
+     * @param scnr Scanner for reading user input from console
+     */
     public Console(boolean isPvP, Color p1Color, Scanner scnr){
         super(isPvP, p1Color, scnr);
-        this.gameType = GameType.CONSOLE;
         this.winner = null;
     }
 
+    /**
+     * Starts and manages the main game loop for console play.
+     * 
+     * Displays startup message and continues processing turns until
+     * a winner is determined, then displays the end game message.
+     */
     @Override
     public void play() {
         System.out.println("Starting console game...");
@@ -30,11 +49,30 @@ public class Console extends Game {
         end(getWinner());
     }
 
+    /**
+     * Gets the winner of the current game.
+     * 
+     * @return The color of the winner, or null if game is ongoing
+     */
     @Override
     public Color getWinner() {
         return winner;
     }
 
+    /**
+     * Processes a single turn in the console game.
+     * 
+     * Displays the current player's turn, shows the board, prompts for move input,
+     * validates the move, executes it if valid, and switches to the next player.
+     * Handles move validation including:
+     * - Chess notation format validation
+     * - Piece existence at source position
+     * - Piece ownership verification
+     * - Move legality checking
+     * 
+     * If an invalid move is entered, the player is prompted to try again without
+     * switching turns.
+     */
     @Override
     public void turn() {
         System.out.println(WhosTurn + "'s turn");
