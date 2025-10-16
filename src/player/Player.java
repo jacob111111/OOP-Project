@@ -46,16 +46,48 @@ public abstract class Player {
 
     //helpers
     public void sortCurrentPieces() {
-    currentPieces.sort((piece1, piece2) -> {
-        // First compare by y-coordinate (max to min)
-        int yComparison = piece2.getPosition().getY() - piece1.getPosition().getY();
-        if (yComparison != 0) {
-            return yComparison;
+        currentPieces.sort((piece1, piece2) -> {
+            Position pos1 = piece1.getPosition();
+            Position pos2 = piece2.getPosition();
+            // Sort by row first, then column for efficient searching
+            int rowCompare = pos1.getY() - pos2.getY();
+            return rowCompare != 0 ? rowCompare : pos1.getX() - pos2.getX();
+        });
+    }
+    
+
+    /* JACOB LOOK AT THIS OMG ITS GONNA EXPLODE WAHHHHHHH
+     * Because currentPieces is sorted by row and column, 
+     * would keeping a tally of how many pieces are in each row allow for a faster
+     *  lookup in findPieceat 
+     * For ex: If we know ther are 4 things in row 1, 
+     * and we need something in row 2, can immediatlly skip to the 3rd index
+     */
+    // Binary search for piece at position
+    public Piece findPieceAt(Position target) {
+        sortCurrentPieces(); // Ensure list is sorted
+        int left = 0, right = currentPieces.size() - 1;
+        
+        while (left <= right) {
+            int mid = (left + right) / 2;
+            Position midPos = currentPieces.get(mid).getPosition();
+            
+            int comparison = comparePositions(midPos, target);
+            if (comparison == 0) {
+                return currentPieces.get(mid);
+            } else if (comparison < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
         }
-        // If y-coordinates are equal, compare by x-coordinate (min to max)
-        return piece1.getPosition().getX() - piece2.getPosition().getX();
-    });
-}
+        return null;
+    }
+    
+    private int comparePositions(Position pos1, Position pos2) {
+        int rowCompare = pos1.getY() - pos2.getY();
+        return rowCompare != 0 ? rowCompare : pos1.getX() - pos2.getX();
+    }
 
     private void initializePieces() {
         int colorOffset = (color == Color.WHITE) ? 0 : 7;
