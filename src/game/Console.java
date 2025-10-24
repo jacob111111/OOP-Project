@@ -88,8 +88,8 @@ public class Console extends Game {
         String toSquare = scnr.next();     
 
         // Convert chess notation to Position objects
-        Position fromPosition = chessNotationToPosition(fromSquare);
-        Position toPosition = chessNotationToPosition(toSquare);
+        Position fromPosition = board.chessNotationToPosition(fromSquare);
+        Position toPosition = board.chessNotationToPosition(toSquare);
         
         if (fromPosition == null || toPosition == null) {
             System.out.println("Invalid move notation! Use format like 'e2 e4'");
@@ -130,31 +130,5 @@ public class Console extends Game {
 } 
         else { WhosTurn = Color.WHITE; }
         
-    }
-    
-    /**
-     * Converts chess notation (like "e4") to a Position object
-     * Chess board: a-h columns (0-7), 1-8 rows (0-7)
-     * @param notation Chess notation string (e.g., "e4")
-     * @return Position object or null if invalid notation
-     */
-    private Position chessNotationToPosition(String notation) {
-        if (notation == null || notation.length() != 2) {
-            return null;
-        }
-        
-        char file = notation.toLowerCase().charAt(0); // column (a-h)
-        char rank = notation.charAt(1); // row (1-8)
-        
-        // Validate input
-        if (file < 'a' || file > 'h' || rank < '1' || rank > '8') {
-            return null;
-        }
-        
-        // Convert to 0-based coordinates
-        int x = file - 'a'; // a=0, b=1, ..., h=7
-        int y = rank - '1'; // 1=0, 2=1, ..., 8=7
-        
-        return new Position(x, y);
     }
 }
