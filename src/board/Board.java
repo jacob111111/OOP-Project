@@ -1,6 +1,5 @@
 package board;
 
-import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -227,19 +226,30 @@ public class Board {
         }
         System.out.println("  a  b  c  d  e  f  g  h");
     }
+
+    /**
+     * Converts chess notation (like "e4") to a Position object
+     * Chess board: a-h columns (0-7), 1-8 rows (0-7)
+     * @param notation Chess notation string (e.g., "e4")
+     * @return Position object or null if invalid notation
+     */
+    public Position chessNotationToPosition(String notation) {
+        if (notation == null || notation.length() != 2) {
+            return null;
+        }
+        
+        char file = notation.toLowerCase().charAt(0); // column (a-h)
+        char rank = notation.charAt(1); // row (1-8)
+        
+        // Validate input
+        if (file < 'a' || file > 'h' || rank < '1' || rank > '8') {
+            return null;
+        }
+        
+        // Convert to 0-based coordinates
+        int x = file - 'a'; // a=0, b=1, ..., h=7
+        int y = rank - '1'; // 1=0, 2=1, ..., 8=7
+        
+        return new Position(x, y);
+    }
 }
-
-
-
-
-                        //variable board area constructors - for shits and giggles
-    // public Board(AI aiPlayer, Player PlayerPlayer, int whoFirst, int legnth, int width){
-    //     whoFirst(aiPlayer, PlayerPlayer, whoFirst);
-    //     this.length = length;
-    //     this.width = width;
-    // }
-    // public Board(Player PlayerPlayer1, Player PlayerPlayer2, int whoFirst, int legnth, int width){
-    //     whoFirst(PlayerPlayer1, PlayerPlayer2, whoFirst);
-    //     this.length = length;
-    //     this.width = width;
-    // }
