@@ -23,6 +23,15 @@ public class Main {
      * @param args Command line arguments (not used)
      */
     public static void main(String[] args) {
+
+        /**
+        // Example of code that runs the GUI
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            new gui.chessFrame(); // Uses CLASSIC palette by default
+            // Or: new gui.chessFrame(UIPalette.MODERN);
+        });
+        */
+        
         Game game = null; 
         Scanner scnr = new Scanner(System.in);
         System.out.println("Welcome to the Game!");
@@ -62,4 +71,5 @@ public class Main {
         }
         scnr.close();
     }
+    
 }

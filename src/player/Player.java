@@ -99,7 +99,7 @@ public class Player {
         currentPieces.sort((piece1, piece2) -> {
             Position pos1 = piece1.getPosition();
             Position pos2 = piece2.getPosition();
-            // Sort by row first, then column for efficient searching
+            // Sort by row first, then column
             int rowCompare = pos1.getY() - pos2.getY();
             return rowCompare != 0 ? rowCompare : pos1.getX() - pos2.getX();
         });
