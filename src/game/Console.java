@@ -108,9 +108,13 @@ public class Console extends Game {
             return;
         }
 
-        boolean moveSuccessful = player.movePiece(toPosition, pieceToMove);
+        //will moving that piece put you in check
         
-        if (!moveSuccessful) {
+        
+        boolean moveSuccessful = player.attemptMove(toPosition, pieceToMove);
+        boolean checkedYourself = isAttackPossibleOnKCurrentPlayersKing();
+
+        if (!moveSuccessful && !checkedYourself) {
             System.out.println("Invalid move! That piece cannot move to " + toSquare);
             return;
         }
@@ -118,8 +122,8 @@ public class Console extends Game {
         board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
         System.out.println("Move successful: " + fromSquare + " to " + toSquare);
         
-        // Check for checkmate before switching turns
-        if(board.getCheckMate()) {
+        // Check for winner
+        if(player.getWinner()) {
             winner = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
             System.out.println("Checkmate! " + winner + " wins!");
             return;

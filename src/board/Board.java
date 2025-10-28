@@ -35,9 +35,6 @@ public class Board {
     /** Dictionary tracking pieces captured by black player */
     private Dictionary<Piece, Integer> blackHasCaptured = new Hashtable<>();
     
-    /** Flag indicating if the game is in checkmate */
-    protected boolean checkMate;
-    
     /** Hash map for O(1) piece position lookups */
     private Map<Position, Piece> positionIndex = new HashMap<>();
     
@@ -55,7 +52,6 @@ public class Board {
         if(isPvP){
             this.white = new Player(Color.WHITE);
             this.black = new Player(Color.BLACK);
-            this.checkMate = false;
         }else{
             Random rand = new Random();
             if(P1Color == Color.RANDOM){ //coin flip decides users (p1's) color
@@ -129,13 +125,6 @@ public class Board {
     public boolean isSquareEmpty(Position pos) {
         return positionIndex.get(pos) == null;
     }
-    
-    /**
-     * Gets the current checkmate status.
-     * 
-     * @return true if the game is in checkmate, false otherwise
-     */
-    public boolean getCheckMate(){ return checkMate;}
 
     /**
      * Updates a piece's position in both the piece object and the position index.
