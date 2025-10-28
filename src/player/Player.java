@@ -96,6 +96,63 @@ public class Player {
     }
 
     /**
+     * Sorts the current pieces by position for efficient searching.
+     * 
+     * Sorts pieces first by row (y-coordinate), then by column (x-coordinate).
+     * This ordering enables binary search operations for piece lookup.
+     */
+    public void sortCurrentPieces() {
+        currentPieces.sort((piece1, piece2) -> {
+            Position pos1 = piece1.getPosition();
+            Position pos2 = piece2.getPosition();
+            // Sort by row first, then column
+            int rowCompare = pos1.getY() - pos2.getY();
+            return rowCompare != 0 ? rowCompare : pos1.getX() - pos2.getX();
+        });
+    }
+
+    /**
+     * Finds a piece at the specified target position using binary search.
+     * 
+     * This method sorts the pieces first, then uses binary search for O(log n)
+     * lookup performance. More efficient than linear search for large piece counts.
+     * 
+     * @param target the position to search for a piece
+     * @return The piece at the target position, or null if no piece is found
+     */
+    public Piece findPieceAt(Position target) {
+        sortCurrentPieces();
+        int left = 0, right = currentPieces.size() - 1;
+        
+        while (left <= right) {
+            int mid = (left + right) / 2;
+            Position midPos = currentPieces.get(mid).getPosition();
+            
+            int comparison = comparePositions(midPos, target);
+            if (comparison == 0) {
+                return currentPieces.get(mid);
+            } else if (comparison < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Compares two positions for sorting purposes.
+     * 
+     * @param pos1 first position to compare
+     * @param pos2 second position to compare
+     * @return negative if pos1 < pos2, positive if pos1 > pos2, 0 if equal
+     */
+    private int comparePositions(Position pos1, Position pos2) {
+        int rowCompare = pos1.getY() - pos2.getY();
+        return rowCompare != 0 ? rowCompare : pos1.getX() - pos2.getX();
+    }
+
+    /**
      * Initializes all chess pieces in their starting positions.
      * 
      * Creates and positions all pieces according to standard chess setup:
