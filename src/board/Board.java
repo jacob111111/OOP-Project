@@ -10,6 +10,7 @@ import piece.*;
 import player.*;
 import utils.Color;
 import utils.Position;
+import utils.CheckmateDetector;
 
 /**
  * Represents the chess board and manages piece positions and game state.
@@ -37,6 +38,9 @@ public class Board {
     
     /** Hash map for O(1) piece position lookups */
     private Map<Position, Piece> positionIndex = new HashMap<>();
+    
+    /** Fast checkmate detector using pre-computed attack maps */
+    private CheckmateDetector checkmateDetector;
     
     /**
      * Constructs a new chess board with players based on game mode.

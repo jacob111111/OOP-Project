@@ -3,6 +3,7 @@ package game;
 import java.util.Scanner;
 import utils.Color;
 import utils.Position;
+import utils.CheckmateDetector;
 import player.Player;
 import piece.Piece;
 
@@ -108,23 +109,28 @@ public class Console extends Game {
             return;
         }
 
-        //will moving that piece put you in check
-        
-        
+        // Validate the move first
         boolean moveSuccessful = player.attemptMove(toPosition, pieceToMove);
-        boolean checkedYourself = isAttackPossibleOnKCurrentPlayersKing();
-
-        if (!moveSuccessful && !checkedYourself) {
+        
+        if (!moveSuccessful) {
             System.out.println("Invalid move! That piece cannot move to " + toSquare);
             return;
         }
         
+        // TODO: Add check validation - ensure move doesn't put own king in check
+        // This would require temporarily making the move, checking if king is in check,
+        // then undoing if invalid
+        
+        // Execute the move
         board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
         System.out.println("Move successful: " + fromSquare + " to " + toSquare);
         
-        // Check for winner
-        if(player.getWinner()) {
-            winner = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        // Check if opponent is in checkmate after this move
+        CheckmateDetector detector = new CheckmateDetector(board);
+        Color opponentColor = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        
+        if (detector.isCheckmate(opponentColor)) {
+            winner = WhosTurn; // Current player wins by checkmating opponent
             System.out.println("Checkmate! " + winner + " wins!");
             return;
         }
