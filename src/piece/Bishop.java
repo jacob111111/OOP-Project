@@ -11,8 +11,8 @@ import utils.Position;
  * A bishop is constrained to the color of square it starts on throughout
  * the entire game. The Bishop extends LinearPiece to inherit linear
  * movement calculation functionality.
- * 
  */
+
 public class Bishop extends LinearPiece {
     /** The four diagonal directions a bishop can move */
     private static final int[][] BISHOP_DIRECTIONS = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};

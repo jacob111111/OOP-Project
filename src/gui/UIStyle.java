@@ -15,8 +15,7 @@ public class UIStyle {
         cellButton.setMargin(new Insets(2, 2, 2, 2));
         cellButton.setFocusPainted(false);
 
-        //set icon, text position, etc.
-        // cellButton.setIcon(new ImageIcon("path/to/icon.png"));
+        //text position, etc.
         cellButton.setHorizontalTextPosition(SwingConstants.CENTER);
         cellButton.setVerticalTextPosition(SwingConstants.BOTTOM);
     }

@@ -23,7 +23,7 @@ public class MainPanel extends JPanel {
     public MainPanel(UIPalette palette) {
         setLayout(new BorderLayout());
         columnLabelsPanel = LabelPanel.createColumnLabelsPanel();
-        add(columnLabelsPanel, BorderLayout.NORTH);
+        add(columnLabelsPanel, BorderLayout.SOUTH);
 
         rowLabelsPanel = LabelPanel.createRowLabelsPanel();
         rowLabelsPanel.setPreferredSize(new java.awt.Dimension(15,0));

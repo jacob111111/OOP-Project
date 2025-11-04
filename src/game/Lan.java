@@ -15,7 +15,7 @@ import utils.Color;
  * 
  * @see Game
  */
-public class Lan extends Game {
+public class LAN extends Game {
     
     /**
      * Creates a new LAN multiplayer game.
@@ -24,7 +24,7 @@ public class Lan extends Game {
      * @param p1Color The color the local player will play
      * @param scnr Scanner for reading local player input
      */
-    public Lan(boolean isPvP, Color p1Color, Scanner scnr) {
+    public LAN(boolean isPvP, Color p1Color, Scanner scnr) {
         super(isPvP, p1Color, scnr);
     }
     
@@ -60,5 +60,9 @@ public class Lan extends Game {
     public Color getWinner() {
         // Implement logic to determine the winner
         return null; // Placeholder
+    }
+
+    public void displayBoard(Color whosMove){ 
+
     }
 }

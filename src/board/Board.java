@@ -179,42 +179,7 @@ public class Board {
         dict.put(capPiece, capPiece.hashCode()); // Using hashCode as piece ID
     }
 
-    /**
-     * Displays the chess board from the perspective of the current player.
-     * 
-     * Shows the board with file letters (a-h) and rank numbers (1-8).
-     * The board orientation changes based on whose turn it is:
-     * - White players see the board with rank 1 at bottom, rank 8 at top
-     * - Black players see the board with rank 8 at bottom, rank 1 at top
-     * 
-     * Pieces are displayed using their symbolic representation (e.g., "wK" for white king),
-     * and empty squares are shown as "##".
-     * 
-     * @param whosMove the color of the current player (determines board orientation)
-     */
-    public void displayBoard(Color whosMove){ 
-        System.out.println("  a  b  c  d  e  f  g  h");
 
-        // Display board from black's perspective (rank 8 to 1) or white's (rank 1 to 8)
-        // Clever loop construction to handle both orientations in one loop
-        for(int rank = (whosMove == Color.WHITE ? 7 : 0); whosMove == Color.WHITE ? rank >= 0 : rank < 8; rank += (whosMove == Color.WHITE ? -1 : 1)) {
-            
-            System.out.print((rank + 1) + " ");
-            
-            for(int file = 0; file < 8; file++) {
-                Position pos = new Position(file, rank);
-                Piece piece = getPieceAt(pos);
-                
-                if(piece != null) {
-                    System.out.print(piece.getDisplaySymbol() + " ");
-                } else {
-                    System.out.print("## ");
-                }
-            }
-            System.out.println();
-        }
-        System.out.println("  a  b  c  d  e  f  g  h");
-    }
 
     /**
      * Converts chess notation (like "e4") to a Position object

@@ -58,4 +58,7 @@ public class PVE extends Game {
         // Implement logic to determine the winner
         return null; // Placeholder
     }
+
+    public void displayBoard(Color whosMove){ 
+    }
 }

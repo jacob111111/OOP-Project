@@ -121,4 +121,6 @@ public abstract class Game {
      * turns are processed, including input handling and move validation.
      */
     public abstract void turn();
+
+    public abstract void displayBoard(Color whosMove);
 }

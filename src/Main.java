@@ -24,14 +24,10 @@ public class Main {
      */
     public static void main(String[] args) {
 
-        /**
-        // Example of code that runs the GUI
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            new gui.chessFrame(); // Uses CLASSIC palette by default
-            // Or: new gui.chessFrame(UIPalette.MODERN);
-        });
-        */
         
+        // Example of code that runs the GUI
+        
+
         Game game = null; 
         Scanner scnr = new Scanner(System.in);
         System.out.println("Welcome to the Game!");
@@ -53,13 +49,21 @@ public class Main {
             case 1:
                 game = new Console(false, p1Color, scnr);
                 break;
-            case 2: // Lan  - not implemented
-                System.out.println("LAN not yet implemented");
-                game = new Console(false, p1Color, scnr);
+            case 2: // LAN  - not implemented
+                //System.out.println("LAN not yet implemented");
+                game = new LAN(false, p1Color, scnr);
+
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    new gui.chessFrame(); // Uses CLASSIC palette by default
+                    // Need to pass the board created by LAN to the gui.chessframe upon creation,
+                    // and after each move for re-drawing
+                });
+
                 break;
             case 3: // PVE - not implemented
                 System.out.println("Player vs AI not yet implemented");
                 game = new Console(true, p1Color, scnr);
+
                 break;
             default:
                 System.out.println("Invalid choice, defaulting to Console");
@@ -71,5 +75,4 @@ public class Main {
         }
         scnr.close();
     }
-    
 }
