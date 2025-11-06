@@ -1,4 +1,4 @@
-package gui;
+package gui.board;
 
 import java.awt.GridLayout;
 
@@ -6,17 +6,17 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import gui.utils.UIPalette;
+import gui.utils.UIStyle;
+
 import board.*;
 import piece.*;
+
 import utils.Position;
 
 public class BoardPanel extends JPanel {
     private UIPalette palette;
     private UIStyle style = new UIStyle();
-
-    public BoardPanel() {
-        this(UIPalette.CLASSIC);
-    }
 
     public BoardPanel(UIPalette palette) {
         this.palette = palette;
@@ -29,6 +29,10 @@ public class BoardPanel extends JPanel {
                 add(cellButton);
             }
         }
+    }
+
+    public BoardPanel() {
+        this(UIPalette.CLASSIC);
     }
 
     public void setPalette(UIPalette newPalette) {
