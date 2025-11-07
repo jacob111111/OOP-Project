@@ -11,7 +11,6 @@ public class UIPalette {
     public final Color labelForeground;
 
     public final Color borderColor;
-
     public final Font font;
 
     public UIPalette(Color boardLight, Color boardDark, Color labelBackground, Color labelForeground, Color borderColor, Font font) {

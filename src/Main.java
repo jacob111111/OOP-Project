@@ -1,78 +1,55 @@
-/**
- * Main entry point for the Chess Game application.
- * 
- * This class handles the initial game setup, including game mode selection,
- * player color choice, and game initialization. It provides a console-based
- * interface for users to start playing chess.
- * 
- 
- */
 import java.util.Scanner;
 import game.*;
 import utils.Color;
 
 public class Main {
-    
-    /**
-     * Main method that starts the chess game application.
-     * 
-     * Presents the user with game mode options (Console PVP, Lan, Player vs AI),
-     * allows color selection, and initializes the appropriate game instance.
-     * Currently, only console mode is fully implemented.
-     * 
-     * @param args Command line arguments (not used)
-     */
     public static void main(String[] args) {
-
-        
-        // Example of code that runs the GUI
-        
-
-        Game game = null; 
         Scanner scnr = new Scanner(System.in);
-        System.out.println("Welcome to the Game!");
-        System.out.println("What type of game would you like to play?");
-        System.out.println("1. PVP Console");
-        System.out.println("3. PVP Lan");
-        System.out.println("2. Player vs AI");
-        System.out.print("Enter 1, 2, or 3: ");
+        /**
+        System.out.println("Do you want to use the console or GUI?");
+        System.out.println("1. GUI");
+        System.out.println("2. Console");
 
-        int choice = scnr.nextInt();
+        //int choice = scnr.nextInt();
+        */
+        int choice = 2;
+        if(choice == 1) {
+            Game game = null; 
+            System.out.println("Welcome to the Game!");
+            System.out.println("What type of game would you like to play?");
+            System.out.println("1-PLayer or 2-Player");
+            System.out.print("Enter 1, 2: ");
 
-        System.out.println("Choose your color:");
-        System.out.println("1. White   2. Black");
-        System.out.print("Input 1-2: ");
-        int colorChoice = scnr.nextInt();
-        Color p1Color = (colorChoice == 1) ? Color.WHITE : Color.BLACK;
-        
-        switch(choice){
-            case 1:
-                game = new Console(false, p1Color, scnr);
-                break;
-            case 2: // Lan  - not implemented
-                //System.out.println("Lan not yet implemented");
-                game = new Lan(false, p1Color, scnr);
+            choice = scnr.nextInt();
 
-                javax.swing.SwingUtilities.invokeLater(() -> {
-                    new gui.chessFrame(); // Uses CLASSIC palette by default
-                    // Need to pass the board created by Lan to the gui.chessframe upon creation,
-                    // and after each move for re-drawing
-                });
+            System.out.println("Choose player-1 color:");
+            System.out.println("1. White   2. Black");
+            System.out.print("Input 1-2: ");
+            int colorChoice = scnr.nextInt();
+            Color p1Color = (colorChoice == 1) ? Color.WHITE : Color.BLACK;
+            
+            switch(choice){
+                case 1:
+                    game = new Console(false, p1Color, scnr);
+                    break;
+                case 2:
+                    game = new Console(true, p1Color, scnr);
 
-                break;
-            case 3: // PVE - not implemented
-                System.out.println("Player vs AI not yet implemented");
-                game = new Console(true, p1Color, scnr);
+                    break;
+                default:
+                    System.out.println("Invalid choice, defaulting to Console");
+                    game = new Console(false, p1Color, scnr);
+            }
+            if (game != null) {
+                game.play();
+            }
+            scnr.close();
+        } 
+        else if(choice == 2) {
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                new gui.chessFrame(); // Uses CLASSIC palette by default
 
-                break;
-            default:
-                System.out.println("Invalid choice, defaulting to Console");
-                game = new Console(false, p1Color, scnr);
+            });
         }
-        
-        if (game != null) {
-            game.play();
-        }
-        scnr.close();
     }
 }

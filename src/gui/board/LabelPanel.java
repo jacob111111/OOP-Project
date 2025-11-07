@@ -15,6 +15,8 @@ public class LabelPanel {
         for (int i = 0; i < 8; i++) {
             columnLabelPanel.add(new JLabel(String.valueOf((char)('a' + i)), JLabel.CENTER));
         }
+        columnLabelPanel.setPreferredSize(new java.awt.Dimension(0, 50));
+        columnLabelPanel.setMinimumSize(new java.awt.Dimension(0, 40));
         return columnLabelPanel;
     }
 
@@ -31,8 +33,7 @@ public class LabelPanel {
 
     public static void setPalette(JPanel panel, UIPalette palette, boolean isRowPanel) {
         UIStyle style = new UIStyle();
-        String title = isRowPanel ? "Row Labels" : "Column Labels";
-        style.styleLabelPanel(panel, palette, title);
+        style.styleLabelPanel(panel, palette, "");
 
         for (int i = 0; i < panel.getComponentCount(); i++) {
             if (panel.getComponent(i) instanceof JLabel) {

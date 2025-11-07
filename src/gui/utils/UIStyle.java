@@ -15,7 +15,6 @@ public class UIStyle {
         cellButton.setMargin(new Insets(2, 2, 2, 2));
         cellButton.setFocusPainted(false);
 
-        //text position, etc.
         cellButton.setHorizontalTextPosition(SwingConstants.CENTER);
         cellButton.setVerticalTextPosition(SwingConstants.BOTTOM);
     }

@@ -1,6 +1,6 @@
 package gui.utils;
 
-public enum state {
+public enum gameState {
     MENU,
     SETTINGS,
     GAME

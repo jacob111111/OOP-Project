@@ -19,6 +19,9 @@ import piece.Piece;
  * 
  */
 public class Console extends Game {
+    /** Scanner for reading user input */
+    protected Scanner scnr;
+
     /** The winner of the console game */
     private Color winner;
     
@@ -30,8 +33,9 @@ public class Console extends Game {
      * @param scnr Scanner for reading user input from console
      */
     public Console(boolean isPvP, Color p1Color, Scanner scnr){
-        super(isPvP, p1Color, scnr);
+        super(isPvP, p1Color);
         this.winner = null;
+        this.scnr = scnr;
     }
 
 
@@ -88,6 +92,10 @@ public class Console extends Game {
         end(getWinner());
     }
 
+    public void end(Color winner) {
+        
+    }
+    
     /**
      * Gets the winner of the current game.
      * 
