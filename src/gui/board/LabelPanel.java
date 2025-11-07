@@ -1,8 +1,11 @@
-package gui;
+package gui.board;
 
 import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+
+import gui.utils.UIPalette;
+import gui.utils.UIStyle;
 
 public class LabelPanel {
     
