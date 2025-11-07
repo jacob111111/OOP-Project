@@ -48,7 +48,6 @@ public class Main {
         else if(choice == 2) {
             javax.swing.SwingUtilities.invokeLater(() -> {
                 new gui.chessFrame(); // Uses CLASSIC palette by default
-
             });
         }
     }

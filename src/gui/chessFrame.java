@@ -3,9 +3,6 @@ package gui;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.CardLayout;
-import java.awt.Component;
-import java.awt.Color;
-import java.util.Scanner;
 
 import gui.board.MainBoardPanel;
 import gui.menu.*;
