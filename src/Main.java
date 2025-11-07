@@ -16,7 +16,7 @@ public class Main {
     /**
      * Main method that starts the chess game application.
      * 
-     * Presents the user with game mode options (Console PVP, LAN, Player vs AI),
+     * Presents the user with game mode options (Console PVP, Lan, Player vs AI),
      * allows color selection, and initializes the appropriate game instance.
      * Currently, only console mode is fully implemented.
      * 
@@ -49,13 +49,13 @@ public class Main {
             case 1:
                 game = new Console(false, p1Color, scnr);
                 break;
-            case 2: // LAN  - not implemented
-                //System.out.println("LAN not yet implemented");
-                game = new LAN(false, p1Color, scnr);
+            case 2: // Lan  - not implemented
+                //System.out.println("Lan not yet implemented");
+                game = new Lan(false, p1Color, scnr);
 
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     new gui.chessFrame(); // Uses CLASSIC palette by default
-                    // Need to pass the board created by LAN to the gui.chessframe upon creation,
+                    // Need to pass the board created by Lan to the gui.chessframe upon creation,
                     // and after each move for re-drawing
                 });
 

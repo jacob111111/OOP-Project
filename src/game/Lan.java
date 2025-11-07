@@ -4,7 +4,7 @@ import java.util.Scanner;
 import utils.Color;
 
 /**
- * Local Area Network (LAN) multiplayer game implementation.
+ * Local Area Network (Lan) multiplayer game implementation.
  * 
  * This class represents a chess game played over a local network between
  * two human players on different machines. Currently this is a placeholder
@@ -15,33 +15,33 @@ import utils.Color;
  * 
  * @see Game
  */
-public class LAN extends Game {
+public class Lan extends Game {
     
     /**
-     * Creates a new LAN multiplayer game.
+     * Creates a new Lan multiplayer game.
      * 
-     * @param isPvP Should be true for LAN multiplayer mode
+     * @param isPvP Should be true for Lan multiplayer mode
      * @param p1Color The color the local player will play
      * @param scnr Scanner for reading local player input
      */
-    public LAN(boolean isPvP, Color p1Color, Scanner scnr) {
+    public Lan(boolean isPvP, Color p1Color, Scanner scnr) {
         super(isPvP, p1Color, scnr);
     }
     
     /**
-     * Starts and manages the game loop for LAN multiplayer mode.
+     * Starts and manages the game loop for Lan multiplayer mode.
      * 
      * This method is currently a placeholder and needs implementation
      * for network communication and synchronization between players.
      */
     public void play() {
-        // Implement the game loop for LAN multiplayer mode
-        System.out.println("Starting LAN multiplayer game...");
+        // Implement the game loop for Lan multiplayer mode
+        System.out.println("Starting Lan multiplayer game...");
         // Network game loop logic goes here
     }
     
     /**
-     * Handles a single turn in LAN mode.
+     * Handles a single turn in Lan mode.
      * 
      * Manages turn coordination between local and remote players,
      * including network communication for move transmission.
@@ -53,7 +53,7 @@ public class LAN extends Game {
     }
     
     /**
-     * Determines the winner of the LAN game.
+     * Determines the winner of the Lan game.
      * 
      * @return The winning color, or null if game is ongoing (placeholder)
      */

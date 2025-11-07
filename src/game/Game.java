@@ -10,7 +10,7 @@ import utils.Color;
  * 
  * This class provides the common structure and functionality for all game modes
  * including turn management, game state tracking, and basic game flow control.
- * Specific game implementations (Console, PVE, LAN) extend this class to provide
+ * Specific game implementations (Console, PVE, Lan) extend this class to provide
  * their own user interface and game logic while sharing common functionality.
  * 
  * The class follows the Template Method pattern where the overall game structure

@@ -21,7 +21,7 @@ A Java-based chess game implementation developed as part of CS3354 Object-Orient
 ### Planned Features
 
 - Player vs AI gameplay
-- Network-based multiplayer (LAN)
+- Network-based multiplayer (Lan)
 - Check and checkmate detection
 - Game state persistence
 
