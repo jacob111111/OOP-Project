@@ -5,16 +5,14 @@ package utils;
  * 
  * This enum is used to distinguish between different types of gameplay
  * and determine the appropriate game flow and interface.
- * 
- 
  */
 public enum GameType {
-    /** Console-based local gameplay */
+    /** Console-based local gameplay between two human players */
     CONSOLE,
     
-    /** Player vs Player mode */
+    /** Player vs Player mode with graphical interface */
     PVP,
     
-    /** Player vs Engine/AI mode */
+    /** Player vs Engine/AI mode for single-player gameplay */
     PVE
 }

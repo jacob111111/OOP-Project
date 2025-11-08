@@ -46,10 +46,39 @@ public abstract class Piece {
         findPossibleMoves();
     }
 
+    /**
+     * Gets the color of this piece.
+     * 
+     * @return The color of this piece (WHITE or BLACK)
+     */
     public Color getColor() {return color; }
+    
+    /**
+     * Gets the current position of this piece on the board.
+     * 
+     * @return The current position of this piece
+     */
     public Position getPosition() {return position; }
+    
+    /**
+     * Gets the list of all possible moves for this piece.
+     * 
+     * @return ArrayList containing all valid positions this piece can move to
+     */
     public ArrayList<Position> getPossibleMoves() { return possibleMoves; }
+    
+    /**
+     * Gets the display symbol for this piece used in board representation.
+     * 
+     * @return String representation of this piece (e.g., "wK" for white king)
+     */
     public String getDisplaySymbol(){return displaySymbol.toString(); }
+    
+    /**
+     * Gets the simple class name of this piece.
+     * 
+     * @return The name of this piece's class (e.g., "King", "Queen", "Pawn")
+     */
     public String getName() { return this.getClass().getSimpleName(); }
 
     /**
@@ -72,7 +101,11 @@ public abstract class Piece {
     
     /**
      * Sets the position of this piece directly without move validation.
-     * @param newPos
+     * 
+     * This method bypasses the normal move validation and should be used
+     * carefully, typically only by the board management system.
+     * 
+     * @param newPos The new position to set for this piece
      */
     public void setPosition(Position newPos) {
         this.position = newPos;
@@ -80,7 +113,11 @@ public abstract class Piece {
     }
 
     /**
-     * Lists all possible moves piece can make
+     * Abstract method to calculate all possible moves for this piece.
+     * 
+     * Each piece type must implement this method to define its specific
+     * movement rules. The method should populate the possibleMoves list
+     * with all valid positions the piece can move to from its current position.
      */
     public abstract void findPossibleMoves();
 }

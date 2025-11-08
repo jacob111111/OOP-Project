@@ -74,7 +74,17 @@ public class Player {
         return null; // should never happen in a valid game
     }
     
+    /**
+     * Checks if this player has won the game.
+     * 
+     * @return true if this player is the winner, false otherwise
+     */
     public boolean getWinner(){ return winner; }
+    
+    /**
+     * Marks this player as the winner of the game.
+     * Sets the internal winner flag to true.
+     */
     public void setAsWinner(){winner = true;}
 
     /**
