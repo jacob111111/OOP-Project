@@ -47,11 +47,20 @@ public class MainBoardPanel extends JPanel {
 
     public void setGame(GUI game) {
         boardPanel.setGame(game);
-        updateDisplay();
+        if (game != null) {
+            updateDisplay();
+        }
+    }
+    
+    public void setPieceTheme(String pieceTheme) {
+        boardPanel.setPieceTheme(pieceTheme);
     }
 
     public void updateDisplay() {
         if (boardPanel.instanceExists()) {
+            boardPanel.drawPieces();
+        } else {
+            // Clear pieces when no game instance
             boardPanel.drawPieces();
         }
     }

@@ -1,5 +1,6 @@
 package board;
 
+import java.io.Serializable;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -26,7 +27,9 @@ import utils.CheckmateDetector;
  * (x,y) coordinates with (0,0) at a1 and (7,7) at h8 in standard chess notation.
  * 
  */
-public class Board {
+public class Board implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     /** The white player instance */
     protected Player white, black;
     
@@ -40,7 +43,7 @@ public class Board {
     private Map<Position, Piece> positionIndex = new HashMap<>();
     
     /** Fast checkmate detector using pre-computed attack maps */
-    private CheckmateDetector checkmateDetector;
+    private transient CheckmateDetector checkmateDetector; // Don't serialize this, recreate on load
     
     /**
      * Constructs a new chess board with players based on game mode.
@@ -155,10 +158,18 @@ public class Board {
      * 
      * @param capturingPiece the piece performing the capture
      * @param capturePos the position where the capture occurs
+     * @return true if a King was captured, false otherwise
      */
-    public void capturePiece(Piece capturingPiece, Position capturePos) {
+    public boolean capturePiece(Piece capturingPiece, Position capturePos) {
         Piece capturedPiece = positionIndex.get(capturePos);
+        boolean kingCaptured = false;
+        
         if (capturedPiece != null) {
+            // Check if the captured piece is a King
+            if (capturedPiece instanceof King) {
+                kingCaptured = true;
+            }
+            
             // Remove from appropriate player's piece list
             if (capturedPiece.getColor() == Color.WHITE) {
                 white.getCurrentPieces().remove(capturedPiece);
@@ -171,6 +182,8 @@ public class Board {
         // Update position index
         positionIndex.remove(capturingPiece.getPosition());
         positionIndex.put(capturePos, capturingPiece);
+        
+        return kingCaptured;
     }
 
     /**

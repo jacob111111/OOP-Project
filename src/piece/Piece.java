@@ -1,5 +1,6 @@
 package piece;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import utils.Color;
@@ -17,7 +18,9 @@ import utils.Position;
  * is defined here, but specific movement calculations are delegated to subclasses.
  * 
  */
-public abstract class Piece {
+public abstract class Piece implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     protected Color color;
     protected Position position;
     protected ArrayList<Position> possibleMoves;

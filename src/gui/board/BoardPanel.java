@@ -22,6 +22,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
     private UIPalette palette;
     private UIStyle style = new UIStyle();
     private GUI instance;
+    private String pieceTheme = "classic"; // Default piece theme
 
     private MoveState currentMove;
 
@@ -80,13 +81,23 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         else { return false; }
     }
 
+    public void setPieceTheme(String newPieceTheme) {
+        this.pieceTheme = newPieceTheme.toLowerCase();
+        drawPieces(); // Refresh pieces with new theme
+    }
+
     public void drawPieces() {
-        if (!instanceExists())
+        if (!instanceExists()) {
+            // Clear all pieces when no game instance
+            clearAllPieces();
             return;
+        }
 
         Board board = instance.getBoard();
-        if (board == null)
+        if (board == null) {
+            clearAllPieces();
             return;
+        }
 
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
@@ -111,10 +122,9 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
     private ImageIcon getIcon(Piece piece) {
         try {
-            String paletteName = palette == UIPalette.CLASSIC ? "classic" : "modern";
             String pieceColor = piece.getColor().toString().toLowerCase();
             String symbol = piece.getDisplaySymbol();
-            String resourcePath = "/gui/images/" + paletteName + "/" + pieceColor + "/" + symbol + ".png";
+            String resourcePath = "/gui/images/" + pieceTheme + "/" + pieceColor + "/" + symbol + ".png";
 
             java.net.URL imgURL = getClass().getResource(resourcePath);
             if (imgURL != null) {
@@ -251,9 +261,11 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         // Execute move and capture if needed
         if (!destPos.equals(currentMove.getSourcePosition())) {
             Piece capturedPiece = instance.getBoard().getPieceAt(destPos);
+            boolean kingCaptured = false;
+            
             if (capturedPiece != null) {
                 System.out.println("mouseReleased: Capturing piece at " + destPos);
-                instance.getBoard().capturePiece(currentMove.getSelectedPiece(), destPos);
+                kingCaptured = instance.getBoard().capturePiece(currentMove.getSelectedPiece(), destPos);
             } else {
                 System.out.println("mouseReleased: No capture, moving piece to " + destPos);
             }
@@ -261,6 +273,14 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                                                     currentMove.getSourcePosition(),
                                                     destPos);
             drawPieces();
+            
+            // Check for game end after the move
+            if (kingCaptured) {
+                instance.checkForKingCapture();
+                if (instance.isGameOver()) {
+                    instance.end(instance.getWinner());
+                }
+            }
         } else {
             System.out.println("mouseReleased: Destination is same as source, no move executed.");
         }
@@ -288,13 +308,23 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             // (Insert move validation here if needed)
             if (!pos.equals(currentMove.getSourcePosition())) {
                 Piece capturedPiece = instance.getBoard().getPieceAt(pos);
+                boolean kingCaptured = false;
+                
                 if (capturedPiece != null) {
-                    instance.getBoard().capturePiece(currentMove.getSelectedPiece(), pos);
+                    kingCaptured = instance.getBoard().capturePiece(currentMove.getSelectedPiece(), pos);
                 }
                 instance.getBoard().updatePiecePosition(currentMove.getSelectedPiece(), 
                                                       currentMove.getSourcePosition(), 
                                                       pos);
                 drawPieces();
+                
+                // Check for game end after the move
+                if (kingCaptured) {
+                    instance.checkForKingCapture();
+                    if (instance.isGameOver()) {
+                        instance.end(instance.getWinner());
+                    }
+                }
             }
             clearHighlights();
             currentMove = null;
@@ -359,6 +389,19 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         if (button != null && button != hoveredButton) {
             highlightCell(button, true);
             hoveredButton = button;
+        }
+    }
+
+    /**
+     * Clears all pieces from the board display.
+     */
+    private void clearAllPieces() {
+        for (int i = 0; i < getComponentCount(); i++) {
+            if (getComponent(i) instanceof JButton) {
+                JButton cellButton = (JButton) getComponent(i);
+                cellButton.setIcon(null);
+                cellButton.setText("");
+            }
         }
     }
 }
