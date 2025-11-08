@@ -1,10 +1,12 @@
 package gui.board;
 
-import java.awt.GridLayout;
+import javax.swing.*;
+import javax.swing.border.Border;
 
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JPanel;
+import java.awt.*;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseEvent;
 
 import gui.utils.UIPalette;
 import gui.utils.UIStyle;
@@ -15,11 +17,25 @@ import piece.*;
 import game.GUI;
 import utils.Position;
 
-public class BoardPanel extends JPanel {
+public class BoardPanel extends JPanel implements MouseListener, MouseMotionListener {
     private static final int ICON_SIZE = 50; // Adjust this value as needed
     private UIPalette palette;
     private UIStyle style = new UIStyle();
     private GUI instance;
+    private String pieceTheme = "classic"; // Default piece theme
+
+    private MoveState currentMove;
+
+    private JButton selectedButton = null;
+    private static final Border HIGHLIGHT_BORDER = BorderFactory.createLineBorder(Color.YELLOW, 3);
+    private static final Border DEFAULT_BORDER = BorderFactory.createLineBorder(Color.GRAY, 2);
+
+    // Drag visual state
+    private JLabel dragLabel = null;
+    private ImageIcon dragIcon = null;
+    private Point dragOffset = null;
+
+    private JButton hoveredButton = null;
 
     public BoardPanel(UIPalette palette) {
         this.palette = palette;
@@ -29,6 +45,8 @@ public class BoardPanel extends JPanel {
                 JButton cellButton = new JButton();
                 boolean isLight = (row + col) % 2 == 0;
                 style.styleCellButton(cellButton, isLight, palette);
+                cellButton.addMouseListener(this);
+                cellButton.addMouseMotionListener(this);
                 add(cellButton);
             }
         }
@@ -63,13 +81,23 @@ public class BoardPanel extends JPanel {
         else { return false; }
     }
 
+    public void setPieceTheme(String newPieceTheme) {
+        this.pieceTheme = newPieceTheme.toLowerCase();
+        drawPieces(); // Refresh pieces with new theme
+    }
+
     public void drawPieces() {
-        if (!instanceExists())
+        if (!instanceExists()) {
+            // Clear all pieces when no game instance
+            clearAllPieces();
             return;
+        }
 
         Board board = instance.getBoard();
-        if (board == null)
+        if (board == null) {
+            clearAllPieces();
             return;
+        }
 
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
@@ -94,22 +122,18 @@ public class BoardPanel extends JPanel {
 
     private ImageIcon getIcon(Piece piece) {
         try {
-            String paletteName = palette == UIPalette.CLASSIC ? "classic" : "modern";
             String pieceColor = piece.getColor().toString().toLowerCase();
             String symbol = piece.getDisplaySymbol();
-            String resourcePath = "/gui/images/" + paletteName + "/" + pieceColor + "/" + symbol + ".png";
+            String resourcePath = "/gui/images/" + pieceTheme + "/" + pieceColor + "/" + symbol + ".png";
 
             java.net.URL imgURL = getClass().getResource(resourcePath);
             if (imgURL != null) {
-                ImageIcon icon = new ImageIcon(imgURL);
-                return scaleIcon(icon, ICON_SIZE);
+                java.awt.image.BufferedImage bImg = javax.imageio.ImageIO.read(imgURL);
+                return scaleIcon(new ImageIcon(bImg), ICON_SIZE);
             } else {
-                System.err.println("Couldn't find icon: " + resourcePath);
                 return null;
             }
         } catch (Exception e) {
-            System.err.println("Error loading icon for piece: " + piece.getDisplaySymbol());
-            e.printStackTrace();
             return null;
         }
     }
@@ -118,5 +142,266 @@ public class BoardPanel extends JPanel {
         java.awt.Image img = icon.getImage();
         java.awt.Image scaledImg = img.getScaledInstance(size, size, java.awt.Image.SCALE_SMOOTH);
         return new ImageIcon(scaledImg);
+    }
+
+    // Helper method for position conversion
+    private Position buttonToPosition(JButton button) {
+        int index = java.util.Arrays.asList(getComponents()).indexOf(button);
+        int row = index / 8;
+        int col = index % 8;
+        return new Position(col, row);
+    }
+
+    // Helper to highlight or unhighlight a cell
+    private void highlightCell(JButton button, boolean highlight) {
+        if (button == null) return;
+        if (highlight) {
+            button.setBorder(HIGHLIGHT_BORDER);
+        } else {
+            button.setBorder(DEFAULT_BORDER);
+        }
+    }
+
+    // Helper to clear highlight from previously selected button
+    private void clearHighlights() {
+        if (selectedButton != null) {
+            highlightCell(selectedButton, false);
+            selectedButton = null;
+        }
+    }
+
+    // Mouse event implementations
+    @Override
+    public void mousePressed(MouseEvent e) {
+        JButton button = (JButton) e.getSource();
+        Position pos = buttonToPosition(button);
+        Piece piece = instance.getBoard().getPieceAt(pos);
+
+        if (piece != null) {
+            currentMove = new MoveState(piece, pos, MoveState.mouseEventType.DRAG, instance);
+
+            // Prepare drag icon
+            dragIcon = getIcon(piece);
+            // DEBUGING mouse dragging
+            //System.out.println("dragIcon in mousePressed: " + (dragIcon != null));
+            if (dragIcon != null) {
+                Image img = dragIcon.getImage();
+                Image transparentImg = createTransparentImage(img, 0.7f, ICON_SIZE, ICON_SIZE);
+                dragIcon = new ImageIcon(transparentImg);
+
+                // Create drag label
+                dragLabel = new JLabel(dragIcon);
+                dragLabel.setSize(ICON_SIZE, ICON_SIZE);
+
+                /** DEBUGING mouse dragging
+                dragLabel.setOpaque(true);
+                dragLabel.setBackground(Color.RED);
+                
+                System.out.println("dragLabel created: " + (dragLabel != null) + ", size: " + dragLabel.getSize());
+                */
+
+                // Calculate offset from mouse to icon origin
+                Point buttonLoc = button.getLocationOnScreen();
+                int offsetX = e.getXOnScreen() - buttonLoc.x;
+                int offsetY = e.getYOnScreen() - buttonLoc.y;
+                dragOffset = new Point(offsetX, offsetY);
+
+                // Add drag label to glass pane
+                JLayeredPane layeredPane = getRootPane().getLayeredPane();
+                layeredPane.add(dragLabel, JLayeredPane.DRAG_LAYER);
+                /** DEBUGING mouse dragging
+                System.out.println("dragLabel added to layeredPane: " + (dragLabel.getParent() == layeredPane));
+                System.out.println("layeredPane size: " + layeredPane.getSize());
+                System.out.println("dragLabel location (before update): " + dragLabel.getLocation());
+                */
+                updateDragLabelLocation(e);
+            } else {System.out.println("Drag icon is not found, defaulting to symbol");}
+        }
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        if (dragLabel != null) {
+            updateDragLabelLocation(e);
+        }
+        // Highlight the button being hovered over during drag
+        Point panelPoint = SwingUtilities.convertPoint((Component) e.getSource(), e.getPoint(), this);
+        Component comp = getComponentAt(panelPoint);
+        JButton button = (comp instanceof JButton) ? (JButton) comp : null;
+
+        if (hoveredButton != null && hoveredButton != button) {
+            highlightCell(hoveredButton, false);
+            hoveredButton = null;
+        }
+        if (button != null && button != hoveredButton) {
+            highlightCell(button, true);
+            hoveredButton = button;
+        }
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (currentMove == null) return;
+
+        // Convert mouse point to BoardPanel coordinates (relative to this panel)
+        Point panelPoint = SwingUtilities.convertPoint((Component) e.getSource(), e.getPoint(), this);
+        Component comp = getComponentAt(panelPoint);
+        JButton button = (comp instanceof JButton) ? (JButton) comp : null;
+        System.out.println("mouseReleased: comp=" + comp + ", button=" + button);
+
+        if (button == null) {
+            System.out.println("mouseReleased: Not released over a button, aborting move.");
+            removeDragVisual();
+            currentMove = null;
+            return;
+        }
+        Position destPos = buttonToPosition(button);
+        System.out.println("mouseReleased: destPos=" + destPos + ", sourcePos=" + currentMove.getSourcePosition());
+
+        // Execute move and capture if needed
+        if (!destPos.equals(currentMove.getSourcePosition())) {
+            Piece capturedPiece = instance.getBoard().getPieceAt(destPos);
+            boolean kingCaptured = false;
+            
+            if (capturedPiece != null) {
+                System.out.println("mouseReleased: Capturing piece at " + destPos);
+                kingCaptured = instance.getBoard().capturePiece(currentMove.getSelectedPiece(), destPos);
+            } else {
+                System.out.println("mouseReleased: No capture, moving piece to " + destPos);
+            }
+            instance.getBoard().updatePiecePosition(currentMove.getSelectedPiece(),
+                                                    currentMove.getSourcePosition(),
+                                                    destPos);
+            drawPieces();
+            
+            // Check for game end after the move
+            if (kingCaptured) {
+                instance.checkForKingCapture();
+                if (instance.isGameOver()) {
+                    instance.end(instance.getWinner());
+                }
+            }
+        } else {
+            System.out.println("mouseReleased: Destination is same as source, no move executed.");
+        }
+
+        removeDragVisual();
+        currentMove = null;
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        JButton button = (JButton) e.getSource();
+        Position pos = buttonToPosition(button);
+
+        if (currentMove == null) {
+            // First click - select piece
+            Piece piece = instance.getBoard().getPieceAt(pos);
+            if (piece != null) {
+                clearHighlights();
+                currentMove = new MoveState(piece, pos, MoveState.mouseEventType.CLICK, instance);
+                selectedButton = button;
+                highlightCell(selectedButton, true);
+            }
+        } else {
+            // Second click - move piece
+            // (Insert move validation here if needed)
+            if (!pos.equals(currentMove.getSourcePosition())) {
+                Piece capturedPiece = instance.getBoard().getPieceAt(pos);
+                boolean kingCaptured = false;
+                
+                if (capturedPiece != null) {
+                    kingCaptured = instance.getBoard().capturePiece(currentMove.getSelectedPiece(), pos);
+                }
+                instance.getBoard().updatePiecePosition(currentMove.getSelectedPiece(), 
+                                                      currentMove.getSourcePosition(), 
+                                                      pos);
+                drawPieces();
+                
+                // Check for game end after the move
+                if (kingCaptured) {
+                    instance.checkForKingCapture();
+                    if (instance.isGameOver()) {
+                        instance.end(instance.getWinner());
+                    }
+                }
+            }
+            clearHighlights();
+            currentMove = null;
+        }
+    }
+
+    // Helper to update drag label position
+    private void updateDragLabelLocation(MouseEvent e) {
+        if (dragLabel == null || dragOffset == null) return;
+        JLayeredPane layeredPane = getRootPane().getLayeredPane();
+        Point mouse = SwingUtilities.convertPoint((JButton) e.getSource(), e.getPoint(), layeredPane);
+        int x = mouse.x - dragOffset.x;
+        int y = mouse.y - dragOffset.y;
+        dragLabel.setLocation(x, y);
+        layeredPane.repaint();
+    }
+
+    // Helper to create a transparent image
+    private Image createTransparentImage(Image img, float alpha, int width, int height) {
+        Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        java.awt.image.BufferedImage bImg = new java.awt.image.BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = bImg.createGraphics();
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+        g2.drawImage(scaledImg, 0, 0, null);
+        g2.dispose();
+        return bImg;
+    }
+
+    // Helper to remove drag visual
+    private void removeDragVisual() {
+        if (dragLabel != null) {
+            JLayeredPane layeredPane = getRootPane().getLayeredPane();
+            layeredPane.remove(dragLabel);
+            layeredPane.repaint();
+            dragLabel = null;
+            dragIcon = null;
+            dragOffset = null;
+        }
+    }
+
+    // Required but unused interface methods
+    @Override
+    public void mouseEntered(MouseEvent e) {}
+    @Override
+    public void mouseExited(MouseEvent e) {
+        if (hoveredButton != null) {
+            highlightCell(hoveredButton, false);
+            hoveredButton = null;
+        }
+    }
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        // Highlight the button being hovered over
+        Component comp = getComponentAt(e.getPoint());
+        JButton button = (comp instanceof JButton) ? (JButton) comp : null;
+
+        if (hoveredButton != null && hoveredButton != button) {
+            // Remove highlight from previously hovered button
+            highlightCell(hoveredButton, false);
+            hoveredButton = null;
+        }
+        if (button != null && button != hoveredButton) {
+            highlightCell(button, true);
+            hoveredButton = button;
+        }
+    }
+
+    /**
+     * Clears all pieces from the board display.
+     */
+    private void clearAllPieces() {
+        for (int i = 0; i < getComponentCount(); i++) {
+            if (getComponent(i) instanceof JButton) {
+                JButton cellButton = (JButton) getComponent(i);
+                cellButton.setIcon(null);
+                cellButton.setText("");
+            }
+        }
     }
 }

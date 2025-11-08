@@ -1,6 +1,6 @@
 package game;
 
-import java.util.Scanner;
+import java.io.Serializable;
 
 import board.Board;
 import utils.Color;
@@ -17,7 +17,9 @@ import utils.Color;
  * is defined here, but specific implementations of play() and turn() are left
  * to subclasses.
  */
-public abstract class Game {
+public abstract class Game implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     /** Tracks whose turn it is to move (starts with WHITE) */
     protected Color WhosTurn = Color.WHITE;
     

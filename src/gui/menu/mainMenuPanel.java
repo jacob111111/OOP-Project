@@ -9,8 +9,6 @@ import gui.chessFrame;
 import gui.utils.UIPalette;
 import gui.utils.UIStyle;
 
-import game.GUI;
-import utils.Color;
 
 public class mainMenuPanel extends JPanel {
     private chessFrame parentFrame;
@@ -37,16 +35,18 @@ public class mainMenuPanel extends JPanel {
         LANButton = new JButton("2-Player");
         settingsButton = new JButton("Settings");
 
-        AIButton.addActionListener(e -> parentFrame.switchToGame());
-
-        LANButton.addActionListener(e -> {
-            GUI newGame = new GUI(true, Color.WHITE);
-            parentFrame.setGame(newGame);
-            parentFrame.switchToGame();
+        // Updated action listeners to work with new structure
+        AIButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "AI mode not yet implemented!");
         });
 
-        
-        settingsButton.addActionListener(e -> parentFrame.switchToSettings());
+        LANButton.addActionListener(e -> {
+            parentFrame.startTwoPlayerGame();
+        });
+
+        settingsButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "Settings available in side panel!");
+        });
 
         styleMenuButton(AIButton);
         styleMenuButton(LANButton);
