@@ -1,8 +1,7 @@
 package gui;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
-import java.awt.CardLayout;
+import java.awt.BorderLayout;
 
 import gui.board.MainBoardPanel;
 import gui.menu.*;
@@ -19,20 +18,15 @@ import game.*;
  */
 public class chessFrame extends JFrame 
 {
-    private static final int FRAME_WIDTH = 800;
+    private static final int FRAME_WIDTH = 1000; // Increased width for side menu
     private static final int FRAME_HEIGHT = 800;
     
-    private CardLayout cardLayout;
-    private JPanel cards;
-    
-    private gameState currentgameState;
-
     private UIPalette masterPalette;
     private UIStyle masterStyle;
+    private String currentPieceTheme = "classic"; // Track piece theme separately
 
-    private mainMenuPanel menuPanel;
     private MainBoardPanel boardPanel;
-    private settingsPanel settingsPanel;
+    private sideMenuPanel menuPanel;
 
     private GUI currentGame;
 
@@ -53,20 +47,16 @@ public class chessFrame extends JFrame
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(FRAME_WIDTH, FRAME_HEIGHT);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        cardLayout = new CardLayout();
-        cards = new JPanel(cardLayout);
-
-        menuPanel = new mainMenuPanel(this);
+        // Initialize panels
         boardPanel = new MainBoardPanel(this);
-        settingsPanel = new settingsPanel(this);
+        menuPanel = new sideMenuPanel(this);
 
-        cards.add(menuPanel, gameState.MENU.toString());
-        cards.add(boardPanel, gameState.GAME.toString());
-        cards.add(settingsPanel, gameState.SETTINGS.toString());
+        // Add panels to frame
+        add(boardPanel, BorderLayout.CENTER);
+        add(menuPanel, BorderLayout.EAST);
         
-        currentgameState = gameState.MENU;
-        add(cards);
         setVisible(true);
     }
 
@@ -80,7 +70,6 @@ public class chessFrame extends JFrame
         this(UIPalette.CLASSIC);
     }
     
-    public gameState getGameState() {return currentgameState;}
     public UIPalette getPalette() { return masterPalette; }
     
     /**
@@ -112,25 +101,14 @@ public class chessFrame extends JFrame
     private void updateAllPanels() {
         menuPanel.updateStyle();
         boardPanel.updateStyle();
-        settingsPanel.updateStyle();
         revalidate();
         repaint();
     }
 
-    public void switchToState(gameState newgameState) {
-        cardLayout.show(cards, newgameState.toString());
-        this.currentgameState = newgameState;
+    // Add this public method to expose update functionality to the menu
+    public void refreshDisplay() {
+        updateAllPanels();
     }
-    public void switchToMenu() { switchToState(gameState.MENU); }
-
-    public void switchToGame() { 
-        if (currentGame != null) {
-            boardPanel.updateDisplay();
-        }
-        switchToState(gameState.GAME); 
-    }
-
-    public void switchToSettings() { switchToState(gameState.SETTINGS); }
 
     /**
      * Gets the currently active game instance.
@@ -148,7 +126,47 @@ public class chessFrame extends JFrame
      * @param game The game instance to set as active, or null to clear
      */
     public void setGame(GUI game) {
-        this.currentGame = game; // Store game instance
-        boardPanel.setGame(game); // Connect instance to board card
+        this.currentGame = game;
+        if (game != null) {
+            boardPanel.setGame(game);
+            boardPanel.updateDisplay();
+            menuPanel.setGameInProgress(true); // Disable game mode buttons
+        } else {
+            // Clear the board when game is null
+            boardPanel.setGame(null);
+            menuPanel.setGameInProgress(false); // Re-enable game mode buttons
+        }
+    }
+
+    // Add method to clear the current game
+    public void clearGame() {
+        setGame(null);
+    }
+
+    // Method to start a new 2-player game
+    public void startTwoPlayerGame() {
+        GUI newGame = new GUI(true, utils.Color.WHITE);
+        newGame.setParentFrame(this); // Set parent reference for clearing
+        setGame(newGame);
+    }
+
+    // Method to change board theme (called from side menu)
+    public void changeTheme(String themeName) {
+        UIPalette newPalette = themeName.equals("Modern") ? UIPalette.MODERN : UIPalette.CLASSIC;
+        setPalette(newPalette);
+    }
+    
+    // Method to change piece theme (called from side menu)
+    public void changePieceTheme(String pieceThemeName) {
+        this.currentPieceTheme = pieceThemeName.toLowerCase();
+        // Update the board to use new piece theme
+        boardPanel.setPieceTheme(currentPieceTheme);
+        if (currentGame != null) {
+            boardPanel.updateDisplay();
+        }
+    }
+    
+    public String getCurrentPieceTheme() {
+        return currentPieceTheme;
     }
 }

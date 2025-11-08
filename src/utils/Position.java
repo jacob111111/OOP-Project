@@ -1,5 +1,7 @@
 package utils;
 
+import java.io.Serializable;
+
 /**
  * Represents a position on the chess board using x,y coordinates.
  * 
@@ -9,7 +11,9 @@ package utils;
  * use in collections and comparison operations.
  * 
  */
-public class Position {
+public class Position implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private int x;
     private int y;
 

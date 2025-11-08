@@ -30,11 +30,18 @@ public class settingsPanel extends JPanel {
         palettePanel.setLayout(new FlowLayout());
         
         paletteSelector = new JComboBox<>(new String[]{"Classic", "Modern"});
+        paletteSelector.addActionListener(e -> {
+            String selectedTheme = (String) paletteSelector.getSelectedItem();
+            parentFrame.changeTheme(selectedTheme);
+        });
+        
         palettePanel.add(new JLabel("Theme: "));
         palettePanel.add(paletteSelector);
         
-        exitButton = new JButton("Back to Menu");
-        exitButton.addActionListener(e -> parentFrame.switchToMenu());
+        exitButton = new JButton("Close Settings");
+        exitButton.addActionListener(e -> {
+            javax.swing.JOptionPane.showMessageDialog(this, "Settings are now in the side panel!");
+        });
         
         add(palettePanel, BorderLayout.NORTH);
         add(exitButton, BorderLayout.SOUTH);

@@ -1,5 +1,6 @@
 package player;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import piece.*;
@@ -19,7 +20,9 @@ import utils.Position;
  * providing common functionality for piece management and movement.
  * 
  */
-public class Player {
+public class Player implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     /** The color this player controls (WHITE or BLACK) */
     protected Color color;
     
