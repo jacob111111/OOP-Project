@@ -108,6 +108,8 @@ public class Player implements Serializable {
         return false;
     }
 
+    // MIGHT NOT BE NECESSARY ANYMORE
+
     /**
      * Sorts the current pieces by position for efficient searching.
      * 
@@ -123,6 +125,8 @@ public class Player implements Serializable {
             return rowCompare != 0 ? rowCompare : pos1.getX() - pos2.getX();
         });
     }
+
+    // MIGHT NOT BE NECESSARY ANYMORE
 
     /**
      * Finds a piece at the specified target position using binary search.

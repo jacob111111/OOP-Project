@@ -1,17 +1,20 @@
 package player;
 
-import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 import utils.NetworkMessageType;
+import utils.NetworkMessage;
 import utils.Color;
 
 public class Server extends Player{
     private Socket clientSocket = null;
     private ServerSocket serverSocket = null;
-    private DataInputStream in = null;
+    private ObjectInputStream in = null;
+    private ObjectOutputStream out = null;
 
     private int port;
 
@@ -21,7 +24,8 @@ public class Server extends Player{
 
         try {
             serverSocket = new ServerSocket(this.port);
-            // print server started
+            clientSocket = acceptClient();
+
         } catch(IOException e)
         {
             // Instead of printing to console, print to a text box within the gui
@@ -30,9 +34,19 @@ public class Server extends Player{
     }
 
     public Socket acceptClient() {
-        // Do I need to Check if server socket is not null
         try {
             clientSocket = serverSocket.accept();
+            
+            // Set up streams
+            out = new ObjectOutputStream(clientSocket.getOutputStream());
+            out.flush();
+            in = new ObjectInputStream(clientSocket.getInputStream());
+            
+            // Send connection confirmation
+            NetworkMessage welcomeMsg = NetworkMessage.playerConnected("Player joined!");
+            out.writeObject(welcomeMsg);
+            out.flush();
+            
             return clientSocket;
         } 
         catch(IOException e) {
@@ -41,8 +55,27 @@ public class Server extends Player{
         }
     }
 
-    public void manageClientInput(NetworkMessageType message) {
-
+    public void sendMoveResponse(boolean isValidMove) {
+        try {
+            NetworkMessage response = NetworkMessage.moveResponse(isValidMove);
+            out.writeObject(response);
+            out.flush();
+            
+        } catch (IOException e) {
+            System.out.println(e);
+        }
     }
 
+    public NetworkMessage receiveMoveRequest() {
+        try {
+            NetworkMessage request = (NetworkMessage) in.readObject();
+            if (request.type == NetworkMessageType.MOVE_REQUEST) {
+                return request;
+            }
+            return null;
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println(e);
+            return null;
+        }
+    }
 }
