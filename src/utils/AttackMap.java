@@ -10,10 +10,8 @@ import player.Player;
 
 /**
  * Efficiently calculates and caches which squares are under attack by each
- * color
- * by pre-computing all attacked squares once per board state, then providing
- * O(1) lookup
- * for attack queries.
+ * color by pre-computing all attacked squares once per board state, then
+ * providing O(1) lookup for attack queries.
  * 
  * Usage Pattern:
  * AttackMap attackMap = new AttackMap(board);
@@ -44,16 +42,6 @@ public class AttackMap {
      * each piece can attack, storing the results in hash sets for fast lookup.
      * The calculation is performed once per board state and cached until the
      * board changes.
-     * 
-     * Time Complexity: O(n × m) where n = number of pieces, m = average attack
-     * squares per piece
-     * Space Complexity: O(k) where k = total number of attacked squares (max 128
-     * for both colors)
-     * 
-     * @implNote This method clears existing attack maps and rebuilds them from
-     *           scratch.
-     *           For incremental updates, consider implementing a more sophisticated
-     *           invalidation strategy.
      */
     private void generateAttackMaps() {
         Player whitePlayer = board.getPlayer(Color.WHITE);
@@ -96,6 +84,9 @@ public class AttackMap {
      * @param pieceThatMoved the piece that was moved
      * @param oldPosition    where the piece was before the move
      * @param newPosition    where the piece is after the move
+     * @Note This doesn't handle pieces that were "unblocked" or "newly blocked"
+     *       For full accuracy, we'd need to recalculate all linear pieces that
+     *       might be affected and update them as well.
      */
     public void updateAfterMove(Piece pieceThatMoved, Position oldPosition, Position newPosition) {
         if (!isValid) {
@@ -122,11 +113,6 @@ public class AttackMap {
         // Remove old attacks and add new attacks
         targetAttackSet.removeAll(oldAttacks);
         targetAttackSet.addAll(newAttacks);
-
-        // Note: This doesn't handle pieces that were "unblocked" or "newly blocked"
-        // For full accuracy, you'd need to recalculate linear pieces that might be
-        // affected
-        // But for playable performance, this incremental approach is much faster
     }
 
     /**
@@ -259,7 +245,6 @@ public class AttackMap {
     }
 
     /**
-     * JUST MOVE THIS OVER TO ITS ONE USECASE
      * Fast check if the king of specified color is in check.
      * 
      * This convenience method combines king position lookup with attack detection

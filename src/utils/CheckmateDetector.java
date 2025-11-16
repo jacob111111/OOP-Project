@@ -309,38 +309,96 @@ public class CheckmateDetector {
 
         Piece checker = piecesGivingCheck.get(0);
 
-        // Option A: Can any piece capture the checker?
+        // Can any piece capture the checker?
         if (canAnyPieceCaptureTarget(checker.getPosition(), user1, user1KingPos)) {
             return true;
         }
 
-        // Option B: Can any piece block the attack line?
-        if (canAnyPieceBlockAttackLine(checker.getPosition(), user1, user1KingPos)) {
+        // Can any piece block the attack line?
+        if (canAnyPieceBlockAttackLine(checker, user1, user1KingPos)) {
             return true;
         }
 
+        // checkmate!
         return false;
     }
 
-    private boolean canAnyPieceCaptureTarget(Position checkerPos, Player user2, Position user1KingPos) {
-        for (Piece p : user2.getCurrentPieces()) {
-            if (canPieceAttackSquare(p, user1KingPos, user1KingPos)) {
-                return true;
+    /**
+     * Checks if any of the defending player's pieces can capture the attacking
+     * piece.
+     * 
+     * Iterates through all defending pieces to see if any can attack the checker's
+     * position. Uses the same attack calculation logic as king escape simulation.
+     * 
+     * @param checkerPos      the position of the piece giving check
+     * @param defendingPlayer the player whose pieces might capture the checker
+     * @param kingPos         the king's position (for line-of-sight simulation)
+     * @return true if any piece can capture the checker, false otherwise
+     */
+    private boolean canAnyPieceCaptureTarget(Position checkerPos, Player defendingPlayer, Position kingPos) {
+        for (Piece piece : defendingPlayer.getCurrentPieces()) {
+            if (piece instanceof King) {
+                continue; // skip King as it's capture was already checked in canKingEscape
+            }
+
+            // Check if this piece can attack the checker's position
+            if (canPieceAttackSquare(piece, checkerPos, kingPos)) {
+                return true; // Found a piece that can capture the checker
             }
         }
-        return false;
+        return false; // No piece can capture the checker
     }
 
-    private boolean canAnyPieceBlockAttackLine(Position checkerPos, Player user2, Position user1KingPos) {
-        List<Position> spacesBetweenCheckerAndKing = new ArrayList<>();
-        // overload isPathClear and send in spacesBetweenCheckerAndKing
+    /**
+     * Checks if any piece can block the attack line between the checker and king.
+     * 
+     * This method handles several edge cases:
+     * - Knights and Pawns cannot be blocked (their attacks are direct)
+     * - Linear pieces (Rook, Bishop, Queen) can be blocked by moving a piece
+     * into the attack line between the attacker and the king
+     * 
+     * Uses the AttackMap to efficiently find pieces that can move to blocking
+     * squares.
+     * 
+     * @param checker         the piece giving check
+     * @param defendingPlayer the player whose pieces might block
+     * @param kingPos         the king's position
+     * @return true if any piece can block the attack line, false otherwise
+     */
+    private boolean canAnyPieceBlockAttackLine(Piece checker, Player defendingPlayer, Position kingPos) {
+        // Knights and Pawns cannot be blocked - their attacks are direct/adjacent
+        if (checker instanceof Knight || checker instanceof Pawn) {
+            return false;
+        }
 
-        for (Piece p : user2.getCurrentPieces()) {
-            if (user2.attemptMove(user1KingPos, p)) {
-                return true;
+        // For linear pieces, calculate the blocking squares (positions between checker
+        // and king)
+        List<Position> blockingSquares = new ArrayList<>();
+        Position checkerPos = checker.getPosition();
+
+        // Use the overloaded isPathClear to collect positions between checker and king
+        isPathClear(checkerPos, kingPos, null, blockingSquares);
+
+        // If there are no squares between checker and king, can't block (adjacent
+        // attack)
+        if (blockingSquares.isEmpty()) {
+            return false;
+        }
+
+        // Check if any defending piece can move to any blocking square
+        Color defendingColor = defendingPlayer.getColor();
+        for (Position blockSquare : blockingSquares) {
+            java.util.Set<Piece> piecesAttackingThisSquare = attackMap.getPiecesAttacking(blockSquare, defendingColor);
+
+            // Filter out the king - it can't block (already tried to escape)
+            for (Piece piece : piecesAttackingThisSquare) {
+                if (!(piece instanceof King)) {
+                    return true; // Found a piece that can block!
+                }
             }
         }
-        return false;
+
+        return false; // No piece can block the attack line
     }
 
     /**
