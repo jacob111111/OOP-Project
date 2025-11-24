@@ -24,6 +24,7 @@ public class GUI extends Game implements Serializable {
      */
     public GUI(boolean isPvP, Color p1Color) {
         super(isPvP, p1Color);
+        detector = new CheckmateDetector(board);
     }
 
     /**
