@@ -76,9 +76,12 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         drawPieces();
     }
 
-    public boolean instanceExists() { 
-        if(instance != null) { return true; }
-        else { return false; }
+    public boolean instanceExists() {
+        if (instance != null) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void setPieceTheme(String newPieceTheme) {
@@ -154,7 +157,8 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
     // Helper to highlight or unhighlight a cell
     private void highlightCell(JButton button, boolean highlight) {
-        if (button == null) return;
+        if (button == null)
+            return;
         if (highlight) {
             button.setBorder(HIGHLIGHT_BORDER);
         } else {
@@ -183,7 +187,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             // Prepare drag icon
             dragIcon = getIcon(piece);
             // DEBUGING mouse dragging
-            //System.out.println("dragIcon in mousePressed: " + (dragIcon != null));
+            // System.out.println("dragIcon in mousePressed: " + (dragIcon != null));
             if (dragIcon != null) {
                 Image img = dragIcon.getImage();
                 Image transparentImg = createTransparentImage(img, 0.7f, ICON_SIZE, ICON_SIZE);
@@ -193,12 +197,14 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                 dragLabel = new JLabel(dragIcon);
                 dragLabel.setSize(ICON_SIZE, ICON_SIZE);
 
-                /** DEBUGING mouse dragging
-                dragLabel.setOpaque(true);
-                dragLabel.setBackground(Color.RED);
-                
-                System.out.println("dragLabel created: " + (dragLabel != null) + ", size: " + dragLabel.getSize());
-                */
+                /**
+                 * DEBUGING mouse dragging
+                 * dragLabel.setOpaque(true);
+                 * dragLabel.setBackground(Color.RED);
+                 * 
+                 * System.out.println("dragLabel created: " + (dragLabel != null) + ", size: " +
+                 * dragLabel.getSize());
+                 */
 
                 // Calculate offset from mouse to icon origin
                 Point buttonLoc = button.getLocationOnScreen();
@@ -209,13 +215,18 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                 // Add drag label to glass pane
                 JLayeredPane layeredPane = getRootPane().getLayeredPane();
                 layeredPane.add(dragLabel, JLayeredPane.DRAG_LAYER);
-                /** DEBUGING mouse dragging
-                System.out.println("dragLabel added to layeredPane: " + (dragLabel.getParent() == layeredPane));
-                System.out.println("layeredPane size: " + layeredPane.getSize());
-                System.out.println("dragLabel location (before update): " + dragLabel.getLocation());
-                */
+                /**
+                 * DEBUGING mouse dragging
+                 * System.out.println("dragLabel added to layeredPane: " +
+                 * (dragLabel.getParent() == layeredPane));
+                 * System.out.println("layeredPane size: " + layeredPane.getSize());
+                 * System.out.println("dragLabel location (before update): " +
+                 * dragLabel.getLocation());
+                 */
                 updateDragLabelLocation(e);
-            } else {System.out.println("Drag icon is not found, defaulting to symbol");}
+            } else {
+                System.out.println("Drag icon is not found, defaulting to symbol");
+            }
         }
     }
 
@@ -241,7 +252,8 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (currentMove == null) return;
+        if (currentMove == null)
+            return;
 
         // Convert mouse point to BoardPanel coordinates (relative to this panel)
         Point panelPoint = SwingUtilities.convertPoint((Component) e.getSource(), e.getPoint(), this);
@@ -255,31 +267,22 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             currentMove = null;
             return;
         }
+
         Position destPos = buttonToPosition(button);
         System.out.println("mouseReleased: destPos=" + destPos + ", sourcePos=" + currentMove.getSourcePosition());
 
-        // Execute move and capture if needed
+        // Execute move through GUI (handles validation, BE update, FE update)
         if (!destPos.equals(currentMove.getSourcePosition())) {
-            Piece capturedPiece = instance.getBoard().getPieceAt(destPos);
-            boolean kingCaptured = false;
-            
-            if (capturedPiece != null) {
-                System.out.println("mouseReleased: Capturing piece at " + destPos);
-                kingCaptured = instance.getBoard().capturePiece(currentMove.getSelectedPiece(), destPos);
+            // Call GUI.executeTurn to validate and execute the move
+            boolean moveSuccessful = instance.executeTurn(
+                    currentMove.getSourcePosition(),
+                    destPos,
+                    currentMove.getSelectedPiece());
+
+            if (moveSuccessful) {
+                System.out.println("mouseReleased: Move executed successfully");
             } else {
-                System.out.println("mouseReleased: No capture, moving piece to " + destPos);
-            }
-            instance.getBoard().updatePiecePosition(currentMove.getSelectedPiece(),
-                                                    currentMove.getSourcePosition(),
-                                                    destPos);
-            drawPieces();
-            
-            // Check for game end after the move
-            if (kingCaptured) {
-                instance.checkForKingCapture();
-                if (instance.isGameOver()) {
-                    instance.end(instance.getWinner());
-                }
+                System.out.println("mouseReleased: Move was invalid");
             }
         } else {
             System.out.println("mouseReleased: Destination is same as source, no move executed.");
@@ -304,26 +307,18 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                 highlightCell(selectedButton, true);
             }
         } else {
-            // Second click - move piece
-            // (Insert move validation here if needed)
+            // Second click - execute move through GUI
             if (!pos.equals(currentMove.getSourcePosition())) {
-                Piece capturedPiece = instance.getBoard().getPieceAt(pos);
-                boolean kingCaptured = false;
-                
-                if (capturedPiece != null) {
-                    kingCaptured = instance.getBoard().capturePiece(currentMove.getSelectedPiece(), pos);
-                }
-                instance.getBoard().updatePiecePosition(currentMove.getSelectedPiece(), 
-                                                      currentMove.getSourcePosition(), 
-                                                      pos);
-                drawPieces();
-                
-                // Check for game end after the move
-                if (kingCaptured) {
-                    instance.checkForKingCapture();
-                    if (instance.isGameOver()) {
-                        instance.end(instance.getWinner());
-                    }
+                // Call GUI.executeTurn to validate and execute the move
+                boolean moveSuccessful = instance.executeTurn(
+                        currentMove.getSourcePosition(),
+                        pos,
+                        currentMove.getSelectedPiece());
+
+                if (moveSuccessful) {
+                    System.out.println("mouseClicked: Move executed successfully");
+                } else {
+                    System.out.println("mouseClicked: Move was invalid");
                 }
             }
             clearHighlights();
@@ -333,7 +328,8 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
     // Helper to update drag label position
     private void updateDragLabelLocation(MouseEvent e) {
-        if (dragLabel == null || dragOffset == null) return;
+        if (dragLabel == null || dragOffset == null)
+            return;
         JLayeredPane layeredPane = getRootPane().getLayeredPane();
         Point mouse = SwingUtilities.convertPoint((JButton) e.getSource(), e.getPoint(), layeredPane);
         int x = mouse.x - dragOffset.x;
@@ -345,7 +341,8 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
     // Helper to create a transparent image
     private Image createTransparentImage(Image img, float alpha, int width, int height) {
         Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        java.awt.image.BufferedImage bImg = new java.awt.image.BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.awt.image.BufferedImage bImg = new java.awt.image.BufferedImage(width, height,
+                java.awt.image.BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = bImg.createGraphics();
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
         g2.drawImage(scaledImg, 0, 0, null);
@@ -367,7 +364,9 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
     // Required but unused interface methods
     @Override
-    public void mouseEntered(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {
+    }
+
     @Override
     public void mouseExited(MouseEvent e) {
         if (hoveredButton != null) {
@@ -375,6 +374,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             hoveredButton = null;
         }
     }
+
     @Override
     public void mouseMoved(MouseEvent e) {
         // Highlight the button being hovered over

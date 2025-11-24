@@ -1,19 +1,25 @@
 package game;
 
+import utils.CheckmateDetector;
 import utils.Color;
+import utils.Position;
 import javax.swing.JOptionPane;
-import java.io.Serializable;
 
+import piece.Piece;
+import player.Player;
+
+import java.io.Serializable;
 
 public class GUI extends Game implements Serializable {
     private static final long serialVersionUID = 1L;
-    
+    CheckmateDetector detector;
     private transient gui.chessFrame parentFrame;
-    
+    private transient gui.board.BoardPanel boardPanel;
+
     /**
      * Creates a new Lan game, 1 or 2 player.
      * 
-     * @param isPvP Should the AI be intialized as player 2
+     * @param isPvP   Should the AI be intialized as player 2
      * @param p1Color The color the 1st player will use, same for if isPVP is false
      */
     public GUI(boolean isPvP, Color p1Color) {
@@ -28,7 +34,16 @@ public class GUI extends Game implements Serializable {
     public void setParentFrame(gui.chessFrame frame) {
         this.parentFrame = frame;
     }
-    
+
+    /**
+     * Sets the board panel reference for frontend updates.
+     * 
+     * @param panel The BoardPanel instance
+     */
+    public void setBoardPanel(gui.board.BoardPanel panel) {
+        this.boardPanel = panel;
+    }
+
     /**
      * Starts and manages the game loop for Lan multiplayer mode.
      * 
@@ -36,9 +51,13 @@ public class GUI extends Game implements Serializable {
      * for network communication and synchronization between players.
      */
     public void play() {
-
+        // Main game loop
+        while (getWinner() == null) {
+            turn();
+        }
+        end(getWinner());
     }
-    
+
     /**
      * Handles a single turn in Lan mode.
      * 
@@ -47,22 +66,108 @@ public class GUI extends Game implements Serializable {
      * Currently a placeholder for future implementation.
      */
     public void turn() {
-        // Implement network move coordination logic here
+        // This method is called by play() loop
+        // Actual move execution happens via executeTurn() called from BoardPanel
+    }
+
+    /**
+     * Executes a single move attempt with full validation and update flow.
+     * This is the main entry point for moves initiated from the GUI.
+     * 
+     * Flow:
+     * 1. Get current player
+     * 2. Validate move (BE)
+     * 3. If invalid, show popup and return false
+     * 4. If valid, update backend board state
+     * 5. Handle captures if needed
+     * 6. Update frontend (refresh BoardPanel)
+     * 7. Check for checkmate
+     * 8. Switch turns
+     * 
+     * @param fromPosition Starting position of the piece
+     * @param toPosition   Target position for the move
+     * @param pieceToMove  The piece being moved
+     * @return true if move was valid and executed, false if invalid
+     */
+    public boolean executeTurn(Position fromPosition, Position toPosition, Piece pieceToMove) {
+        // Step 1: Get current player
+        Player player = board.getPlayer(WhosTurn);
+
+        // Step 3: Validate the move (BE validation)
+        boolean moveSuccessful = player.attemptMove(toPosition, pieceToMove);
+
+        if (!moveSuccessful) {
+            // Invalid move - show popup and return false
+            showInvalidMovePopup();
+            return false;
+        }
+
+        // Step 4: Execute the move on backend
+        // Step 5: Handle captures
+        Piece capturedPiece = board.getPieceAt(toPosition);
+        boolean kingCaptured = false;
+
+        if (capturedPiece != null) {
+            // Capture the piece at destination
+            kingCaptured = board.capturePiece(pieceToMove, toPosition);
+        }
+
+        // Update piece position on backend
+        board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
+
+        // Step 6: Update frontend (refresh board display)
+        if (boardPanel != null) {
+            boardPanel.drawPieces();
+        }
+
+        // Check if game ended by King capture
+        if (kingCaptured) {
+            winner = WhosTurn;
+            end(winner);
+            return true;
+        }
+
+        // Step 7: Check for checkmate
+        Color opponentColor = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+
+        if (detector != null && detector.isCheckmate(opponentColor)) {
+            winner = WhosTurn;
+            System.out.println("Checkmate! " + winner + " wins!");
+            end(winner);
+            return true;
+        }
+
+        // Step 8: Switch turns
+        WhosTurn = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+
+        // TODO: Flip FE board for switched perspective
+
+        return true;
+    }
+
+    /**
+     * Shows a popup message when an invalid move is attempted.
+     */
+    private void showInvalidMovePopup() {
+        JOptionPane.showMessageDialog(null,
+                "Invalid move! Please try a different move.",
+                "Invalid Move",
+                JOptionPane.WARNING_MESSAGE);
     }
 
     public void end(Color winner) {
         String winnerText = (winner == Color.WHITE) ? "White" : "Black";
-        JOptionPane.showMessageDialog(null, 
-            winnerText + " wins by capturing the King!\n\nGame Over", 
-            "Chess Game - Winner!", 
-            JOptionPane.INFORMATION_MESSAGE);
-        
+        JOptionPane.showMessageDialog(null,
+                winnerText + " wins by capturing the King!\n\nGame Over",
+                "Chess Game - Winner!",
+                JOptionPane.INFORMATION_MESSAGE);
+
         // Clear the game after user clicks OK
         if (parentFrame != null) {
             parentFrame.clearGame();
         }
     }
-    
+
     /**
      * Checks if the game has ended due to King capture.
      * 
@@ -70,37 +175,6 @@ public class GUI extends Game implements Serializable {
      */
     public boolean isGameOver() {
         return winner != null;
-    }
-    
-    /**
-     * Checks for King capture and sets winner if found.
-     * Should be called after each move to detect game end.
-     */
-    public void checkForKingCapture() {
-        // Check if white king is still on the board
-        boolean whiteKingExists = false;
-        boolean blackKingExists = false;
-        
-        for (piece.Piece piece : board.getPlayer(Color.WHITE).getCurrentPieces()) {
-            if (piece instanceof piece.King) {
-                whiteKingExists = true;
-                break;
-            }
-        }
-        
-        for (piece.Piece piece : board.getPlayer(Color.BLACK).getCurrentPieces()) {
-            if (piece instanceof piece.King) {
-                blackKingExists = true;
-                break;
-            }
-        }
-        
-        // Set winner if a king is missing
-        if (!whiteKingExists) {
-            winner = Color.BLACK;
-        } else if (!blackKingExists) {
-            winner = Color.WHITE;
-        }
     }
 
     /**
@@ -112,7 +186,7 @@ public class GUI extends Game implements Serializable {
         return winner;
     }
 
-    public void displayBoard(Color whosMove){ 
+    public void displayBoard(Color whosMove) {
 
     }
 }
