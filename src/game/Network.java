@@ -1,6 +1,7 @@
 package game;
 
 import player.Server;
+import piece.Piece;
 import player.Client;
 import utils.Color;
 import utils.NetworkMessageType;
@@ -71,17 +72,20 @@ public class Network extends GUI {
         throw new UnsupportedOperationException("Unimplemented method 'play'");
     }
 
+    /**
+     * Handles
+     * 
+     */
     @Override
     public void turn() {
-        // GAME STATE MANAGEMENT NOT IMPLEMENTED YET, VAR NAMES SUBJECT TO CHANGE
-        /**
         if (currentPlayer.getColor() == myColor) {
-            waitForLocalMove();
-        } else {
-            waitForRemoteMove();
+            
+        } 
+        else {
+
         }
-        */
     }
+
     
     // Syncs game state between host and client (for error recovery)
     public void updateGameState() {
