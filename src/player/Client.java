@@ -70,4 +70,17 @@ public class Client extends Player{
             return null;
         }
     }
+
+    public NetworkMessage receiveInitialSync() {
+        try {
+            NetworkMessage syncMsg = (NetworkMessage) in.readObject();
+            if (syncMsg.type == NetworkMessageType.INITIAL_SYNC) {
+                return syncMsg;
+            }
+            return null;
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println(e);
+            return null;
+        }
+    }
 }

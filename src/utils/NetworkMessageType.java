@@ -5,5 +5,6 @@ public enum NetworkMessageType {
     MOVE_RESPONSE, 
     GAME_STATE_UPDATE,
     PLAYER_CONNECTED,
+    INITIAL_SYNC,
     GAME_END
 }

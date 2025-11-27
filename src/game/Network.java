@@ -12,6 +12,7 @@ public class Network extends GUI {
     private Server server = null;
     private Client client = null;
     private boolean isHost;
+    private Color myColor;
     
     // ============================================================================
     // CONSTRUCTORS
@@ -22,10 +23,15 @@ public class Network extends GUI {
         super(isPvP, p1Color);
         this.port = port;
         this.isHost = true;
+        this.myColor = p1Color;
         
         // Create server and wait for client
         server = new Server(p1Color, port);
         server.acceptClient(); // Blocks until client connects
+        
+        // Send initial game state sync to client
+        Color clientColor = (p1Color == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        server.sendInitialSync(this, clientColor);
     }
     
     // Constructor for CLIENT mode
@@ -35,6 +41,18 @@ public class Network extends GUI {
         this.isHost = false;
         
         client = new Client(p1Color, serverIP, port);
+        
+        // Receive initial sync from server
+        NetworkMessage syncMsg = client.receiveInitialSync();
+        if (syncMsg != null) {
+            // Update client's color based on server assignment
+            this.myColor = syncMsg.clientColor;
+            // Sync game state
+            if (syncMsg.gameState != null) {
+                this.board = syncMsg.gameState.getBoard();
+                this.WhosTurn = syncMsg.gameState.WhosTurn;
+            }
+        }
     }
 
     // ============================================================================
@@ -65,16 +83,29 @@ public class Network extends GUI {
         */
     }
     
-    // this would call the gameSync method of NetworkMessage.java
-    // is only used during game start after player connects or if error occurs
+    // Syncs game state between host and client (for error recovery)
     public void updateGameState() {
-        // this would ensure both players are looking at the same board,
-        // need function that 
+        if (isHost) {
+            // Host sends current game state to client
+            Color clientColor = (myColor == Color.WHITE) ? Color.BLACK : Color.WHITE;
+            server.sendInitialSync(this, clientColor);
+        } else {
+            // Client receives updated game state from host
+            NetworkMessage syncMsg = client.receiveInitialSync();
+            if (syncMsg != null && syncMsg.gameState != null) {
+                this.board = syncMsg.gameState.getBoard();
+                this.WhosTurn = syncMsg.gameState.WhosTurn;
+            }
+        }
     }
 
-    public void getFlippedBoard() {
-        // currently don't know which classes need this 
-        // flips the gui display for the player on black
+    public boolean shouldFlipBoard() {
+        // Returns true if this player is black (board should be flipped)
+        return myColor == Color.BLACK;
+    }
+    
+    public Color getMyColor() {
+        return myColor;
     }
 
     // ============================================================================

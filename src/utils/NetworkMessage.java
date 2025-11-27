@@ -10,6 +10,7 @@ public class NetworkMessage implements Serializable {
     public Boolean isValid;
     public Game gameState;
     public Color p1Color;
+    public Color clientColor;
     public Color winner;
     public String welcomeMsg;
     
@@ -59,6 +60,15 @@ public class NetworkMessage implements Serializable {
         NetworkMessage msg = new NetworkMessage();
         msg.type = NetworkMessageType.PLAYER_CONNECTED;
         msg.winner = p1Color;
+        return msg;
+    }
+
+    // Constructor for initial sync (sends game state and color assignments)
+    public static NetworkMessage initialSync(Game gameState, Color clientColor) {
+        NetworkMessage msg = new NetworkMessage();
+        msg.type = NetworkMessageType.INITIAL_SYNC;
+        msg.gameState = gameState;
+        msg.clientColor = clientColor;
         return msg;
     }
 

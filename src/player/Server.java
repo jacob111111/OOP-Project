@@ -66,6 +66,17 @@ public class Server extends Player{
         }
     }
 
+    public void sendInitialSync(game.Game gameState, Color clientColor) {
+        try {
+            NetworkMessage syncMsg = NetworkMessage.initialSync(gameState, clientColor);
+            out.writeObject(syncMsg);
+            out.flush();
+            
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+    }
+
     public NetworkMessage receiveMoveRequest() {
         try {
             NetworkMessage request = (NetworkMessage) in.readObject();
