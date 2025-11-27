@@ -116,11 +116,10 @@ public class AttackMap {
     }
 
     /**
-     * Gets all squares attacked by a specific piece.
+     * Gets all squares attacked by a specific piece for check/threat detection.
      * 
      * This method calculates attack squares differently from legal moves:
-     * - Includes squares occupied by own pieces (for king safety analysis)
-     * - For pawns, only includes diagonal attack squares (not forward movement)
+     * - For pawns, ONLY includes diagonal attack squares (for threat detection)
      * - For linear pieces (rooks, etc), stops at the first piece encountered but
      * includes that square
      * - For knights and kings, includes all reachable squares regardless of
@@ -140,15 +139,17 @@ public class AttackMap {
         int y = pos.getY();
 
         if (piece instanceof Pawn) {
-            // Pawns only attack diagonally
             int direction = (piece.getColor() == Color.WHITE) ? 1 : -1;
             int newY = y + direction;
 
+            // Pawns threaten diagonal squares (for check detection)
             if (newY >= 0 && newY < 8) {
-                if (x - 1 >= 0)
+                if (x - 1 >= 0) {
                     attacks.add(new Position(x - 1, newY));
-                if (x + 1 < 8)
+                }
+                if (x + 1 < 8) {
                     attacks.add(new Position(x + 1, newY));
+                }
             }
         } else if (piece instanceof Knight) {
             // Knight L-shaped attacks
@@ -202,12 +203,12 @@ public class AttackMap {
      * @return array of direction vectors as [x, y] pairs
      */
     private int[][] getDirections(Piece piece) {
-        if (piece instanceof Rook) {
+        if (piece instanceof Queen) {
+            return new int[][] { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } };
+        } else if (piece instanceof Rook) {
             return new int[][] { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
         } else if (piece instanceof Bishop) {
             return new int[][] { { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } };
-        } else if (piece instanceof Queen) {
-            return new int[][] { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } };
         }
         return new int[0][0];
     }
@@ -260,5 +261,81 @@ public class AttackMap {
         Position kingPos = player.getKingPosition();
         Color opponentColor = (kingColor == Color.WHITE) ? Color.BLACK : Color.WHITE;
         return isSquareAttackedBy(kingPos, opponentColor);
+    }
+
+    /**
+     * Gets all valid moves for a specific piece, accounting for piece-specific
+     * movement rules.
+     * This is different from getAttackSquares because pawns have different movement
+     * vs attack patterns.
+     * 
+     * @param piece the piece to get valid moves for
+     * @return Set of positions the piece can legally move to
+     */
+    public Set<Position> getValidMovesForPiece(Piece piece) {
+        if (!isValid)
+            generateAttackMaps();
+
+        Set<Position> validMoves = new HashSet<>();
+
+        if (piece instanceof Pawn) {
+            // Pawns have special movement rules different from attack squares
+            Position pos = piece.getPosition();
+            int x = pos.getX();
+            int y = pos.getY();
+            int direction = (piece.getColor() == Color.WHITE) ? 1 : -1;
+            int newY = y + direction;
+
+            // Pawns can move diagonally ONLY if there's an enemy piece to capture
+            if (newY >= 0 && newY < 8) {
+                if (x - 1 >= 0) {
+                    Position diagLeft = new Position(x - 1, newY);
+                    Piece targetPiece = board.getPieceAt(diagLeft);
+                    if (targetPiece != null && targetPiece.getColor() != piece.getColor()) {
+                        validMoves.add(diagLeft);
+                    }
+                }
+                if (x + 1 < 8) {
+                    Position diagRight = new Position(x + 1, newY);
+                    Piece targetPiece = board.getPieceAt(diagRight);
+                    if (targetPiece != null && targetPiece.getColor() != piece.getColor()) {
+                        validMoves.add(diagRight);
+                    }
+                }
+            }
+
+            // Pawns can move forward if the square is empty
+            if (newY >= 0 && newY < 8) {
+                Position forwardOne = new Position(x, newY);
+                if (board.getPieceAt(forwardOne) == null) {
+                    validMoves.add(forwardOne);
+
+                    // Two squares forward on first move if both squares are empty
+                    Pawn pawn = (Pawn) piece;
+                    if (!pawn.getHasMoved()) {
+                        int twoSquaresY = y + (direction * 2);
+                        if (twoSquaresY >= 0 && twoSquaresY < 8) {
+                            Position forwardTwo = new Position(x, twoSquaresY);
+                            if (board.getPieceAt(forwardTwo) == null) {
+                                validMoves.add(forwardTwo);
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // For non-pawns, recalculate attack squares with current board state
+            // and filter out friendly pieces
+            Set<Position> attacks = getAttackSquares(piece);
+            for (Position pos : attacks) {
+                Piece targetPiece = board.getPieceAt(pos);
+                // Can move if empty or enemy piece (not friendly)
+                if (targetPiece == null || targetPiece.getColor() != piece.getColor()) {
+                    validMoves.add(pos);
+                }
+            }
+        }
+
+        return validMoves;
     }
 }

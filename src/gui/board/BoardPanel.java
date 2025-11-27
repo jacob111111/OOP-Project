@@ -39,6 +39,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
     private Point dragOffset = null;
 
     private JButton hoveredButton = null;
+    private boolean whiteAtBottom = true; // true = white perspective, false = black perspective
 
     public BoardPanel(UIPalette palette) {
         this.palette = palette;
@@ -94,6 +95,25 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         drawPieces(); // Refresh pieces with new theme
     }
 
+    /**
+     * Flips the board perspective and redraws.
+     * Toggles between white at bottom (true) and black at bottom (false).
+     */
+    public void flipBoard() {
+        whiteAtBottom = !whiteAtBottom;
+        drawPieces();
+    }
+
+    /**
+     * Converts display row to board row based on current perspective.
+     * 
+     * @param displayRow The row index in the GUI (0-7, top to bottom)
+     * @return The board row coordinate
+     */
+    private int displayRowToBoardRow(int displayRow) {
+        return whiteAtBottom ? (7 - displayRow) : displayRow;
+    }
+
     public void drawPieces() {
         if (!instanceExists()) {
             // Clear all pieces when no game instance
@@ -109,7 +129,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
-                Position pos = new Position(col, row);
+                Position pos = new Position(col, displayRowToBoardRow(row));
                 Piece piece = board.getPieceAt(pos);
                 int index = (row * 8) + col;
                 JButton cellButton = (JButton) getComponent(index);
@@ -157,7 +177,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         int index = java.util.Arrays.asList(getComponents()).indexOf(button);
         int row = index / 8;
         int col = index % 8;
-        return new Position(col, row);
+        return new Position(col, displayRowToBoardRow(row));
     }
 
     // Helper to highlight or unhighlight a cell
@@ -295,6 +315,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
             if (moveSuccessful) {
                 System.out.println("mouseReleased: Move executed successfully");
+                flipBoard();
             } else {
                 System.out.println("mouseReleased: Move was invalid");
             }

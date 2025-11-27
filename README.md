@@ -61,7 +61,7 @@ A Java-based chess game implementation developed as part of CS3354 Object-Orient
 ```
 src/
 ├── board/              # Chess board representation and state management
-│   └── Board.java      # Board logic, piece tracking, position indexing
+│   └── Board.java      # Board logic, move validation, piece tracking, checkmate detection
 ├── game/               # Game flow and different game modes
 │   ├── Game.java       # Abstract base class (Template Method pattern)
 │   ├── Console.java    # Console-based gameplay implementation
@@ -103,6 +103,19 @@ src/
     ├── Color.java              # Player color enum
     └── GameType.java           # Game mode enum
 ```
+
+## Architecture Overview
+
+The project follows a clear separation of concerns with the **Board** class serving as the central authority for game logic:
+
+- **Board**: Handles all move validation using AttackMap, manages piece positions, tracks captures, and coordinates with CheckmateDetector for game-ending conditions
+- **Game**: Manages turn flow and delegates move requests to Board for validation
+- **Player**: Manages piece collections and provides piece lookup functionality
+- **Piece**: Individual pieces handle their own position updates after Board validates moves
+- **AttackMap**: Provides O(1) lookup for which squares are under attack, accounting for blocked paths
+- **CheckmateDetector**: Uses AttackMap to efficiently determine checkmate conditions
+
+This architecture maintains proper OOP encapsulation where the Board (which owns the game state) is responsible for validating and executing moves, rather than individual players making their own moves.
 
 ## How to Run
 

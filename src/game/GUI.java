@@ -6,10 +6,11 @@ import utils.Position;
 import javax.swing.JOptionPane;
 
 import piece.Piece;
-import player.Player;
 
-public class GUI extends Game {
-    CheckmateDetector detector;
+import java.io.Serializable;
+
+public class GUI extends Game implements Serializable {
+    private static final long serialVersionUID = 1L;
     private transient gui.chessFrame parentFrame;
     private transient gui.board.BoardPanel boardPanel;
 
@@ -21,7 +22,6 @@ public class GUI extends Game {
      */
     public GUI(boolean isPvP, Color p1Color) {
         super(isPvP, p1Color);
-        detector = new CheckmateDetector(board);
     }
 
     /**
@@ -88,11 +88,8 @@ public class GUI extends Game {
      * @return true if move was valid and executed, false if invalid
      */
     public boolean executeTurn(Position fromPosition, Position toPosition, Piece pieceToMove) {
-        // Step 1: Get current player
-        Player player = board.getPlayer(WhosTurn);
-
-        // Step 3: Validate the move (BE validation)
-        boolean moveSuccessful = player.attemptMove(toPosition, pieceToMove);
+        // Validate the move (BE validation)
+        boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
 
         if (!moveSuccessful) {
             // Invalid move - show popup and return false
@@ -100,23 +97,18 @@ public class GUI extends Game {
             return false;
         }
 
-        // Step 4: Execute the move on backend
-        // Step 5: Handle captures
+        // Step 4: Execute the move on backend And Step 5: Handle captures
         Piece capturedPiece = board.getPieceAt(toPosition);
         boolean kingCaptured = false;
 
-        if (capturedPiece != null) {
+        // Check if there's a piece to capture and it's not the same color
+        if (capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor()) {
             // Capture the piece at destination
             kingCaptured = board.capturePiece(pieceToMove, toPosition);
         }
 
         // Update piece position on backend
         board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
-
-        // Step 6: Update frontend (refresh board display)
-        if (boardPanel != null) {
-            boardPanel.drawPieces();
-        }
 
         // Check if game ended by King capture
         if (kingCaptured) {
@@ -125,20 +117,19 @@ public class GUI extends Game {
             return true;
         }
 
-        // Step 7: Check for checkmate
-        Color opponentColor = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        // Step 7: Look for checkmate
+        player.Player opponent = getOpponentPlayer();
+        CheckmateDetector detector = board.getCheckmateDetector();
 
-        if (detector != null && detector.isCheckmate(opponentColor)) {
+        if (detector != null && detector.isCheckmate(opponent.getColor())) {
             winner = WhosTurn;
             System.out.println("Checkmate! " + winner + " wins!");
             end(winner);
             return true;
         }
 
-        // Step 8: Switch turns
-        WhosTurn = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
-
-        // TODO: Flip FE board for switched perspective
+        // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
+        switchTurn();
 
         return true;
     }

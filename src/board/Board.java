@@ -9,9 +9,10 @@ import java.util.Random;
 
 import piece.*;
 import player.*;
+import utils.AttackMap;
+import utils.CheckmateDetector;
 import utils.Color;
 import utils.Position;
-import utils.CheckmateDetector;
 
 /**
  * Represents the chess board and manages piece positions and game state.
@@ -43,8 +44,11 @@ public class Board implements Serializable {
     /** Hash map for O(1) piece position lookups */
     private Map<Position, Piece> positionIndex = new HashMap<>();
 
-    /** Fast checkmate detector using pre-computed attack maps */
-    private transient CheckmateDetector checkmateDetector; // Don't serialize this, recreate on load
+    /** Cached attack map for efficient move validation and checkmate detection */
+    private transient AttackMap attackMap;
+
+    /** Checkmate detector using the cached attack map */
+    private transient CheckmateDetector checkmateDetector;
 
     /**
      * Constructs a new chess board with players based on game mode.
@@ -89,6 +93,10 @@ public class Board implements Serializable {
         for (Piece piece : black.getCurrentPieces()) {
             positionIndex.put(piece.getPosition(), piece);
         }
+
+        // Initialize attack map and checkmate detector
+        this.attackMap = new AttackMap(this);
+        this.checkmateDetector = new CheckmateDetector(this, attackMap);
     }
 
     /**
@@ -112,6 +120,15 @@ public class Board implements Serializable {
     }
 
     /**
+     * Gets the checkmate detector for this board.
+     * 
+     * @return The CheckmateDetector instance
+     */
+    public CheckmateDetector getCheckmateDetector() {
+        return checkmateDetector;
+    }
+
+    /**
      * Gets the piece at the specified position, if any.
      * 
      * Uses the position index for O(1) lookup performance.
@@ -127,7 +144,7 @@ public class Board implements Serializable {
      * Updates a piece's position in both the piece object and the position index.
      * 
      * This method maintains consistency between the piece's internal position
-     * and the board's position tracking system.
+     * and the board's position tracking system, and updates the attack map.
      * 
      * @param piece  the piece being moved
      * @param oldPos the piece's previous position
@@ -137,6 +154,11 @@ public class Board implements Serializable {
         positionIndex.remove(oldPos);
         positionIndex.put(newPos, piece);
         piece.setPosition(newPos);
+
+        // Update attack map after piece movement
+        if (attackMap != null) {
+            attackMap.updateAfterMove(piece, oldPos, newPos);
+        }
     }
 
     /**
@@ -187,7 +209,47 @@ public class Board implements Serializable {
     }
 
     /**
-     * Used exclusively in Console.java
+     * Attempts to move a piece to the specified position.
+     * 
+     * Validates that the target position is actually reachable by checking
+     * the AttackMap, which accounts for blocked squares and piece obstructions.
+     * This provides proper move validation logic.
+     * 
+     * @param possibleMove the target position for the move
+     * @param pieceToMove  the piece that should be moved
+     * @return true if the move was successful, false if invalid
+     */
+    public boolean attemptMove(Position possibleMove, Piece pieceToMove) {
+        // Validate the move using AttackMap to account for blocked squares
+        if (isValidMove(pieceToMove, possibleMove)) {
+            pieceToMove.move(possibleMove);
+
+            // Update pawn's hasMoved flag after first move
+            if (pieceToMove instanceof Pawn) {
+                ((Pawn) pieceToMove).setHasMoved(true);
+            }
+
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Validates if a move is legal by checking if the piece can reach the target.
+     * Uses cached AttackMap to check actual reachable squares accounting for
+     * obstructions and piece-specific movement rules (like pawn diagonal captures).
+     * 
+     * @param piece  the piece attempting to move
+     * @param target the target position
+     * @return true if the move is valid
+     */
+    private boolean isValidMove(Piece piece, Position target) {
+        // Use AttackMap's getValidMovesForPiece which properly handles pawn movement
+        // rules
+        return attackMap.getValidMovesForPiece(piece).contains(target);
+    }
+
+    /**
      * Converts chess notation (like "e4") to a Position object
      * Chess board: a-h columns (0-7), 1-8 rows (0-7)
      * 
