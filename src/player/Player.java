@@ -106,6 +106,8 @@ public class Player implements Serializable {
         });
     }
 
+    // MIGHT NOT BE NECESSARY ANYMORE
+
     /**
      * Finds a piece at the specified target position using binary search.
      * 

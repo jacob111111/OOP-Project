@@ -80,7 +80,7 @@ public class GUI extends Game {
      * to the user based on whos turn it is
      */
     public void displayBoard(Color whosMove) {
-        if(whosMove==Color.WHITE) { // Current persective is white on the bottom
+        if(whosMove == Color.WHITE) { // Current persective is white on the bottom
 
         } else { // Current persective is black  on the bottom
 

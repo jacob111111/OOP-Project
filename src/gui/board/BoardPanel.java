@@ -17,6 +17,9 @@ import piece.*;
 import game.GUI;
 import utils.Position;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class BoardPanel extends JPanel implements MouseListener, MouseMotionListener {
     private static final int ICON_SIZE = 50; // Adjust this value as needed
     private UIPalette palette;
@@ -28,7 +31,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
     private JButton selectedButton = null;
     private static final Border HIGHLIGHT_BORDER = BorderFactory.createLineBorder(Color.YELLOW, 3);
-    private static final Border DEFAULT_BORDER = BorderFactory.createLineBorder(Color.GRAY, 2);
+    private Map<JButton, Border> originalBorders = new HashMap<>();
 
     // Drag visual state
     private JLabel dragLabel = null;
@@ -46,6 +49,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                 JButton cellButton = new JButton();
                 boolean isLight = (row + col) % 2 == 0;
                 style.styleCellButton(cellButton, isLight, palette);
+                originalBorders.put(cellButton, cellButton.getBorder());
                 cellButton.addMouseListener(this);
                 cellButton.addMouseMotionListener(this);
                 add(cellButton);
@@ -66,6 +70,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                 int col = i % 8;
                 boolean isLight = (row + col) % 2 == 0;
                 style.styleCellButton(cellButton, isLight, newPalette);
+                originalBorders.put(cellButton, cellButton.getBorder());
             }
         }
         repaint();
@@ -182,7 +187,10 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         if (highlight) {
             button.setBorder(HIGHLIGHT_BORDER);
         } else {
-            button.setBorder(DEFAULT_BORDER);
+            Border originalBorder = originalBorders.get(button);
+            if (originalBorder != null) {
+                button.setBorder(originalBorder);
+            }
         }
     }
 
@@ -197,6 +205,12 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
     // Mouse event implementations
     @Override
     public void mousePressed(MouseEvent e) {
+        // Clear any hover highlight since we're now interacting via click/drag
+        if (hoveredButton != null) {
+            highlightCell(hoveredButton, false);
+            hoveredButton = null;
+        }
+        
         JButton button = (JButton) e.getSource();
         Position pos = buttonToPosition(button);
         Piece piece = instance.getBoard().getPieceAt(pos);
@@ -399,7 +413,9 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
     @Override
     public void mouseMoved(MouseEvent e) {
         // Highlight the button being hovered over
-        Component comp = getComponentAt(e.getPoint());
+        // Convert coordinates from the source button to this panel's coordinate space
+        Point panelPoint = SwingUtilities.convertPoint((Component) e.getSource(), e.getPoint(), this);
+        Component comp = getComponentAt(panelPoint);
         JButton button = (comp instanceof JButton) ? (JButton) comp : null;
 
         if (hoveredButton != null && hoveredButton != button) {
