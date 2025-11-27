@@ -1,15 +1,14 @@
 package game;
 
-import utils.CheckmateDetector;
+
 import utils.Color;
 import utils.Position;
 import javax.swing.JOptionPane;
 
 import piece.Piece;
 
-import java.io.Serializable;
 
-public class GUI extends Game implements Serializable {
+public class GUI extends Game {
     private static final long serialVersionUID = 1L;
     private transient gui.chessFrame parentFrame;
     private transient gui.board.BoardPanel boardPanel;
@@ -22,6 +21,8 @@ public class GUI extends Game implements Serializable {
      */
     public GUI(boolean isPvP, Color p1Color) {
         super(isPvP, p1Color);
+        // Initialize move validator from board
+        setValidMoveDetector(board.getCheckmateDetector());
     }
 
     /**
@@ -119,9 +120,8 @@ public class GUI extends Game implements Serializable {
 
         // Step 7: Look for checkmate
         player.Player opponent = getOpponentPlayer();
-        CheckmateDetector detector = board.getCheckmateDetector();
 
-        if (detector != null && detector.isCheckmate(opponent.getColor())) {
+        if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
             winner = WhosTurn;
             System.out.println("Checkmate! " + winner + " wins!");
             end(winner);

@@ -3,7 +3,6 @@ package game;
 import java.util.Scanner;
 import utils.Color;
 import utils.Position;
-import utils.CheckmateDetector;
 import piece.Piece;
 
 /**
@@ -38,6 +37,8 @@ public class Console extends Game {
         super(isPvP, p1Color);
         this.winner = null;
         this.scnr = scnr;
+        // Initialize move validator from board
+        setValidMoveDetector(board.getCheckmateDetector());
     }
 
     /**
@@ -171,10 +172,9 @@ public class Console extends Game {
         System.out.println("Move successful: " + fromSquare + " to " + toSquare);
 
         // Check if opponent is in checkmate after this move
-        CheckmateDetector detector = board.getCheckmateDetector();
         player.Player opponent = getOpponentPlayer();
 
-        if (detector.isCheckmate(opponent.getColor())) {
+        if (validMoveDetector.isCheckmate(opponent.getColor())) {
             winner = WhosTurn; // Current player wins by checkmating opponent
             System.out.println("Checkmate! " + winner + " wins!");
             return;

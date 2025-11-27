@@ -3,6 +3,7 @@ package game;
 import java.io.Serializable;
 
 import board.Board;
+import utils.CheckmateDetector;
 import utils.Color;
 
 /**
@@ -33,6 +34,9 @@ public abstract class Game implements Serializable {
 
     /** Reference to the current player (avoids repeated ternary operations) */
     protected player.Player currentPlayer;
+
+    /** Move validation and checkmate detector (set by subclasses) */
+    protected CheckmateDetector validMoveDetector;
 
     /**
      * Creates a new Game with the specified parameters.
@@ -80,6 +84,25 @@ public abstract class Game implements Serializable {
      */
     public Color getWinner() {
         return winner;
+    }
+
+    /**
+     * Gets the move validator and checkmate detector.
+     * 
+     * @return The CheckmateDetector instance
+     */
+    public CheckmateDetector getValidMoveDetector() {
+        return validMoveDetector;
+    }
+
+    /**
+     * Sets the move validator and checkmate detector.
+     * Should be called by subclasses after board initialization.
+     * 
+     * @param detector The CheckmateDetector instance to use
+     */
+    protected void setValidMoveDetector(CheckmateDetector detector) {
+        this.validMoveDetector = detector;
     }
 
     /**
