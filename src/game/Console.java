@@ -172,18 +172,15 @@ public class Console extends Game {
 
         // Check if opponent is in checkmate after this move
         CheckmateDetector detector = board.getCheckmateDetector();
-        Color opponentColor = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        player.Player opponent = getOpponentPlayer();
 
-        if (detector.isCheckmate(opponentColor)) {
+        if (detector.isCheckmate(opponent.getColor())) {
             winner = WhosTurn; // Current player wins by checkmating opponent
             System.out.println("Checkmate! " + winner + " wins!");
             return;
         }
 
-        if (WhosTurn == Color.WHITE) {
-            WhosTurn = Color.BLACK;
-        } else {
-            WhosTurn = Color.WHITE;
-        }
+        // Switch to next player's turn
+        switchTurn();
     }
 }

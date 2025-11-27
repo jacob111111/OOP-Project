@@ -223,12 +223,12 @@ public class Board implements Serializable {
         // Validate the move using AttackMap to account for blocked squares
         if (isValidMove(pieceToMove, possibleMove)) {
             pieceToMove.move(possibleMove);
-            
+
             // Update pawn's hasMoved flag after first move
             if (pieceToMove instanceof Pawn) {
                 ((Pawn) pieceToMove).setHasMoved(true);
             }
-            
+
             return true;
         }
         return false;
@@ -237,16 +237,16 @@ public class Board implements Serializable {
     /**
      * Validates if a move is legal by checking if the piece can reach the target.
      * Uses cached AttackMap to check actual reachable squares accounting for
-     * obstructions.
+     * obstructions and piece-specific movement rules (like pawn diagonal captures).
      * 
      * @param piece  the piece attempting to move
      * @param target the target position
      * @return true if the move is valid
      */
     private boolean isValidMove(Piece piece, Position target) {
-        // Use cached AttackMap's existing method to check if this piece can attack/move
-        // to target
-        return attackMap.getPiecesAttacking(target, piece.getColor()).contains(piece);
+        // Use AttackMap's getValidMovesForPiece which properly handles pawn movement
+        // rules
+        return attackMap.getValidMovesForPiece(piece).contains(target);
     }
 
     /**

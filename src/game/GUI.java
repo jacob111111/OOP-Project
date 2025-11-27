@@ -118,10 +118,10 @@ public class GUI extends Game implements Serializable {
         }
 
         // Step 7: Look for checkmate
-        Color opponentColor = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        player.Player opponent = getOpponentPlayer();
         CheckmateDetector detector = board.getCheckmateDetector();
 
-        if (detector != null && detector.isCheckmate(opponentColor)) {
+        if (detector != null && detector.isCheckmate(opponent.getColor())) {
             winner = WhosTurn;
             System.out.println("Checkmate! " + winner + " wins!");
             end(winner);
@@ -129,7 +129,7 @@ public class GUI extends Game implements Serializable {
         }
 
         // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
-        WhosTurn = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        switchTurn();
 
         return true;
     }
