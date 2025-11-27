@@ -9,9 +9,8 @@ import piece.Piece;
 
 
 public class GUI extends Game {
-    private static final long serialVersionUID = 1L;
-    private transient gui.chessFrame parentFrame;
     private transient gui.board.BoardPanel boardPanel;
+    private transient gui.chessFrame parentFrame;
 
     /**
      * Creates a new Lan game, 1 or 2 player.
@@ -24,6 +23,17 @@ public class GUI extends Game {
         // Initialize move validator from board
         setValidMoveDetector(board.getCheckmateDetector());
     }
+
+    /**
+     * In co-op mode, these method are intentionally left empty because the game
+     * is event-driven rather than blocking based.
+     */
+    public void turn() {}
+    public void play() {}
+
+    // ============================================================================
+    // SETTERS
+    // ============================================================================
 
     /**
      * Sets the parent frame reference for clearing the game.
@@ -43,35 +53,47 @@ public class GUI extends Game {
         this.boardPanel = panel;
     }
 
+    // ============================================================================
+    // GETTERS
+    // ============================================================================
+
     /**
-     * Starts and manages the game loop for Lan multiplayer mode.
+     * Checks if the game has ended due to King capture.
      * 
-     * This method is currently a placeholder and needs implementation
-     * for network communication and synchronization between players.
+     * @return true if a King has been captured, false otherwise
      */
-    public void play() {
-        // Main game loop
-        while (getWinner() == null) {
-            turn();
+    public boolean isGameOver() {
+        return winner != null;
+    }
+
+    /**
+     * Determines the winner of the Lan game.
+     * 
+     * @return The winning color, or null if game is ongoing
+     */
+    public Color getWinner() {
+        return winner;
+    }
+
+    /**
+     * Manages which of the 2 board perspectives are displayed
+     * to the user based on whos turn it is
+     */
+    public void displayBoard(Color whosMove) {
+        if(whosMove==Color.WHITE) { // Current persective is white on the bottom
+
+        } else { // Current persective is black  on the bottom
+
         }
-        end(getWinner());
     }
 
-    /**
-     * Handles a single turn in Lan mode.
-     * 
-     * Manages turn coordination between local and remote players,
-     * including network communication for move transmission.
-     * Currently a placeholder for future implementation.
-     */
-    public void turn() {
-        // This method is called by play() loop
-        // Actual move execution happens via executeTurn() called from BoardPanel
-    }
+    // ============================================================================
+    // GAME LOGIC
+    // ============================================================================
 
     /**
-     * Executes a single move attempt with full validation and update flow.
-     * This is the main entry point for moves initiated from the GUI.
+     * Executes a single move attempt with full validation and GUI updates.
+     * Entry point for moves executed through the GUI.
      * 
      * Flow:
      * 1. Get current player
@@ -155,27 +177,5 @@ public class GUI extends Game {
         if (parentFrame != null) {
             parentFrame.clearGame();
         }
-    }
-
-    /**
-     * Checks if the game has ended due to King capture.
-     * 
-     * @return true if a King has been captured, false otherwise
-     */
-    public boolean isGameOver() {
-        return winner != null;
-    }
-
-    /**
-     * Determines the winner of the Lan game.
-     * 
-     * @return The winning color, or null if game is ongoing
-     */
-    public Color getWinner() {
-        return winner;
-    }
-
-    public void displayBoard(Color whosMove) {
-
     }
 }
