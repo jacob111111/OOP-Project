@@ -187,6 +187,7 @@ public class Board implements Serializable {
     }
 
     /**
+     * Used exclusively in Console.java
      * Converts chess notation (like "e4") to a Position object
      * Chess board: a-h columns (0-7), 1-8 rows (0-7)
      * 

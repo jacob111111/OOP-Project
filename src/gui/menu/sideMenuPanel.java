@@ -20,10 +20,10 @@ import gui.utils.UIStyle;
  */
 public class sideMenuPanel extends JPanel {
     private chessFrame parentFrame;
-    private JButton aiButton, twoPlayerButton, newGameButton, saveGameButton, loadGameButton;
+    private JButton newGameButton, saveGameButton, loadGameButton;
     private JLabel gameTitle, themeLabel, pieceThemeLabel;
     private JComboBox<String> themeSelector, pieceThemeSelector;
-    private JPanel buttonPanel, themePanel, gameControlPanel;
+    private JPanel themePanel, gameControlPanel;
 
     /**
      * Creates a new side menu panel with the specified parent frame.
@@ -50,32 +50,16 @@ public class sideMenuPanel extends JPanel {
         gameTitle = new JLabel("CHESS", SwingConstants.CENTER);
         gameTitle.setPreferredSize(new Dimension(220, 50));
         
-        // Button panel for game modes
-        buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-        
         // Game control panel for new/save/load
         gameControlPanel = new JPanel();
         gameControlPanel.setLayout(new BoxLayout(gameControlPanel, BoxLayout.Y_AXIS));
         
-        // Game mode buttons
-        aiButton = new JButton("1-Player (AI)");
-        twoPlayerButton = new JButton("2-Player");
         
         // Game control buttons
         newGameButton = new JButton("New Game");
         saveGameButton = new JButton("Save Game");
         loadGameButton = new JButton("Load Game");
         
-        // Add action listeners for game modes
-        aiButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "AI mode not yet implemented!");
-        });
-        
-        twoPlayerButton.addActionListener(e -> {
-            parentFrame.startTwoPlayerGame();
-            setGameInProgress(true);
-        });
         
         // Add action listeners for game controls
         newGameButton.addActionListener(e -> handleNewGame());
@@ -83,18 +67,9 @@ public class sideMenuPanel extends JPanel {
         loadGameButton.addActionListener(e -> handleLoadGame());
         
         // Style buttons
-        styleMenuButton(aiButton);
-        styleMenuButton(twoPlayerButton);
         styleMenuButton(newGameButton);
         styleMenuButton(saveGameButton);
         styleMenuButton(loadGameButton);
-        
-        // Add game mode buttons to panel
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        buttonPanel.add(aiButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        buttonPanel.add(twoPlayerButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         
         // Add game control buttons to panel
         gameControlPanel.add(newGameButton);
@@ -136,15 +111,9 @@ public class sideMenuPanel extends JPanel {
         themePanel.add(boardThemePanel);
         themePanel.add(pieceThemePanel);
         
-        // Combine button panels
-        JPanel allButtonsPanel = new JPanel();
-        allButtonsPanel.setLayout(new BoxLayout(allButtonsPanel, BoxLayout.Y_AXIS));
-        allButtonsPanel.add(buttonPanel);
-        allButtonsPanel.add(gameControlPanel);
-        
         // Add components to main panel
         add(gameTitle, BorderLayout.NORTH);
-        add(allButtonsPanel, BorderLayout.CENTER);
+        add(gameControlPanel, BorderLayout.CENTER);
         add(themePanel, BorderLayout.SOUTH);
         
         // Set initial button states
@@ -162,10 +131,10 @@ public class sideMenuPanel extends JPanel {
             // Game is in progress, confirm reset
             int result = JOptionPane.showConfirmDialog(
                 this,
-                "This will reset the current game. Are you sure?",
+                "This will override the current game. Are you sure?",
                 "New Game",
                 JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
+                JOptionPane.WARNING_MESSAGE
             );
             
             if (result == JOptionPane.YES_OPTION) {
@@ -180,35 +149,140 @@ public class sideMenuPanel extends JPanel {
     /**
      * Displays game mode selection dialog for starting a new game.
      * 
-     * Presents options for 2-player or AI mode and starts the selected
-     * game type. Currently AI mode shows a not-implemented message.
+     * Creates a dialog with three buttons: 1-Player (AI), Co-op, and Online.
+     * Each button triggers relevant game initialization logic.
      */
     private void showGameModeSelection() {
-        String[] options = {"2-Player", "1-Player (AI)", "Cancel"};
-        int choice = JOptionPane.showOptionDialog(
-            this,
-            "Select game mode:",
-            "New Game",
-            JOptionPane.YES_NO_CANCEL_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            options,
-            options[0]
-        );
+        // Create custom dialog
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "New Game", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(300, 200);
+        dialog.setLocationRelativeTo(this);
         
-        switch (choice) {
-            case 0: // 2-Player
+        // Create panel for buttons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        // Create buttons
+        JButton aiButton = new JButton("1-Player (AI)");
+        JButton coopButton = new JButton("Co-op");
+        JButton onlineButton = new JButton("Online");
+        
+        // Style buttons
+        Dimension buttonSize = new Dimension(200, 40);
+        aiButton.setAlignmentX(CENTER_ALIGNMENT);
+        aiButton.setMaximumSize(buttonSize);
+        coopButton.setAlignmentX(CENTER_ALIGNMENT);
+        coopButton.setMaximumSize(buttonSize);
+        onlineButton.setAlignmentX(CENTER_ALIGNMENT);
+        onlineButton.setMaximumSize(buttonSize);
+        
+        // AI button action
+        aiButton.addActionListener(e -> {
+            dialog.dispose();
+            JOptionPane.showMessageDialog(this, "AI mode not yet implemented!", "Not Implemented", JOptionPane.INFORMATION_MESSAGE);
+        });
+        
+        // Co-op button action
+        coopButton.addActionListener(e -> {
+            dialog.dispose();
+            // Check if game is currently active
+            if (parentFrame.getCurrentGame() != null) {
+                int result = JOptionPane.showConfirmDialog(
+                    this,
+                    "This will override the current game. Are you sure?",
+                    "Warning",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+                );
+                
+                if (result == JOptionPane.YES_OPTION) {
+                    parentFrame.startTwoPlayerGame();
+                    setGameInProgress(true);
+                }
+            } else {
+                // No game active, create new game
                 parentFrame.startTwoPlayerGame();
                 setGameInProgress(true);
-                break;
-            case 1: // 1-Player (AI)
-                JOptionPane.showMessageDialog(this, "AI mode not yet implemented!");
-                break;
-            case 2: // Cancel
-            default:
-                // Do nothing
-                break;
-        }
+            }
+        });
+        
+        // Online button action
+        onlineButton.addActionListener(e -> {
+            dialog.dispose();
+            showOnlineGameDialog();
+        });
+        
+        // Add buttons to panel
+        buttonPanel.add(aiButton);
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        buttonPanel.add(coopButton);
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        buttonPanel.add(onlineButton);
+        
+        dialog.add(buttonPanel, BorderLayout.CENTER);
+        dialog.setVisible(true);
+    }
+    
+    /**
+     * Displays the online game dialog with IP address and port input fields.
+     * Shows Host and Join buttons for network gameplay setup.
+     */
+    private void showOnlineGameDialog() {
+        // Create custom dialog
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Online Game", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(350, 200);
+        dialog.setLocationRelativeTo(this);
+        
+        // Create panel for input fields
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
+        inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        
+        // IP Address field
+        JPanel ipPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel ipLabel = new JLabel("IP Address:");
+        ipLabel.setPreferredSize(new Dimension(80, 25));
+        JTextField ipField = new JTextField(15);
+        ipPanel.add(ipLabel);
+        ipPanel.add(ipField);
+        
+        // Port field
+        JPanel portPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel portLabel = new JLabel("Port:");
+        portLabel.setPreferredSize(new Dimension(80, 25));
+        JTextField portField = new JTextField(15);
+        portPanel.add(portLabel);
+        portPanel.add(portField);
+        
+        inputPanel.add(ipPanel);
+        inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        inputPanel.add(portPanel);
+        
+        // Create panel for buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        JButton hostButton = new JButton("Host");
+        JButton joinButton = new JButton("Join");
+        
+        // Button actions (not implemented yet)
+        hostButton.addActionListener(e -> {
+            // TODO: Implement host functionality
+            dialog.dispose();
+        });
+        
+        joinButton.addActionListener(e -> {
+            // TODO: Implement join functionality
+            dialog.dispose();
+        });
+        
+        buttonPanel.add(hostButton);
+        buttonPanel.add(joinButton);
+        
+        dialog.add(inputPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
     }
     
     /**
@@ -313,23 +387,10 @@ public class sideMenuPanel extends JPanel {
      * Enables or disables buttons based on game state
      */
     public void setGameInProgress(boolean gameInProgress) {
-        // Game mode buttons - disable when game is active
-        aiButton.setEnabled(!gameInProgress);
-        twoPlayerButton.setEnabled(!gameInProgress);
-        
         // Game control buttons
         saveGameButton.setEnabled(gameInProgress); // Only enable save when there's a game
         loadGameButton.setEnabled(true); // Always allow loading
         newGameButton.setEnabled(true); // Always allow new game
-        
-        // Update button text to show state
-        if (gameInProgress) {
-            aiButton.setText("1-Player (Game Active)");
-            twoPlayerButton.setText("2-Player (Game Active)");
-        } else {
-            aiButton.setText("1-Player (AI)");
-            twoPlayerButton.setText("2-Player");
-        }
     }
 
     /**
@@ -346,14 +407,11 @@ public class sideMenuPanel extends JPanel {
         style.styleLabelPanel(this, palette, "Game Menu");
         
         // Style all buttons
-        style.styleCellButton(aiButton, true, palette);
-        style.styleCellButton(twoPlayerButton, true, palette);
         style.styleCellButton(newGameButton, true, palette);
         style.styleCellButton(saveGameButton, true, palette);
         style.styleCellButton(loadGameButton, true, palette);
         
         // Style panels
-        style.styleLabelPanel(buttonPanel, palette, "Game Modes");
         style.styleLabelPanel(gameControlPanel, palette, "Game Controls");
         style.styleLabelPanel(themePanel, palette, "Settings");
         

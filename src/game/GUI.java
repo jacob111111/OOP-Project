@@ -10,7 +10,7 @@ import player.Player;
 
 import java.io.Serializable;
 
-public class GUI extends Game implements Serializable {
+public class GUI extends Game {
     private static final long serialVersionUID = 1L;
     CheckmateDetector detector;
     private transient gui.chessFrame parentFrame;
