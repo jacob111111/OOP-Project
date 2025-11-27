@@ -140,15 +140,36 @@ public class AttackMap {
         int y = pos.getY();
 
         if (piece instanceof Pawn) {
-            // Pawns only attack diagonally
             int direction = (piece.getColor() == Color.WHITE) ? 1 : -1;
             int newY = y + direction;
 
+            // Pawns attack diagonally
             if (newY >= 0 && newY < 8) {
                 if (x - 1 >= 0)
                     attacks.add(new Position(x - 1, newY));
                 if (x + 1 < 8)
                     attacks.add(new Position(x + 1, newY));
+            }
+
+            // Pawns can also move forward (not attack, but valid moves)
+            if (newY >= 0 && newY < 8) {
+                // One square forward if empty
+                Position forwardOne = new Position(x, newY);
+                if (board.getPieceAt(forwardOne) == null) {
+                    attacks.add(forwardOne);
+
+                    // Two squares forward on first move if both squares are empty
+                    Pawn pawn = (Pawn) piece;
+                    if (!pawn.getHasMoved()) {
+                        int twoSquaresY = y + (direction * 2);
+                        if (twoSquaresY >= 0 && twoSquaresY < 8) {
+                            Position forwardTwo = new Position(x, twoSquaresY);
+                            if (board.getPieceAt(forwardTwo) == null) {
+                                attacks.add(forwardTwo);
+                            }
+                        }
+                    }
+                }
             }
         } else if (piece instanceof Knight) {
             // Knight L-shaped attacks
@@ -260,5 +281,29 @@ public class AttackMap {
         Position kingPos = player.getKingPosition();
         Color opponentColor = (kingColor == Color.WHITE) ? Color.BLACK : Color.WHITE;
         return isSquareAttackedBy(kingPos, opponentColor);
+    }
+
+    /**
+     * Gets all valid moves for a specific piece.
+     * Inverts the attackers map to provide piece -> positions mapping.
+     * 
+     * @param piece the piece to get valid moves for
+     * @return Set of positions the piece can move to
+     */
+    public Set<Position> getValidMovesForPiece(Piece piece) {
+        if (!isValid)
+            generateAttackMaps();
+
+        Set<Position> validMoves = new HashSet<>();
+        Map<Position, Set<Piece>> attackerMap = (piece.getColor() == Color.WHITE) ? whiteAttackers : blackAttackers;
+
+        // Invert the map: find all positions that this specific piece attacks
+        for (Map.Entry<Position, Set<Piece>> entry : attackerMap.entrySet()) {
+            if (entry.getValue().contains(piece)) {
+                validMoves.add(entry.getKey());
+            }
+        }
+
+        return validMoves;
     }
 }

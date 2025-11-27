@@ -4,7 +4,6 @@ import java.util.Scanner;
 import utils.Color;
 import utils.Position;
 import utils.CheckmateDetector;
-import player.Player;
 import piece.Piece;
 
 /**
@@ -129,7 +128,6 @@ public class Console extends Game {
     public void turn() {
         System.out.println(WhosTurn + "'s turn");
         System.out.println("");
-        Player player = board.getPlayer(WhosTurn);
         displayBoard(WhosTurn);
 
         System.out.println("Input move");
@@ -161,7 +159,7 @@ public class Console extends Game {
         }
 
         // Validate the move first
-        boolean moveSuccessful = player.attemptMove(toPosition, pieceToMove);
+        boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
 
         if (!moveSuccessful) {
             System.out.println("Invalid move! That piece cannot move to " + toSquare);
@@ -173,7 +171,7 @@ public class Console extends Game {
         System.out.println("Move successful: " + fromSquare + " to " + toSquare);
 
         // Check if opponent is in checkmate after this move
-        CheckmateDetector detector = new CheckmateDetector(board);
+        CheckmateDetector detector = board.getCheckmateDetector();
         Color opponentColor = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
 
         if (detector.isCheckmate(opponentColor)) {
