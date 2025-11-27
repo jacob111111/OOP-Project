@@ -233,7 +233,7 @@ public class sideMenuPanel extends JPanel {
         // Create custom dialog
         JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Online Game", true);
         dialog.setLayout(new BorderLayout());
-        dialog.setSize(350, 200);
+        dialog.setSize(350, 250);
         dialog.setLocationRelativeTo(this);
         
         // Create panel for input fields
@@ -254,27 +254,79 @@ public class sideMenuPanel extends JPanel {
         JLabel portLabel = new JLabel("Port:");
         portLabel.setPreferredSize(new Dimension(80, 25));
         JTextField portField = new JTextField(15);
+        portField.setText("8080"); // Default port
         portPanel.add(portLabel);
         portPanel.add(portField);
+        
+        // Color selection (for host)
+        JPanel colorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel colorLabel = new JLabel("Your Color:");
+        colorLabel.setPreferredSize(new Dimension(80, 25));
+        JComboBox<String> colorSelector = new JComboBox<>(new String[]{"White", "Black"});
+        colorPanel.add(colorLabel);
+        colorPanel.add(colorSelector);
         
         inputPanel.add(ipPanel);
         inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         inputPanel.add(portPanel);
+        inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        inputPanel.add(colorPanel);
         
         // Create panel for buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         JButton hostButton = new JButton("Host");
         JButton joinButton = new JButton("Join");
         
-        // Button actions (not implemented yet)
+        // Host button action
         hostButton.addActionListener(e -> {
-            // TODO: Implement host functionality
-            dialog.dispose();
+            String portText = portField.getText().trim();
+            if (portText.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Enter a port number", "Invalid Input", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            try {
+                int port = Integer.parseInt(portText);
+                if (port < 1024 || port > 65535) {
+                    JOptionPane.showMessageDialog(dialog, "Port must be between 1024 and 65535!", "Invalid Port", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                
+                // Get selected color
+                String selectedColor = (String) colorSelector.getSelectedItem();
+                utils.Color hostColor = selectedColor.equals("White") ? utils.Color.WHITE : utils.Color.BLACK;
+                
+                dialog.dispose();
+                startHostGame(port, hostColor);
+                
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Port must be a valid number!", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+            }
         });
         
+        // Join button action
         joinButton.addActionListener(e -> {
-            // TODO: Implement join functionality
-            dialog.dispose();
+            String ip = ipField.getText().trim();
+            String portText = portField.getText().trim();
+            
+            if (ip.isEmpty() || portText.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please enter both IP address and port!", "Invalid Input", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            try {
+                int port = Integer.parseInt(portText);
+                if (port < 1024 || port > 65535) {
+                    JOptionPane.showMessageDialog(dialog, "Port must be between 1024 and 65535!", "Invalid Port", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                
+                dialog.dispose();
+                startClientGame(ip, port);
+                
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Port must be a valid number!", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+            }
         });
         
         buttonPanel.add(hostButton);
@@ -283,6 +335,46 @@ public class sideMenuPanel extends JPanel {
         dialog.add(inputPanel, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
+    }
+    
+    /**
+     * Starts a new network game as the host.
+     * 
+     * @param port The port to host the server on
+     * @param hostColor The color the host wants to play as
+     */
+    private void startHostGame(int port, utils.Color hostColor) {
+        JOptionPane.showMessageDialog(this, 
+            "Hosting on port " + port + " as " + (hostColor == utils.Color.WHITE ? "White" : "Black") + "\nWaiting for opponent...", 
+            "Hosting Game", 
+            JOptionPane.INFORMATION_MESSAGE);
+        
+        // TODO: Create Network game instance as host
+        // game.Network networkGame = new game.Network(true, hostColor, port);
+        // networkGame.setParentFrame(parentFrame);
+        // parentFrame.setGame(networkGame);
+        // setGameInProgress(true);
+    }
+    
+    /**
+     * Starts a new network game as the client.
+     * 
+     * @param serverIP The IP address of the host server
+     * @param port The port the server is hosted on
+     */
+    private void startClientGame(String serverIP, int port) {
+        JOptionPane.showMessageDialog(this, 
+            "Connecting to " + serverIP + ":" + port + "...", 
+            "Joining Game", 
+            JOptionPane.INFORMATION_MESSAGE);
+        
+        // TODO: Create Network game instance as client
+        // Client's color will be assigned by server (opposite of host)
+        // For now, pass WHITE as placeholder - will be updated by server
+        // game.Network networkGame = new game.Network(true, utils.Color.WHITE, serverIP, port);
+        // networkGame.setParentFrame(parentFrame);
+        // parentFrame.setGame(networkGame);
+        // setGameInProgress(true);
     }
     
     /**

@@ -7,14 +7,15 @@ import utils.NetworkMessageType;
 import utils.NetworkMessage;
 import utils.Position;
 
-// THE FUNCTIONS NEED TO BE SORTED BASED ON WHETHER HOST/CLIENT CAN USE THEM
-
-
 public class Network extends GUI {
     private int port;
     private Server server = null;
     private Client client = null;
     private boolean isHost;
+    
+    // ============================================================================
+    // CONSTRUCTORS
+    // ============================================================================
     
     // Constructor for HOST mode
     public Network(boolean isPvP, Color p1Color, int port) {
@@ -36,8 +37,9 @@ public class Network extends GUI {
         client = new Client(p1Color, serverIP, port);
     }
 
-    // THESE METHODS HANDLE THE MAIN GAMEPLAY LOOP NOT VERY APPLICABLE TO SERVER <--> CLIENT INTERACTION
-    // SUBJECT TO CHANGE GIVEN NATURE OF NETWORKING
+    // ============================================================================
+    // SHARED METHODS (Both host and client use)
+    // ============================================================================
 
     @Override
     public void end(Color winner) {
@@ -51,7 +53,6 @@ public class Network extends GUI {
         throw new UnsupportedOperationException("Unimplemented method 'play'");
     }
 
-    // Methods that are identical regardless of mode
     @Override
     public void turn() {
         // GAME STATE MANAGEMENT NOT IMPLEMENTED YET, VAR NAMES SUBJECT TO CHANGE
@@ -63,9 +64,6 @@ public class Network extends GUI {
         }
         */
     }
-
-    // SUBJECT TO CHANGE GIVEN NATURE OF NETWORKING
-
     
     // this would call the gameSync method of NetworkMessage.java
     // is only used during game start after player connects or if error occurs
@@ -78,6 +76,10 @@ public class Network extends GUI {
         // currently don't know which classes need this 
         // flips the gui display for the player on black
     }
+
+    // ============================================================================
+    // HOST-ONLY METHODS (Server-specific functionality)
+    // ============================================================================
 
     // Handle incoming move request from client (only for host)
     public void handleMoveRequest() {
@@ -94,7 +96,6 @@ public class Network extends GUI {
         }
     }
 
-
     // JORDAN IS IMPLEMENTING THIS
     // Validation logic (implement based on your game rules)
     private boolean validateMove(utils.Position from, utils.Position to) {
@@ -103,6 +104,10 @@ public class Network extends GUI {
         // For now, returning true as placeholder
         return true;
     }
+
+    // ============================================================================
+    // CLIENT-ONLY METHODS (Client-specific functionality)
+    // ============================================================================
 
     // JORDAN IS IMPLEMENTING THIS
 }
