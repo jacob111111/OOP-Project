@@ -26,11 +26,10 @@ public class Network extends GUI {
         this.isHost = true;
         this.myColor = p1Color;
         
-        // Create server and wait for client
         server = new Server(p1Color, port);
-        server.acceptClient(); // Blocks until client connects
+        server.acceptClient(); // Block until client connects
         
-        // Send initial game state sync to client
+        // Send initial game state to client for sync
         Color clientColor = (p1Color == Color.WHITE) ? Color.BLACK : Color.WHITE;
         server.sendInitialSync(this, clientColor);
     }
@@ -73,7 +72,7 @@ public class Network extends GUI {
     }
 
     /**
-     * Handles
+     * Handles 
      * 
      */
     @Override
