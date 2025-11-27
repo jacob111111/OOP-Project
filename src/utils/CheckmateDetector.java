@@ -20,9 +20,9 @@ public class CheckmateDetector {
     private Board board;
     private AttackMap attackMap;
 
-    public CheckmateDetector(Board board) {
+    public CheckmateDetector(Board board, AttackMap attackMap) {
         this.board = board;
-        this.attackMap = new AttackMap(board);
+        this.attackMap = attackMap;
     }
 
     /**
@@ -139,7 +139,8 @@ public class CheckmateDetector {
     private boolean canPieceAttackSquare(Piece piece, Position target, Position currentKingPos) {
         if (piece instanceof Knight || piece instanceof King) {
             // Knights and kings don't care about blocking pieces
-            return piece.getPossibleMoves().contains(target);
+            // Use AttackMap to check if this piece can attack the target
+            return attackMap.getPiecesAttacking(target, piece.getColor()).contains(piece);
         } else if (piece instanceof Pawn) {
             return canPawnAttack(piece, target);
         } else {

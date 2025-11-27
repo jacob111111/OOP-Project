@@ -91,24 +91,6 @@ public class Player implements Serializable {
     public void setAsWinner(){winner = true;}
 
     /**
-     * Attempts to move a piece to the specified position.
-     * 
-     * Validates that the target position is in the piece's list of possible moves
-     * before executing the move. This provides the basic move validation logic.
-     * 
-     * @param possibleMove the target position for the move
-     * @param pieceToMove the piece that should be moved
-     * @return true if the move was successful, false if invalid
-     */
-    public boolean attemptMove(Position possibleMove, Piece pieceToMove){
-        if(pieceToMove.getPossibleMoves().contains(possibleMove)){
-            pieceToMove.move(possibleMove);
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Sorts the current pieces by position for efficient searching.
      * 
      * Sorts pieces first by row (y-coordinate), then by column (x-coordinate).
