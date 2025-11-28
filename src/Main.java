@@ -45,7 +45,7 @@ public class Main {
         } 
         else if(choice == 2) {
             // Console mode
-            Game game = null; 
+            Console game = null; 
             System.out.println("Welcome to the Console Chess Game!");
             System.out.println("What type of game would you like to play?");
             System.out.println("1-Player or 2-Player");
