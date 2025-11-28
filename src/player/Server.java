@@ -65,6 +65,25 @@ public class Server extends Player{
             System.out.println(e);
         }
     }
+    
+    /**
+     * Sends a validated move update to the client.
+     * Used when the server makes a move and needs to notify the client.
+     * 
+     * @param from The starting position of the move
+     * @param to The ending position of the move
+     */
+    public void sendMoveUpdate(utils.Position from, utils.Position to) {
+        try {
+            NetworkMessage moveUpdate = NetworkMessage.moveRequest(from, to);
+            out.writeObject(moveUpdate);
+            out.flush();
+            
+        } catch (IOException e) {
+            System.out.println("Error sending move update to client: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     public void sendInitialSync(game.Game gameState, Color clientColor) {
         try {
