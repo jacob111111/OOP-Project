@@ -122,14 +122,6 @@ public abstract class Game implements Serializable {
     public abstract void end(Color winner);
 
     /**
-     * Abstract method to start and manage the main game loop.
-     * 
-     * Each game type must implement this method to define how the game
-     * progresses from start to finish.
-     */
-    public abstract void play();
-
-    /**
      * Abstract method to handle a single turn of the game.
      * 
      * Each game type must implement this method to define how individual

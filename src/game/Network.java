@@ -7,6 +7,8 @@ import utils.Color;
 import utils.NetworkMessageType;
 import utils.NetworkMessage;
 import utils.Position;
+import board.Board;
+import java.io.*;
 
 public class Network extends GUI {
     private int port;
@@ -14,6 +16,10 @@ public class Network extends GUI {
     private Client client = null;
     private boolean isHost;
     private Color myColor;
+    
+    // Optimistic update rollback support
+    private Board backupBoard = null;
+    private Color backupTurn = null;
     
     // ============================================================================
     // CONSTRUCTORS
@@ -61,31 +67,108 @@ public class Network extends GUI {
 
     @Override
     public void end(Color winner) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'end'");
-    }
-
-    @Override
-    public void play() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'play'");
+        // Once a winner is determined, call methods to display who won in a pop up on each playes screen 
     }
 
     /**
-     * Handles 
+     * Control flow (whose turn, wait for input)
      * 
      */
     @Override
     public void turn() {
-        if (currentPlayer.getColor() == myColor) {
-            
-        } 
-        else {
-
+        if (WhosTurn == myColor) {
+            // LOCAL TURN: Wait for player to click/drag in GUI
+            // BoardPanel will call executeTurn() when move is made
+        } else {
+            // REMOTE TURN: Listen for opponent's move from network
+            if (isHost) {
+                // Server: receive move request from client, validate, and apply
+                //waitForClientMove();
+            } else {
+                // Client: receive validated move from server and apply
+                //waitForServerMove();
+            }
         }
     }
 
-    
+    /** 
+     * Action execution (validate and apply a specific move)
+     * Uses optimistic updates for client moves - immediately applies move to GUI,
+     * then validates with server. Rollback occurs if server rejects.
+     */
+    @Override
+    public boolean executeTurn(Position from, Position to, Piece piece) {
+        if (WhosTurn == myColor) {
+            // LOCAL MOVE (our turn)
+            if (isHost) {
+                // Server: validate and apply immediately
+                boolean success = super.executeTurn(from, to, piece);
+                
+                if (success) {
+                    // Send validated move to client
+                    server.sendMoveUpdate(from, to);
+                }
+                
+                return success;
+            } else {
+                // Client: optimistic update
+                // Create backup RIGHT BEFORE applying move
+                backupBoard = deepCopyBoard(board);
+                backupTurn = WhosTurn;
+                
+                // Apply move optimistically (with client-side validation)
+                boolean success = super.executeTurn(from, to, piece);
+                
+                if (success) {
+                    // Send move to server for authoritative validation
+                    client.sendMoveRequest(from, to);
+                    // Server will respond async via handleMoveApproval() or handleMoveRejection()
+                } else {
+                    // Client-side validation failed, clear backup
+                    backupBoard = null;
+                    backupTurn = null;
+                }
+                
+                return success;
+            }
+        } else {
+            // REMOTE MOVE (opponent's turn)
+            // Apply the validated move received from network without re-validating
+            Piece capturedPiece = board.getPieceAt(to);
+            boolean kingCaptured = false;
+
+            // Handle captures
+            if (capturedPiece != null && capturedPiece.getColor() != piece.getColor()) {
+                kingCaptured = board.capturePiece(piece, to);
+            }
+
+            // Update piece position
+            board.updatePiecePosition(piece, from, to);
+
+            // Check if game ended by King capture
+            if (kingCaptured) {
+                winner = WhosTurn;
+                end(winner);
+                return true;
+            }
+
+            // Check for checkmate
+            player.Player opponent = getOpponentPlayer();
+            if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
+                winner = WhosTurn;
+                System.out.println("Checkmate! " + winner + " wins!");
+                end(winner);
+                return true;
+            }
+
+            // Switch turns
+            switchTurn();
+            
+            return true;
+        }
+    }
+
+
     // Syncs game state between host and client (for error recovery)
     public void updateGameState() {
         if (isHost) {
@@ -101,14 +184,67 @@ public class Network extends GUI {
             }
         }
     }
-
-    public boolean shouldFlipBoard() {
-        // Returns true if this player is black (board should be flipped)
-        return myColor == Color.BLACK;
-    }
     
     public Color getMyColor() {
         return myColor;
+    }
+    
+    /**
+     * Deep copy of Board using serialization.
+     * Leverages existing Serializable implementation.
+     * 
+     * @param original The board to copy
+     * @return A deep copy of the board
+     */
+    private Board deepCopyBoard(Board original) {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bos);
+            out.writeObject(original);
+            out.flush();
+            
+            ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(bis);
+            return (Board) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Failed to deep copy board: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    /**
+     * Called when server approves the client's optimistic move.
+     * Clears the backup state as the move is confirmed valid.
+     */
+    public void handleMoveApproval() {
+        // Move was valid, just clear backup
+        backupBoard = null;
+        backupTurn = null;
+    }
+    
+    /**
+     * Called when server rejects the client's optimistic move.
+     * Rolls back the board state to the pre-move backup.
+     * 
+     * @param errorMessage Optional error message to display to user
+     */
+    public void handleMoveRejection(String errorMessage) {
+        // Restore backup state
+        this.board = backupBoard;
+        this.WhosTurn = backupTurn;
+        
+        // Update GUI to reflect rollback
+        refreshBoardPanel();
+        
+        // Show error to user
+        if (errorMessage != null && !errorMessage.isEmpty()) {
+            showInvalidMovePopup();
+        }
+        
+        // Clear backup
+        backupBoard = null;
+        backupTurn = null;
     }
 
     // ============================================================================
@@ -123,25 +259,18 @@ public class Network extends GUI {
 
         NetworkMessage request = server.receiveMoveRequest();
         if (request != null) {
-            // JORDAN YOU MAY NEED TO CHANGE THIS DEPENDING ON HOW YOU IMPLEMENT THE VALIDATION
-            boolean isValidMove = validateMove(request.from, request.to);
+            // Validate Move needs to use CheckMateDetector
             
-            server.sendMoveResponse(isValidMove);
+            // Send validation response back to client
+            
         }
     }
 
-    // JORDAN IS IMPLEMENTING THIS
-    // Validation logic (implement based on your game rules)
-    private boolean validateMove(utils.Position from, utils.Position to) {
-        // TODO: Implement actual move validation logic
-        // This should check if the move is legal according to chess rules
-        // For now, returning true as placeholder
-        return true;
-    }
+
 
     // ============================================================================
     // CLIENT-ONLY METHODS (Client-specific functionality)
     // ============================================================================
 
-    // JORDAN IS IMPLEMENTING THIS
+
 }

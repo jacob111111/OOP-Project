@@ -29,7 +29,6 @@ public class GUI extends Game {
      * is event-driven rather than blocking based.
      */
     public void turn() {}
-    public void play() {}
 
     // ============================================================================
     // SETTERS
@@ -159,11 +158,22 @@ public class GUI extends Game {
     /**
      * Shows a popup message when an invalid move is attempted.
      */
-    private void showInvalidMovePopup() {
+    protected void showInvalidMovePopup() {
         JOptionPane.showMessageDialog(null,
                 "Invalid move! Please try a different move.",
                 "Invalid Move",
                 JOptionPane.WARNING_MESSAGE);
+    }
+    
+    /**
+     * Refreshes the board panel display.
+     * Used for updating GUI after state changes (e.g., rollback).
+     */
+    protected void refreshBoardPanel() {
+        if (boardPanel != null) {
+            boardPanel.repaint();
+            boardPanel.revalidate();
+        }
     }
 
     public void end(Color winner) {
