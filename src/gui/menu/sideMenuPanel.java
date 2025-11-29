@@ -26,6 +26,7 @@ public class sideMenuPanel extends JPanel {
     private JPanel themePanel, gameControlPanel, messagePanel;
     private JTextArea messageBoard;
     private JScrollPane messageScrollPane;
+    private JLabel hoverInfoLabel;
 
     /**
      * Creates a new side menu panel with the specified parent frame.
@@ -124,8 +125,12 @@ public class sideMenuPanel extends JPanel {
         messageScrollPane = new JScrollPane(messageBoard);
         messageScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
+        hoverInfoLabel = new JLabel(" ");
+        hoverInfoLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
+
         messagePanel.add(messageLabel, BorderLayout.NORTH);
         messagePanel.add(messageScrollPane, BorderLayout.CENTER);
+        messagePanel.add(hoverInfoLabel, BorderLayout.SOUTH);
 
         // Create container for game controls and messages
         JPanel centerContainer = new JPanel();
@@ -555,6 +560,28 @@ public class sideMenuPanel extends JPanel {
     }
 
     /**
+     * Updates the hover info label to show the currently hovered piece.
+     * 
+     * @param pieceName  The name of the piece being hovered over (e.g., "King",
+     *                   "Queen")
+     * @param pieceColor The color of the piece ("White" or "Black")
+     */
+    public void updateHoverInfo(String pieceName, String pieceColor) {
+        if (pieceName != null && pieceColor != null) {
+            hoverInfoLabel.setText("Hovering: " + pieceColor + " " + pieceName);
+        } else {
+            hoverInfoLabel.setText(" ");
+        }
+    }
+
+    /**
+     * Clears the hover info label.
+     */
+    public void clearHoverInfo() {
+        hoverInfoLabel.setText(" ");
+    }
+
+    /**
      * Updates the visual styling of all components using current palette.
      * 
      * Applies the current UI palette and styling to all buttons, panels,
@@ -599,6 +626,9 @@ public class sideMenuPanel extends JPanel {
         messageBoard.setFont(palette.font);
         messageBoard.setForeground(palette.labelForeground);
         messageBoard.setBackground(palette.labelBackground);
+
+        hoverInfoLabel.setFont(palette.font);
+        hoverInfoLabel.setForeground(palette.labelForeground);
 
         repaint();
         revalidate();

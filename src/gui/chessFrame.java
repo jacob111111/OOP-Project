@@ -185,4 +185,25 @@ public class chessFrame extends JFrame {
             menuPanel.displayMessage(message, messageType);
         }
     }
+
+    /**
+     * Updates the hover info label in the side menu.
+     * 
+     * @param pieceName  The name of the piece being hovered over
+     * @param pieceColor The color of the piece
+     */
+    public void updateHoverInfo(String pieceName, String pieceColor) {
+        if (menuPanel != null) {
+            menuPanel.updateHoverInfo(pieceName, pieceColor);
+        }
+    }
+
+    /**
+     * Clears the hover info label in the side menu.
+     */
+    public void clearHoverInfo() {
+        if (menuPanel != null) {
+            menuPanel.clearHoverInfo();
+        }
+    }
 }

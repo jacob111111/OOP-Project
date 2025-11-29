@@ -210,7 +210,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             highlightCell(hoveredButton, false);
             hoveredButton = null;
         }
-        
+
         JButton button = (JButton) e.getSource();
         Position pos = buttonToPosition(button);
         Piece piece = instance.getBoard().getPieceAt(pos);
@@ -408,6 +408,11 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             highlightCell(hoveredButton, false);
             hoveredButton = null;
         }
+        // Clear hover info when mouse leaves the board
+        gui.chessFrame frame = (gui.chessFrame) SwingUtilities.getWindowAncestor(this);
+        if (frame != null) {
+            frame.clearHoverInfo();
+        }
     }
 
     @Override
@@ -423,9 +428,28 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             highlightCell(hoveredButton, false);
             hoveredButton = null;
         }
-        if (button != null && button != hoveredButton) {
-            highlightCell(button, true);
-            hoveredButton = button;
+        if (button != null) {
+            if (button != hoveredButton) {
+                highlightCell(button, true);
+                hoveredButton = button;
+            }
+
+            // Update hover info with piece information
+            if (instance != null && instance.getBoard() != null) {
+                Position pos = buttonToPosition(button);
+                Piece piece = instance.getBoard().getPieceAt(pos);
+                gui.chessFrame frame = (gui.chessFrame) SwingUtilities.getWindowAncestor(this);
+                if (frame != null) {
+                    if (piece != null) {
+                        String pieceName = piece.getName();
+                        String pieceColor = (piece.getColor() == utils.Color.WHITE) ? "White" : "Black";
+                        frame.updateHoverInfo(pieceName, pieceColor);
+                    } else {
+                        // Clear hover info when hovering over empty cell
+                        frame.clearHoverInfo();
+                    }
+                }
+            }
         }
     }
 
