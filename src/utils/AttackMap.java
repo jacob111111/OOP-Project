@@ -1,9 +1,7 @@
 package utils;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import board.Board;
@@ -80,177 +78,22 @@ public class AttackMap {
     }
 
     /**
-     * Updates attack maps incrementally after a piece move.
+     * Regenerates the entire attack map after a move.
      * 
-     * This method now properly handles pieces that were blocked or unblocked by the
-     * move.
-     * When a piece moves, it can affect the attack lines of linear pieces (Queens,
-     * Rooks, Bishops)
-     * that were pointing through the old or new position.
+     * Instead of complex incremental updates, this simply recalculates all attacks
+     * from scratch. With a maximum of 32 pieces, this is actually faster and much
+     * simpler than tracking which linear pieces were blocked/unblocked.
      * 
-     * @param pieceThatMoved the piece that was moved
-     * @param oldPosition    where the piece was before the move
-     * @param newPosition    where the piece is after the move
+     * @param pieceThatMoved the piece that was moved (unused, kept for API
+     *                       compatibility)
+     * @param oldPosition    where the piece was before the move (unused, kept for
+     *                       API compatibility)
+     * @param newPosition    where the piece is after the move (unused, kept for API
+     *                       compatibility)
      */
     public void updateAfterMove(Piece pieceThatMoved, Position oldPosition, Position newPosition) {
-        if (!isValid) {
-            generateAttackMaps(); // If invalid, do full regeneration
-            return;
-        }
-
-        // Update the moved piece's attacks
-        updatePieceAttacks(pieceThatMoved, oldPosition, newPosition);
-
-        // Find and update all linear pieces that might be affected by this move
-        // A linear piece is affected if the old or new position lies on one of its
-        // attack lines
-        Player whitePlayer = board.getPlayer(Color.WHITE);
-        Player blackPlayer = board.getPlayer(Color.BLACK);
-
-        // Check all pieces from both colors
-        for (Piece piece : whitePlayer.getCurrentPieces()) {
-            if (piece != pieceThatMoved && isLinearPiece(piece)) {
-                if (isPositionOnAttackLine(piece, oldPosition) || isPositionOnAttackLine(piece, newPosition)) {
-                    // This piece's attack line was affected, recalculate it
-                    recalculatePieceAttacks(piece);
-                }
-            }
-        }
-
-        for (Piece piece : blackPlayer.getCurrentPieces()) {
-            if (piece != pieceThatMoved && isLinearPiece(piece)) {
-                if (isPositionOnAttackLine(piece, oldPosition) || isPositionOnAttackLine(piece, newPosition)) {
-                    // This piece's attack line was affected, recalculate it
-                    recalculatePieceAttacks(piece);
-                }
-            }
-        }
-    }
-
-    /**
-     * Updates the attack map for a specific piece that moved.
-     * 
-     * @param piece       the piece that moved
-     * @param oldPosition the old position
-     * @param newPosition the new position
-     */
-    private void updatePieceAttacks(Piece piece, Position oldPosition, Position newPosition) {
-        // Temporarily set piece to old position to calculate old attacks
-        Position currentPos = piece.getPosition();
-        piece.setPosition(oldPosition);
-        Set<Position> oldAttacks = getAttackSquares(piece);
-
-        // Set piece to new position and calculate new attacks
-        piece.setPosition(newPosition);
-        Set<Position> newAttacks = getAttackSquares(piece);
-
-        // Restore the correct position (should already be newPosition, but being safe)
-        piece.setPosition(currentPos);
-
-        // Update the appropriate attack set and attacker map
-        Color pieceColor = piece.getColor();
-        Set<Position> targetAttackSet = (pieceColor == Color.WHITE) ? whiteAttacks : blackAttacks;
-        Map<Position, Set<Piece>> targetAttackerMap = (pieceColor == Color.WHITE) ? whiteAttackers : blackAttackers;
-
-        // Remove old attacks
-        for (Position pos : oldAttacks) {
-            targetAttackSet.remove(pos);
-            Set<Piece> attackers = targetAttackerMap.get(pos);
-            if (attackers != null) {
-                attackers.remove(piece);
-                if (attackers.isEmpty()) {
-                    targetAttackerMap.remove(pos);
-                }
-            }
-        }
-
-        // Add new attacks
-        for (Position pos : newAttacks) {
-            targetAttackSet.add(pos);
-            targetAttackerMap.computeIfAbsent(pos, k -> new HashSet<>()).add(piece);
-        }
-    }
-
-    /**
-     * Recalculates the attacks for a piece whose attack line was affected by
-     * another piece's move.
-     * 
-     * @param piece the piece whose attacks need recalculation
-     */
-    private void recalculatePieceAttacks(Piece piece) {
-        Color pieceColor = piece.getColor();
-        Set<Position> targetAttackSet = (pieceColor == Color.WHITE) ? whiteAttacks : blackAttacks;
-        Map<Position, Set<Piece>> targetAttackerMap = (pieceColor == Color.WHITE) ? whiteAttackers : blackAttackers;
-
-        // Remove old attacks for this piece
-        Set<Position> oldAttacks = new HashSet<>();
-        for (Position pos : targetAttackSet) {
-            Set<Piece> attackers = targetAttackerMap.get(pos);
-            if (attackers != null && attackers.contains(piece)) {
-                oldAttacks.add(pos);
-            }
-        }
-
-        for (Position pos : oldAttacks) {
-            Set<Piece> attackers = targetAttackerMap.get(pos);
-            if (attackers != null) {
-                attackers.remove(piece);
-                if (attackers.isEmpty()) {
-                    targetAttackerMap.remove(pos);
-                    targetAttackSet.remove(pos);
-                }
-            }
-        }
-
-        // Calculate new attacks with current board state
-        Set<Position> newAttacks = getAttackSquares(piece);
-
-        // Add new attacks
-        for (Position pos : newAttacks) {
-            targetAttackSet.add(pos);
-            targetAttackerMap.computeIfAbsent(pos, k -> new HashSet<>()).add(piece);
-        }
-    }
-
-    /**
-     * Checks if a piece is a linear piece (Queen, Rook, or Bishop).
-     * 
-     * @param piece the piece to check
-     * @return true if the piece is a Queen, Rook, or Bishop
-     */
-    private boolean isLinearPiece(Piece piece) {
-        return piece instanceof Queen || piece instanceof Rook || piece instanceof Bishop;
-    }
-
-    /**
-     * Checks if a position lies on any of the attack lines of a linear piece.
-     * 
-     * @param piece    the linear piece
-     * @param position the position to check
-     * @return true if the position is on one of the piece's attack lines
-     */
-    private boolean isPositionOnAttackLine(Piece piece, Position position) {
-        if (!isLinearPiece(piece)) {
-            return false;
-        }
-
-        Position piecePos = piece.getPosition();
-        int dx = position.getX() - piecePos.getX();
-        int dy = position.getY() - piecePos.getY();
-
-        // Check if position is on the same line as the piece
-        if (piece instanceof Rook) {
-            // Rook moves in straight lines (horizontal or vertical)
-            return (dx == 0 && dy != 0) || (dy == 0 && dx != 0);
-        } else if (piece instanceof Bishop) {
-            // Bishop moves diagonally
-            return Math.abs(dx) == Math.abs(dy) && dx != 0;
-        } else if (piece instanceof Queen) {
-            // Queen combines rook and bishop movement
-            return (dx == 0 && dy != 0) || (dy == 0 && dx != 0) || (Math.abs(dx) == Math.abs(dy) && dx != 0);
-        }
-
-        return false;
+        // Simple regeneration - fast enough with max 32 pieces
+        generateAttackMaps();
     }
 
     /**
@@ -478,13 +321,11 @@ public class AttackMap {
     }
 
     /**
-     * Validates a move and updates the attack map atomically.
+     * Validates a move by simulating it and checking if the king would be in check.
      * 
-     * This method combines move validation with attack map updates to avoid
-     * redundant calculations. It temporarily applies the move to the attack map,
-     * checks if the king would be in check, and either commits or rolls back
-     * the changes. It also handles updating linear pieces that may be affected
-     * by the move (blocked or unblocked), and properly simulates captures.
+     * This simplified version temporarily moves the piece, removes captured pieces,
+     * regenerates the attack map, and checks for king safety. If unsafe, everything
+     * is rolled back. Much simpler than incremental updates!
      * 
      * @param piece  the piece to move
      * @param oldPos the piece's current position
@@ -493,105 +334,24 @@ public class AttackMap {
      *         otherwise
      */
     public boolean validateAndUpdateMove(Piece piece, Position oldPos, Position newPos) {
-        if (!isValid) {
-            generateAttackMaps();
-        }
-
         // Check if this move captures an enemy piece
         Piece capturedPiece = board.getPieceAt(newPos);
         boolean isCapture = capturedPiece != null && capturedPiece.getColor() != piece.getColor();
 
-        // If capturing, temporarily remove the captured piece from its player
+        // Temporarily remove captured piece from its player if this is a capture
         Player capturedPieceOwner = null;
         if (isCapture) {
             capturedPieceOwner = board.getPlayer(capturedPiece.getColor());
             capturedPieceOwner.getCurrentPieces().remove(capturedPiece);
         }
 
-        // Find all linear pieces that will be affected by this move
-        List<Piece> affectedPieces = new ArrayList<>();
-        Player whitePlayer = board.getPlayer(Color.WHITE);
-        Player blackPlayer = board.getPlayer(Color.BLACK);
-
-        for (Piece p : whitePlayer.getCurrentPieces()) {
-            if (p != piece && isLinearPiece(p)) {
-                if (isPositionOnAttackLine(p, oldPos) || isPositionOnAttackLine(p, newPos)) {
-                    affectedPieces.add(p);
-                }
-            }
-        }
-
-        for (Piece p : blackPlayer.getCurrentPieces()) {
-            if (p != piece && isLinearPiece(p)) {
-                if (isPositionOnAttackLine(p, oldPos) || isPositionOnAttackLine(p, newPos)) {
-                    affectedPieces.add(p);
-                }
-            }
-        }
-
-        // Store the complete old state for potential rollback
-        Map<Piece, Set<Position>> oldAttacksMap = new HashMap<>();
-
-        // Save the moving piece's old attacks
-        piece.setPosition(oldPos);
-        oldAttacksMap.put(piece, new HashSet<>(getAttackSquares(piece)));
-
-        // If capturing, save and remove the captured piece's attacks
-        if (isCapture) {
-            oldAttacksMap.put(capturedPiece, new HashSet<>(getAttackSquares(capturedPiece)));
-        }
-
-        // Save affected pieces' old attacks
-        for (Piece affectedPiece : affectedPieces) {
-            oldAttacksMap.put(affectedPiece, new HashSet<>(getAttackSquares(affectedPiece)));
-        }
-
-        // Update the moving piece to new position
+        // Move the piece to the new position
         piece.setPosition(newPos);
 
-        // Calculate new attacks for all affected pieces (including the moved piece)
-        Map<Piece, Set<Position>> newAttacksMap = new HashMap<>();
-        newAttacksMap.put(piece, new HashSet<>(getAttackSquares(piece)));
+        // Regenerate attack map with the new board state
+        generateAttackMaps();
 
-        // Captured piece has no attacks after being captured
-        if (isCapture) {
-            newAttacksMap.put(capturedPiece, new HashSet<>());
-        }
-
-        for (Piece affectedPiece : affectedPieces) {
-            newAttacksMap.put(affectedPiece, new HashSet<>(getAttackSquares(affectedPiece)));
-        }
-
-        // Apply updates to attack maps
-        for (Map.Entry<Piece, Set<Position>> entry : oldAttacksMap.entrySet()) {
-            Piece p = entry.getKey();
-            Set<Position> oldAttacks = entry.getValue();
-            Set<Position> newAttacks = newAttacksMap.get(p);
-
-            Color pieceColor = p.getColor();
-            Set<Position> targetAttackSet = (pieceColor == Color.WHITE) ? whiteAttacks : blackAttacks;
-            Map<Position, Set<Piece>> targetAttackerMap = (pieceColor == Color.WHITE) ? whiteAttackers : blackAttackers;
-
-            // Remove old attacks
-            for (Position pos : oldAttacks) {
-                Set<Piece> attackers = targetAttackerMap.get(pos);
-                if (attackers != null) {
-                    attackers.remove(p);
-                    if (attackers.isEmpty()) {
-                        targetAttackerMap.remove(pos);
-                        targetAttackSet.remove(pos);
-                    }
-                }
-            }
-
-            // Add new attacks
-            for (Position pos : newAttacks) {
-                targetAttackSet.add(pos);
-                targetAttackerMap.computeIfAbsent(pos, k -> new HashSet<>()).add(p);
-            }
-        }
-
-        // Check if king is in check with the updated attack map
+        // Check if king is safe after the move
         Color pieceColor = piece.getColor();
         Player player = board.getPlayer(pieceColor);
         Position kingPos = player.getKingPosition();
@@ -599,50 +359,23 @@ public class AttackMap {
         boolean kingIsSafe = !isSquareAttackedBy(kingPos, opponentColor);
 
         if (kingIsSafe) {
-            // Move is safe, keep the updated attack map
-            // Restore the captured piece to the player list (will be removed later in
+            // Move is safe - restore captured piece to player list (will be removed in
             // actual capture)
             if (isCapture) {
                 capturedPieceOwner.getCurrentPieces().add(capturedPiece);
             }
             return true;
         } else {
-            // Move leaves king in check, rollback all changes
-            for (Map.Entry<Piece, Set<Position>> entry : oldAttacksMap.entrySet()) {
-                Piece p = entry.getKey();
-                Set<Position> oldAttacks = entry.getValue();
-                Set<Position> newAttacks = newAttacksMap.get(p);
+            // Move leaves king in check - rollback everything
+            piece.setPosition(oldPos);
 
-                Color pColor = p.getColor();
-                Set<Position> targetAttackSet = (pColor == Color.WHITE) ? whiteAttacks : blackAttacks;
-                Map<Position, Set<Piece>> targetAttackerMap = (pColor == Color.WHITE) ? whiteAttackers : blackAttackers;
-
-                // Remove new attacks that were added
-                for (Position pos : newAttacks) {
-                    Set<Piece> attackers = targetAttackerMap.get(pos);
-                    if (attackers != null) {
-                        attackers.remove(p);
-                        if (attackers.isEmpty()) {
-                            targetAttackerMap.remove(pos);
-                            targetAttackSet.remove(pos);
-                        }
-                    }
-                }
-
-                // Restore old attacks
-                for (Position pos : oldAttacks) {
-                    targetAttackSet.add(pos);
-                    targetAttackerMap.computeIfAbsent(pos, k -> new HashSet<>()).add(p);
-                }
-            }
-
-            // Restore captured piece to the player list
+            // Restore captured piece to player list
             if (isCapture) {
                 capturedPieceOwner.getCurrentPieces().add(capturedPiece);
             }
 
-            // Restore piece position
-            piece.setPosition(oldPos);
+            // Regenerate attack map to restore original state
+            generateAttackMaps();
             return false;
         }
     }
