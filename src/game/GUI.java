@@ -98,62 +98,75 @@ public class GUI extends Game {
      */
     public boolean executeTurn(Position fromPosition, Position toPosition, Piece pieceToMove) {
         // Piece color validation is done here to maintain OOP architecture
-        if (pieceToMove.getColor() == currentPlayer.getColor()) {
-            // Validate the move (BE validation)
-            boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
+        if (pieceToMove.getColor() != currentPlayer.getColor()) {
+            // Player tried to move opponent's piece
+            showWrongColorError();
+            return false;
+        }
 
-            if (!moveSuccessful) {
-                // Invalid move - show popup and return false
-                showInvalidMovePopup();
-                return false;
-            }
+        // Validate the move (BE validation)
+        boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
 
-            // Step 4: Execute the move on backend And Step 5: Handle captures
-            Piece capturedPiece = board.getPieceAt(toPosition);
-            boolean kingCaptured = false;
+        if (!moveSuccessful) {
+            // Invalid move - show message and return false
+            showInvalidMoveMessage();
+            return false;
+        }
 
-            // Check if there's a piece to capture and it's not the same color
-            if (capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor()) {
-                // Capture the piece at destination
-                kingCaptured = board.capturePiece(pieceToMove, toPosition);
-            }
+        // Step 4: Execute the move on backend And Step 5: Handle captures
+        Piece capturedPiece = board.getPieceAt(toPosition);
+        boolean kingCaptured = false;
 
-            // Update piece position on backend
-            board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
+        // Check if there's a piece to capture and it's not the same color
+        if (capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor()) {
+            // Capture the piece at destination
+            kingCaptured = board.capturePiece(pieceToMove, toPosition);
+        }
 
-            // Check if game ended by King capture
-            if (kingCaptured) {
-                winner = WhosTurn;
-                end(winner);
-                return true;
-            }
+        // Update piece position on backend
+        board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
 
-            // Step 7: Look for checkmate
-            player.Player opponent = getOpponentPlayer();
-
-            if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
-                winner = WhosTurn;
-                System.out.println("Checkmate! " + winner + " wins!");
-                end(winner);
-                return true;
-            }
-
-            // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
-            switchTurn();
-
+        // Check if game ended by King capture
+        if (kingCaptured) {
+            winner = WhosTurn;
+            end(winner);
             return true;
         }
-        return false;
+
+        // Step 7: Look for checkmate
+        player.Player opponent = getOpponentPlayer();
+
+        if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
+            winner = WhosTurn;
+            System.out.println("Checkmate! " + winner + " wins!");
+            end(winner);
+            return true;
+        }
+
+        // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
+        switchTurn();
+
+        return true;
     }
 
     /**
-     * Shows a popup message when an invalid move is attempted.
+     * Shows an error message when a player tries to move the opponent's piece.
      */
-    protected void showInvalidMovePopup() {
-        JOptionPane.showMessageDialog(null,
-                "Invalid move! Please try a different move.",
-                "Invalid Move",
-                JOptionPane.WARNING_MESSAGE);
+    protected void showWrongColorError() {
+        if (parentFrame != null) {
+            String currentColor = (currentPlayer.getColor() == Color.WHITE) ? "White" : "Black";
+            parentFrame.displayMessage("You cannot move your opponent's pieces! It is " + currentColor + "'s turn.",
+                    "error");
+        }
+    }
+
+    /**
+     * Shows a message when an invalid move is attempted.
+     */
+    protected void showInvalidMoveMessage() {
+        if (parentFrame != null) {
+            parentFrame.displayMessage("Invalid move! Please try a different move.", "warning");
+        }
     }
 
     /**
@@ -169,6 +182,12 @@ public class GUI extends Game {
 
     public void end(Color winner) {
         String winnerText = (winner == Color.WHITE) ? "White" : "Black";
+
+        // Display in message board
+        if (parentFrame != null) {
+            parentFrame.displayMessage(winnerText + " wins by capturing the King! Game Over.", "info");
+        }
+
         JOptionPane.showMessageDialog(null,
                 winnerText + " wins by capturing the King!\n\nGame Over",
                 "Chess Game - Winner!",

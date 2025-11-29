@@ -23,7 +23,10 @@ public class sideMenuPanel extends JPanel {
     private JButton newGameButton, saveGameButton, loadGameButton;
     private JLabel gameTitle, themeLabel, pieceThemeLabel;
     private JComboBox<String> themeSelector, pieceThemeSelector;
-    private JPanel themePanel, gameControlPanel;
+    private JPanel themePanel, gameControlPanel, messagePanel;
+    private JTextArea messageBoard;
+    private JScrollPane messageScrollPane;
+    private JLabel hoverInfoLabel;
 
     /**
      * Creates a new side menu panel with the specified parent frame.
@@ -45,32 +48,30 @@ public class sideMenuPanel extends JPanel {
     private void initializeComponents() {
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(220, 0)); // Slightly wider for new buttons
-        
+
         // Game title
         gameTitle = new JLabel("CHESS", SwingConstants.CENTER);
         gameTitle.setPreferredSize(new Dimension(220, 50));
-        
+
         // Game control panel for new/save/load
         gameControlPanel = new JPanel();
         gameControlPanel.setLayout(new BoxLayout(gameControlPanel, BoxLayout.Y_AXIS));
-        
-        
+
         // Game control buttons
         newGameButton = new JButton("New Game");
         saveGameButton = new JButton("Save Game");
         loadGameButton = new JButton("Load Game");
-        
-        
+
         // Add action listeners for game controls
         newGameButton.addActionListener(e -> handleNewGame());
         saveGameButton.addActionListener(e -> handleSaveGame());
         loadGameButton.addActionListener(e -> handleLoadGame());
-        
+
         // Style buttons
         styleMenuButton(newGameButton);
         styleMenuButton(saveGameButton);
         styleMenuButton(loadGameButton);
-        
+
         // Add game control buttons to panel
         gameControlPanel.add(newGameButton);
         gameControlPanel.add(Box.createRigidArea(new Dimension(0, 5)));
@@ -78,44 +79,71 @@ public class sideMenuPanel extends JPanel {
         gameControlPanel.add(Box.createRigidArea(new Dimension(0, 5)));
         gameControlPanel.add(loadGameButton);
         gameControlPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        
+
         // Theme selection panel
         themePanel = new JPanel();
         themePanel.setLayout(new BoxLayout(themePanel, BoxLayout.Y_AXIS));
-        
+
         // Board theme selection
         JPanel boardThemePanel = new JPanel(new FlowLayout());
         themeLabel = new JLabel("Board Theme:");
-        themeSelector = new JComboBox<>(new String[]{"Classic", "Modern"});
+        themeSelector = new JComboBox<>(new String[] { "Classic", "Modern" });
         themeSelector.addActionListener(e -> {
             String selectedTheme = (String) themeSelector.getSelectedItem();
             parentFrame.changeTheme(selectedTheme);
         });
-        
+
         boardThemePanel.add(themeLabel);
         boardThemePanel.add(themeSelector);
-        
+
         // Piece theme selection
         JPanel pieceThemePanel = new JPanel(new FlowLayout());
         pieceThemeLabel = new JLabel("Piece Theme:");
-        pieceThemeSelector = new JComboBox<>(new String[]{"Classic", "Modern"});
+        pieceThemeSelector = new JComboBox<>(new String[] { "Classic", "Modern" });
         pieceThemeSelector.addActionListener(e -> {
             String selectedPieceTheme = (String) pieceThemeSelector.getSelectedItem();
             parentFrame.changePieceTheme(selectedPieceTheme);
         });
-        
+
         pieceThemePanel.add(pieceThemeLabel);
         pieceThemePanel.add(pieceThemeSelector);
-        
+
         // Add both theme panels to main theme panel
         themePanel.add(boardThemePanel);
         themePanel.add(pieceThemePanel);
-        
+
+        // Message board panel
+        messagePanel = new JPanel();
+        messagePanel.setLayout(new BorderLayout());
+        messagePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel messageLabel = new JLabel("Messages:");
+        messageBoard = new JTextArea(5, 15);
+        messageBoard.setEditable(false);
+        messageBoard.setLineWrap(true);
+        messageBoard.setWrapStyleWord(true);
+        messageScrollPane = new JScrollPane(messageBoard);
+        messageScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        hoverInfoLabel = new JLabel(" ");
+        hoverInfoLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
+
+        messagePanel.add(messageLabel, BorderLayout.NORTH);
+        messagePanel.add(messageScrollPane, BorderLayout.CENTER);
+        messagePanel.add(hoverInfoLabel, BorderLayout.SOUTH);
+
+        // Create container for game controls and messages
+        JPanel centerContainer = new JPanel();
+        centerContainer.setLayout(new BoxLayout(centerContainer, BoxLayout.Y_AXIS));
+        centerContainer.add(gameControlPanel);
+        centerContainer.add(Box.createRigidArea(new Dimension(0, 10)));
+        centerContainer.add(messagePanel);
+
         // Add components to main panel
         add(gameTitle, BorderLayout.NORTH);
-        add(gameControlPanel, BorderLayout.CENTER);
+        add(centerContainer, BorderLayout.CENTER);
         add(themePanel, BorderLayout.SOUTH);
-        
+
         // Set initial button states
         setGameInProgress(false);
     }
@@ -130,13 +158,12 @@ public class sideMenuPanel extends JPanel {
         if (parentFrame.getCurrentGame() != null) {
             // Game is in progress, confirm reset
             int result = JOptionPane.showConfirmDialog(
-                this,
-                "This will override the current game. Are you sure?",
-                "New Game",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE
-            );
-            
+                    this,
+                    "This will override the current game. Are you sure?",
+                    "New Game",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+
             if (result == JOptionPane.YES_OPTION) {
                 showGameModeSelection();
             }
@@ -145,7 +172,7 @@ public class sideMenuPanel extends JPanel {
             showGameModeSelection();
         }
     }
-    
+
     /**
      * Displays game mode selection dialog for starting a new game.
      * 
@@ -158,17 +185,17 @@ public class sideMenuPanel extends JPanel {
         dialog.setLayout(new BorderLayout());
         dialog.setSize(300, 200);
         dialog.setLocationRelativeTo(this);
-        
+
         // Create panel for buttons
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        
+
         // Create buttons
         JButton aiButton = new JButton("1-Player (AI)");
         JButton coopButton = new JButton("Co-op");
         JButton onlineButton = new JButton("Online");
-        
+
         // Style buttons
         Dimension buttonSize = new Dimension(200, 40);
         aiButton.setAlignmentX(CENTER_ALIGNMENT);
@@ -177,26 +204,26 @@ public class sideMenuPanel extends JPanel {
         coopButton.setMaximumSize(buttonSize);
         onlineButton.setAlignmentX(CENTER_ALIGNMENT);
         onlineButton.setMaximumSize(buttonSize);
-        
+
         // AI button action
         aiButton.addActionListener(e -> {
             dialog.dispose();
-            JOptionPane.showMessageDialog(this, "AI mode not yet implemented!", "Not Implemented", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "AI mode not yet implemented!", "Not Implemented",
+                    JOptionPane.INFORMATION_MESSAGE);
         });
-        
+
         // Co-op button action
         coopButton.addActionListener(e -> {
             dialog.dispose();
             // Check if game is currently active
             if (parentFrame.getCurrentGame() != null) {
                 int result = JOptionPane.showConfirmDialog(
-                    this,
-                    "This will override the current game. Are you sure?",
-                    "Warning",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE
-                );
-                
+                        this,
+                        "This will override the current game. Are you sure?",
+                        "Warning",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+
                 if (result == JOptionPane.YES_OPTION) {
                     parentFrame.startTwoPlayerGame();
                     setGameInProgress(true);
@@ -207,24 +234,24 @@ public class sideMenuPanel extends JPanel {
                 setGameInProgress(true);
             }
         });
-        
+
         // Online button action
         onlineButton.addActionListener(e -> {
             dialog.dispose();
             showOnlineGameDialog();
         });
-        
+
         // Add buttons to panel
         buttonPanel.add(aiButton);
         buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         buttonPanel.add(coopButton);
         buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         buttonPanel.add(onlineButton);
-        
+
         dialog.add(buttonPanel, BorderLayout.CENTER);
         dialog.setVisible(true);
     }
-    
+
     /**
      * Displays the online game dialog with IP address and port input fields.
      * Shows Host and Join buttons for network gameplay setup.
@@ -235,12 +262,12 @@ public class sideMenuPanel extends JPanel {
         dialog.setLayout(new BorderLayout());
         dialog.setSize(350, 250);
         dialog.setLocationRelativeTo(this);
-        
+
         // Create panel for input fields
         JPanel inputPanel = new JPanel();
         inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
         inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
-        
+
         // IP Address field
         JPanel ipPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel ipLabel = new JLabel("IP Address:");
@@ -248,7 +275,7 @@ public class sideMenuPanel extends JPanel {
         JTextField ipField = new JTextField(15);
         ipPanel.add(ipLabel);
         ipPanel.add(ipField);
-        
+
         // Port field
         JPanel portPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel portLabel = new JLabel("Port:");
@@ -257,126 +284,134 @@ public class sideMenuPanel extends JPanel {
         portField.setText("8080"); // Default port
         portPanel.add(portLabel);
         portPanel.add(portField);
-        
+
         // Color selection (for host)
         JPanel colorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel colorLabel = new JLabel("Your Color:");
         colorLabel.setPreferredSize(new Dimension(80, 25));
-        JComboBox<String> colorSelector = new JComboBox<>(new String[]{"White", "Black"});
+        JComboBox<String> colorSelector = new JComboBox<>(new String[] { "White", "Black" });
         colorPanel.add(colorLabel);
         colorPanel.add(colorSelector);
-        
+
         inputPanel.add(ipPanel);
         inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         inputPanel.add(portPanel);
         inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         inputPanel.add(colorPanel);
-        
+
         // Create panel for buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         JButton hostButton = new JButton("Host");
         JButton joinButton = new JButton("Join");
-        
+
         // Host button action
         hostButton.addActionListener(e -> {
             String portText = portField.getText().trim();
             if (portText.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Enter a port number", "Invalid Input", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Enter a port number", "Invalid Input",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            
+
             try {
                 int port = Integer.parseInt(portText);
                 if (port < 1024 || port > 65535) {
-                    JOptionPane.showMessageDialog(dialog, "Port must be between 1024 and 65535!", "Invalid Port", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(dialog, "Port must be between 1024 and 65535!", "Invalid Port",
+                            JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                
+
                 // Get selected color
                 String selectedColor = (String) colorSelector.getSelectedItem();
                 utils.Color hostColor = selectedColor.equals("White") ? utils.Color.WHITE : utils.Color.BLACK;
-                
+
                 dialog.dispose();
                 startHostGame(port, hostColor);
-                
+
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog, "Port must be a valid number!", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Port must be a valid number!", "Invalid Input",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
-        
+
         // Join button action
         joinButton.addActionListener(e -> {
             String ip = ipField.getText().trim();
             String portText = portField.getText().trim();
-            
+
             if (ip.isEmpty() || portText.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Please enter both IP address and port!", "Invalid Input", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Please enter both IP address and port!", "Invalid Input",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            
+
             try {
                 int port = Integer.parseInt(portText);
                 if (port < 1024 || port > 65535) {
-                    JOptionPane.showMessageDialog(dialog, "Port must be between 1024 and 65535!", "Invalid Port", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(dialog, "Port must be between 1024 and 65535!", "Invalid Port",
+                            JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                
+
                 dialog.dispose();
                 startClientGame(ip, port);
-                
+
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog, "Port must be a valid number!", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Port must be a valid number!", "Invalid Input",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
-        
+
         buttonPanel.add(hostButton);
         buttonPanel.add(joinButton);
-        
+
         dialog.add(inputPanel, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
     }
-    
+
     /**
      * Starts a new network game as the host.
      * 
-     * @param port The port to host the server on
+     * @param port      The port to host the server on
      * @param hostColor The color the host wants to play as
      */
     private void startHostGame(int port, utils.Color hostColor) {
-        JOptionPane.showMessageDialog(this, 
-            "Hosting on port " + port + " as " + (hostColor == utils.Color.WHITE ? "White" : "Black") + "\nWaiting for opponent...", 
-            "Hosting Game", 
-            JOptionPane.INFORMATION_MESSAGE);
-        
+        JOptionPane.showMessageDialog(this,
+                "Hosting on port " + port + " as " + (hostColor == utils.Color.WHITE ? "White" : "Black")
+                        + "\nWaiting for opponent...",
+                "Hosting Game",
+                JOptionPane.INFORMATION_MESSAGE);
+
         // TODO: Create Network game instance as host
         // game.Network networkGame = new game.Network(true, hostColor, port);
         // networkGame.setParentFrame(parentFrame);
         // parentFrame.setGame(networkGame);
         // setGameInProgress(true);
     }
-    
+
     /**
      * Starts a new network game as the client.
      * 
      * @param serverIP The IP address of the host server
-     * @param port The port the server is hosted on
+     * @param port     The port the server is hosted on
      */
     private void startClientGame(String serverIP, int port) {
-        JOptionPane.showMessageDialog(this, 
-            "Connecting to " + serverIP + ":" + port + "...", 
-            "Joining Game", 
-            JOptionPane.INFORMATION_MESSAGE);
-        
+        JOptionPane.showMessageDialog(this,
+                "Connecting to " + serverIP + ":" + port + "...",
+                "Joining Game",
+                JOptionPane.INFORMATION_MESSAGE);
+
         // TODO: Create Network game instance as client
         // Client's color will be assigned by server (opposite of host)
         // For now, pass WHITE as placeholder - will be updated by server
-        // game.Network networkGame = new game.Network(true, utils.Color.WHITE, serverIP, port);
+        // game.Network networkGame = new game.Network(true, utils.Color.WHITE,
+        // serverIP, port);
         // networkGame.setParentFrame(parentFrame);
         // parentFrame.setGame(networkGame);
         // setGameInProgress(true);
     }
-    
+
     /**
      * Handles saving the current game state to a file.
      * 
@@ -388,27 +423,29 @@ public class sideMenuPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "No game to save!", "Save Game", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
+
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Save Game");
         fileChooser.setFileFilter(new FileNameExtensionFilter("Chess Game Files (*.chess)", "chess"));
         fileChooser.setSelectedFile(new File("game.chess"));
-        
+
         if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             if (!file.getName().endsWith(".chess")) {
                 file = new File(file.getAbsolutePath() + ".chess");
             }
-            
+
             try {
                 saveGameToFile(file);
-                JOptionPane.showMessageDialog(this, "Game saved successfully!", "Save Game", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Game saved successfully!", "Save Game",
+                        JOptionPane.INFORMATION_MESSAGE);
             } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Failed to save game: " + e.getMessage(), "Save Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Failed to save game: " + e.getMessage(), "Save Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
-    
+
     /**
      * Handles loading a game state from a file.
      * 
@@ -418,35 +455,36 @@ public class sideMenuPanel extends JPanel {
     private void handleLoadGame() {
         if (parentFrame.getCurrentGame() != null) {
             int result = JOptionPane.showConfirmDialog(
-                this,
-                "This will replace the current game. Are you sure?",
-                "Load Game",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-            );
-            
+                    this,
+                    "This will replace the current game. Are you sure?",
+                    "Load Game",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+
             if (result != JOptionPane.YES_OPTION) {
                 return;
             }
         }
-        
+
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Load Game");
         fileChooser.setFileFilter(new FileNameExtensionFilter("Chess Game Files (*.chess)", "chess"));
-        
+
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
-            
+
             try {
                 loadGameFromFile(file);
                 setGameInProgress(true);
-                JOptionPane.showMessageDialog(this, "Game loaded successfully!", "Load Game", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Game loaded successfully!", "Load Game",
+                        JOptionPane.INFORMATION_MESSAGE);
             } catch (IOException | ClassNotFoundException e) {
-                JOptionPane.showMessageDialog(this, "Failed to load game: " + e.getMessage(), "Load Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Failed to load game: " + e.getMessage(), "Load Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
-    
+
     /**
      * Serializes and saves the current game to the specified file.
      * 
@@ -459,12 +497,12 @@ public class sideMenuPanel extends JPanel {
             oos.writeObject(parentFrame.getCurrentGame());
         }
     }
-    
+
     /**
      * Deserializes and loads a game from the specified file.
      * 
      * @param file The file to load the game state from
-     * @throws IOException if file reading fails
+     * @throws IOException            if file reading fails
      * @throws ClassNotFoundException if game class cannot be found
      */
     private void loadGameFromFile(File file) throws IOException, ClassNotFoundException {
@@ -486,6 +524,64 @@ public class sideMenuPanel extends JPanel {
     }
 
     /**
+     * Displays a message in the message board.
+     * 
+     * @param message     The message to display
+     * @param messageType The type of message ("error", "warning", "info")
+     */
+    public void displayMessage(String message, String messageType) {
+        String timestamp = new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date());
+        String prefix = "";
+
+        switch (messageType.toLowerCase()) {
+            case "error":
+                prefix = "[ERROR] ";
+                break;
+            case "warning":
+                prefix = "[WARNING] ";
+                break;
+            case "info":
+                prefix = "[INFO] ";
+                break;
+            default:
+                prefix = "";
+        }
+
+        String formattedMessage = timestamp + " " + prefix + message + "\n";
+        messageBoard.append(formattedMessage);
+        messageBoard.setCaretPosition(messageBoard.getDocument().getLength());
+    }
+
+    /**
+     * Clears all messages from the message board.
+     */
+    public void clearMessages() {
+        messageBoard.setText("");
+    }
+
+    /**
+     * Updates the hover info label to show the currently hovered piece.
+     * 
+     * @param pieceName  The name of the piece being hovered over (e.g., "King",
+     *                   "Queen")
+     * @param pieceColor The color of the piece ("White" or "Black")
+     */
+    public void updateHoverInfo(String pieceName, String pieceColor) {
+        if (pieceName != null && pieceColor != null) {
+            hoverInfoLabel.setText("Hovering: " + pieceColor + " " + pieceName);
+        } else {
+            hoverInfoLabel.setText(" ");
+        }
+    }
+
+    /**
+     * Clears the hover info label.
+     */
+    public void clearHoverInfo() {
+        hoverInfoLabel.setText(" ");
+    }
+
+    /**
      * Updates the visual styling of all components using current palette.
      * 
      * Applies the current UI palette and styling to all buttons, panels,
@@ -494,37 +590,46 @@ public class sideMenuPanel extends JPanel {
     public void updateStyle() {
         UIStyle style = parentFrame.getStyle();
         UIPalette palette = parentFrame.getPalette();
-        
+
         // Style the main panel
         style.styleLabelPanel(this, palette, "Game Menu");
-        
+
         // Style all buttons
         style.styleCellButton(newGameButton, true, palette);
         style.styleCellButton(saveGameButton, true, palette);
         style.styleCellButton(loadGameButton, true, palette);
-        
+
         // Style panels
         style.styleLabelPanel(gameControlPanel, palette, "Game Controls");
         style.styleLabelPanel(themePanel, palette, "Settings");
-        
+
         // Style labels and components
         gameTitle.setFont(palette.font);
         gameTitle.setForeground(palette.labelForeground);
-        
+
         themeLabel.setFont(palette.font);
         themeLabel.setForeground(palette.labelForeground);
-        
+
         pieceThemeLabel.setFont(palette.font);
         pieceThemeLabel.setForeground(palette.labelForeground);
-        
+
         themeSelector.setFont(palette.font);
         themeSelector.setForeground(palette.labelForeground);
         themeSelector.setBackground(palette.labelBackground);
-        
+
         pieceThemeSelector.setFont(palette.font);
         pieceThemeSelector.setForeground(palette.labelForeground);
         pieceThemeSelector.setBackground(palette.labelBackground);
-        
+
+        // Style message board
+        style.styleLabelPanel(messagePanel, palette, "Messages");
+        messageBoard.setFont(palette.font);
+        messageBoard.setForeground(palette.labelForeground);
+        messageBoard.setBackground(palette.labelBackground);
+
+        hoverInfoLabel.setFont(palette.font);
+        hoverInfoLabel.setForeground(palette.labelForeground);
+
         repaint();
         revalidate();
     }
