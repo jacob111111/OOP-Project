@@ -16,11 +16,10 @@ import game.*;
  * It handles theme management, game initialization, and coordinates
  * communication between different UI components.
  */
-public class chessFrame extends JFrame 
-{
+public class chessFrame extends JFrame {
     private static final int FRAME_WIDTH = 1000; // Increased width for side menu
     private static final int FRAME_HEIGHT = 800;
-    
+
     private UIPalette masterPalette;
     private UIStyle masterStyle;
     private String currentPieceTheme = "classic"; // Track piece theme separately
@@ -39,8 +38,7 @@ public class chessFrame extends JFrame
      * 
      * @param palette The UI palette to use for initial styling
      */
-    public chessFrame(UIPalette palette) 
-    {
+    public chessFrame(UIPalette palette) {
         this.masterPalette = palette;
         this.masterStyle = new UIStyle();
         setTitle("Chess Game");
@@ -56,7 +54,7 @@ public class chessFrame extends JFrame
         // Add panels to frame
         add(boardPanel, BorderLayout.CENTER);
         add(menuPanel, BorderLayout.EAST);
-        
+
         setVisible(true);
     }
 
@@ -69,16 +67,20 @@ public class chessFrame extends JFrame
     public chessFrame() {
         this(UIPalette.CLASSIC);
     }
-    
-    public UIPalette getPalette() { return masterPalette; }
-    
+
+    public UIPalette getPalette() {
+        return masterPalette;
+    }
+
     /**
      * Gets the UI style utility instance.
      * 
      * @return The UIStyle instance used for component styling
      */
-    public UIStyle getStyle() { return masterStyle; }
-    
+    public UIStyle getStyle() {
+        return masterStyle;
+    }
+
     /**
      * Sets a new UI palette and updates all components.
      * 
@@ -115,7 +117,9 @@ public class chessFrame extends JFrame
      * 
      * @return The current GUI game instance, or null if no game is active
      */
-    public GUI getCurrentGame() { return currentGame; }
+    public GUI getCurrentGame() {
+        return currentGame;
+    }
 
     /**
      * Sets the active game instance and updates the display.
@@ -155,7 +159,7 @@ public class chessFrame extends JFrame
         UIPalette newPalette = themeName.equals("Modern") ? UIPalette.MODERN : UIPalette.CLASSIC;
         setPalette(newPalette);
     }
-    
+
     // Method to change piece theme (called from side menu)
     public void changePieceTheme(String pieceThemeName) {
         this.currentPieceTheme = pieceThemeName.toLowerCase();
@@ -165,8 +169,20 @@ public class chessFrame extends JFrame
             boardPanel.updateDisplay();
         }
     }
-    
+
     public String getCurrentPieceTheme() {
         return currentPieceTheme;
+    }
+
+    /**
+     * Displays a message in the side menu message board.
+     * 
+     * @param message     The message to display
+     * @param messageType The type of message ("error", "warning", "info")
+     */
+    public void displayMessage(String message, String messageType) {
+        if (menuPanel != null) {
+            menuPanel.displayMessage(message, messageType);
+        }
     }
 }
