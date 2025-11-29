@@ -1,12 +1,10 @@
 package game;
 
-
 import utils.Color;
 import utils.Position;
 import javax.swing.JOptionPane;
 
 import piece.Piece;
-
 
 public class GUI extends Game {
     private transient gui.board.BoardPanel boardPanel;
@@ -28,7 +26,8 @@ public class GUI extends Game {
      * In co-op mode, these method are intentionally left empty because the game
      * is event-driven rather than blocking based.
      */
-    public void turn() {}
+    public void turn() {
+    }
 
     // ============================================================================
     // SETTERS
@@ -74,18 +73,6 @@ public class GUI extends Game {
         return winner;
     }
 
-    /**
-     * Manages which of the 2 board perspectives are displayed
-     * to the user based on whos turn it is
-     */
-    public void displayBoard(Color whosMove) {
-        if(whosMove == Color.WHITE) { // Current persective is white on the bottom
-
-        } else { // Current persective is black  on the bottom
-
-        }
-    }
-
     // ============================================================================
     // GAME LOGIC
     // ============================================================================
@@ -110,49 +97,53 @@ public class GUI extends Game {
      * @return true if move was valid and executed, false if invalid
      */
     public boolean executeTurn(Position fromPosition, Position toPosition, Piece pieceToMove) {
-        // Validate the move (BE validation)
-        boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
+        // Piece color validation is done here to maintain OOP architecture
+        if (pieceToMove.getColor() == currentPlayer.getColor()) {
+            // Validate the move (BE validation)
+            boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
 
-        if (!moveSuccessful) {
-            // Invalid move - show popup and return false
-            showInvalidMovePopup();
-            return false;
-        }
+            if (!moveSuccessful) {
+                // Invalid move - show popup and return false
+                showInvalidMovePopup();
+                return false;
+            }
 
-        // Step 4: Execute the move on backend And Step 5: Handle captures
-        Piece capturedPiece = board.getPieceAt(toPosition);
-        boolean kingCaptured = false;
+            // Step 4: Execute the move on backend And Step 5: Handle captures
+            Piece capturedPiece = board.getPieceAt(toPosition);
+            boolean kingCaptured = false;
 
-        // Check if there's a piece to capture and it's not the same color
-        if (capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor()) {
-            // Capture the piece at destination
-            kingCaptured = board.capturePiece(pieceToMove, toPosition);
-        }
+            // Check if there's a piece to capture and it's not the same color
+            if (capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor()) {
+                // Capture the piece at destination
+                kingCaptured = board.capturePiece(pieceToMove, toPosition);
+            }
 
-        // Update piece position on backend
-        board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
+            // Update piece position on backend
+            board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
 
-        // Check if game ended by King capture
-        if (kingCaptured) {
-            winner = WhosTurn;
-            end(winner);
+            // Check if game ended by King capture
+            if (kingCaptured) {
+                winner = WhosTurn;
+                end(winner);
+                return true;
+            }
+
+            // Step 7: Look for checkmate
+            player.Player opponent = getOpponentPlayer();
+
+            if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
+                winner = WhosTurn;
+                System.out.println("Checkmate! " + winner + " wins!");
+                end(winner);
+                return true;
+            }
+
+            // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
+            switchTurn();
+
             return true;
         }
-
-        // Step 7: Look for checkmate
-        player.Player opponent = getOpponentPlayer();
-
-        if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
-            winner = WhosTurn;
-            System.out.println("Checkmate! " + winner + " wins!");
-            end(winner);
-            return true;
-        }
-
-        // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
-        switchTurn();
-
-        return true;
+        return false;
     }
 
     /**
@@ -164,7 +155,7 @@ public class GUI extends Game {
                 "Invalid Move",
                 JOptionPane.WARNING_MESSAGE);
     }
-    
+
     /**
      * Refreshes the board panel display.
      * Used for updating GUI after state changes (e.g., rollback).

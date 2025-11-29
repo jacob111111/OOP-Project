@@ -129,8 +129,6 @@ public abstract class Game implements Serializable {
      */
     public abstract void turn();
 
-    public abstract void displayBoard(Color whosMove);
-
     public Board getBoard() {
         return board;
     }
