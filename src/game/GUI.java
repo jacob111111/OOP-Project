@@ -104,7 +104,7 @@ public class GUI extends Game {
             return false;
         }
 
-        // Validate the move (BE validation)
+        // Validate the move (BE validation) - includes check validation
         boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
 
         if (!moveSuccessful) {
@@ -115,32 +115,32 @@ public class GUI extends Game {
 
         // Step 4: Execute the move on backend And Step 5: Handle captures
         Piece capturedPiece = board.getPieceAt(toPosition);
-        boolean kingCaptured = false;
 
         // Check if there's a piece to capture and it's not the same color
         if (capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor()) {
             // Capture the piece at destination
-            kingCaptured = board.capturePiece(pieceToMove, toPosition);
+            board.capturePiece(pieceToMove, toPosition);
         }
 
         // Update piece position on backend
         board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
 
-        // Check if game ended by King capture
-        if (kingCaptured) {
-            winner = WhosTurn;
-            end(winner);
-            return true;
-        }
-
         // Step 7: Look for checkmate
         player.Player opponent = getOpponentPlayer();
 
         if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
-            winner = WhosTurn;
+            winner = currentPlayer.getColor();
             System.out.println("Checkmate! " + winner + " wins!");
             end(winner);
             return true;
+        }
+
+        // Check if opponent is in check (but not checkmate)
+        if (validMoveDetector != null && validMoveDetector.isKingInCheck(opponent.getColor())) {
+            String opponentColorName = (opponent.getColor() == Color.WHITE) ? "White" : "Black";
+            if (parentFrame != null) {
+                parentFrame.displayMessage(opponentColorName + " is in check!", "warning");
+            }
         }
 
         // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
@@ -182,15 +182,17 @@ public class GUI extends Game {
 
     public void end(Color winner) {
         String winnerText = (winner == Color.WHITE) ? "White" : "Black";
+        String loserText = (winner == Color.WHITE) ? "Black" : "White";
 
         // Display in message board
         if (parentFrame != null) {
-            parentFrame.displayMessage(winnerText + " wins by capturing the King! Game Over.", "info");
+            parentFrame.displayMessage(
+                    "Checkmate! " + loserText + " is in checkmate. " + winnerText + " wins! Game Over.", "info");
         }
 
         JOptionPane.showMessageDialog(null,
-                winnerText + " wins by capturing the King!\n\nGame Over",
-                "Chess Game - Winner!",
+                "Checkmate!\n\n" + loserText + " is in checkmate.\n" + winnerText + " wins!",
+                "Chess Game - Checkmate!",
                 JOptionPane.INFORMATION_MESSAGE);
 
         // Clear the game after user clicks OK

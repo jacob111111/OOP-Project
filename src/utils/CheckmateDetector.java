@@ -64,6 +64,16 @@ public class CheckmateDetector {
     }
 
     /**
+     * Determines if the specified color's king is currently in check.
+     * 
+     * @param kingColor the color of the king to check (WHITE or BLACK)
+     * @return true if the king is in check, false otherwise
+     */
+    public boolean isKingInCheck(Color kingColor) {
+        return attackMap.isKingInCheck(kingColor);
+    }
+
+    /**
      * Determines if the king can escape to any safe square.
      * 
      * This method checks all 8 adjacent squares around the king to see if any

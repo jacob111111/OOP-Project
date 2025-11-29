@@ -144,7 +144,8 @@ public class Board implements Serializable {
      * Updates a piece's position in both the piece object and the position index.
      * 
      * This method maintains consistency between the piece's internal position
-     * and the board's position tracking system, and updates the attack map.
+     * and the board's position tracking system. Note that the attack map is
+     * updated during move validation, so no additional update is needed here.
      * 
      * @param piece  the piece being moved
      * @param oldPos the piece's previous position
@@ -154,11 +155,6 @@ public class Board implements Serializable {
         positionIndex.remove(oldPos);
         positionIndex.put(newPos, piece);
         piece.setPosition(newPos);
-
-        // Update attack map after piece movement
-        if (attackMap != null) {
-            attackMap.updateAfterMove(piece, oldPos, newPos);
-        }
     }
 
     /**
@@ -213,6 +209,8 @@ public class Board implements Serializable {
      * 
      * Validates that the target position is actually reachable by checking
      * the AttackMap, which accounts for blocked squares and piece obstructions.
+     * Also validates that the move doesn't leave the current player's king in
+     * check using an optimized atomic validation and update approach.
      * This provides proper move validation logic.
      * 
      * @param possibleMove the target position for the move
@@ -220,18 +218,29 @@ public class Board implements Serializable {
      * @return true if the move was successful, false if invalid
      */
     public boolean attemptMove(Position possibleMove, Piece pieceToMove) {
-        // Validate the move using AttackMap to account for blocked squares
-        if (isValidMove(pieceToMove, possibleMove)) {
-            pieceToMove.move(possibleMove);
-
-            // Update pawn's hasMoved flag after first move
-            if (pieceToMove instanceof Pawn) {
-                ((Pawn) pieceToMove).setHasMoved(true);
-            }
-
-            return true;
+        // First validate the move using AttackMap to account for blocked squares
+        if (!isValidMove(pieceToMove, possibleMove)) {
+            return false;
         }
-        return false;
+
+        Position oldPosition = pieceToMove.getPosition();
+
+        // Validate and update attack map atomically
+        // This checks if the move leaves the king in check and updates the attack map
+        // in a single operation, avoiding redundant calculations
+        if (attackMap != null && !attackMap.validateAndUpdateMove(pieceToMove, oldPosition, possibleMove)) {
+            return false;
+        }
+
+        // Move is valid and safe, execute it
+        pieceToMove.move(possibleMove);
+
+        // Update pawn's hasMoved flag after first move
+        if (pieceToMove instanceof Pawn) {
+            ((Pawn) pieceToMove).setHasMoved(true);
+        }
+
+        return true;
     }
 
     /**
