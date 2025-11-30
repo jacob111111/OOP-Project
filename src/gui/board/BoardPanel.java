@@ -230,13 +230,24 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         Piece piece = instance.getBoard().getPieceAt(pos);
 
         if (piece != null) {
-            // DEBUG: Print piece type and possible moves
+            // DEBUG: Print piece type, possible moves, and attack map data
             System.out.println("=== PIECE SELECTED ===");
             System.out.println("Piece type: " + piece.getClass().getSimpleName());
+            System.out.println("Color: " + piece.getColor());
             System.out.println("Position: " + pos);
             System.out.println("Display symbol: " + piece.getDisplaySymbol());
             Set<Position> possibleMoves = piece.getPossibleMoves(instance.getBoard());
             System.out.println("Possible moves (" + possibleMoves.size() + "): " + possibleMoves);
+
+            // Show attack map information
+            utils.AttackMap attackMap = instance.getBoard().getAttackMap();
+            utils.Color opponentColor = (piece.getColor() == utils.Color.WHITE) ? utils.Color.BLACK : utils.Color.WHITE;
+            System.out.println("\nAttack Map Info:");
+            System.out
+                    .println("  This square attacked by opponent? " + attackMap.isSquareAttackedBy(pos, opponentColor));
+            if (attackMap.isSquareAttackedBy(pos, opponentColor)) {
+                System.out.println("  Attacking pieces: " + attackMap.getPiecesAttacking(pos, opponentColor));
+            }
             System.out.println("======================");
 
             currentMove = new MoveState(piece, pos, MoveState.mouseEventType.DRAG, instance);
