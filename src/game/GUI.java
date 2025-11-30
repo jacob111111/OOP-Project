@@ -82,8 +82,8 @@ public class GUI extends Game {
      * Entry point for moves executed through the GUI.
      * 
      * Flow:
-     * 1. Get current player
-     * 2. Validate move (BE)
+     * 1. Validate ownership (player moving their own piece)
+     * 2. Validate move legality (reachability + king safety)
      * 3. If invalid, show popup and return false
      * 4. If valid, update backend board state
      * 5. Handle captures if needed
@@ -97,14 +97,20 @@ public class GUI extends Game {
      * @return true if move was valid and executed, false if invalid
      */
     public boolean executeTurn(Position fromPosition, Position toPosition, Piece pieceToMove) {
-        // Piece color validation is done here to maintain OOP architecture
-        if (pieceToMove.getColor() != currentPlayer.getColor()) {
-            // Player tried to move opponent's piece
+        // Use MoveValidator for comprehensive validation
+        utils.MoveValidator validator = board.getMoveValidator();
+
+        // Ownership validation
+        if (!validator.isPieceOwnedByPlayer(pieceToMove, currentPlayer)) {
             showWrongColorError();
             return false;
         }
 
-        // Validate the move (BE validation)
+        // Step 4: Check for captures BEFORE moving
+        Piece capturedPiece = board.getPieceAt(toPosition);
+        boolean isCapture = capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor();
+
+        // Validate the move (reachability + king safety)
         boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
 
         if (!moveSuccessful) {
@@ -113,34 +119,31 @@ public class GUI extends Game {
             return false;
         }
 
-        // Step 4: Execute the move on backend And Step 5: Handle captures
-        Piece capturedPiece = board.getPieceAt(toPosition);
-        boolean kingCaptured = false;
-
-        // Check if there's a piece to capture and it's not the same color
-        if (capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor()) {
+        // Step 5: Execute the move on backend and handle captures
+        if (isCapture) {
             // Capture the piece at destination
-            kingCaptured = board.capturePiece(pieceToMove, toPosition);
+            board.capturePiece(pieceToMove, toPosition, capturedPiece);
         }
 
         // Update piece position on backend
         board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
 
-        // Check if game ended by King capture
-        if (kingCaptured) {
-            winner = WhosTurn;
-            end(winner);
-            return true;
-        }
-
         // Step 7: Look for checkmate
         player.Player opponent = getOpponentPlayer();
 
         if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
-            winner = WhosTurn;
+            winner = currentPlayer.getColor();
             System.out.println("Checkmate! " + winner + " wins!");
             end(winner);
             return true;
+        }
+
+        // Check if opponent is in check (but not checkmate)
+        if (validMoveDetector != null && validMoveDetector.isKingInCheck(opponent.getColor())) {
+            String opponentColorName = (opponent.getColor() == Color.WHITE) ? "White" : "Black";
+            if (parentFrame != null) {
+                parentFrame.displayMessage(opponentColorName + " is in check!", "warning");
+            }
         }
 
         // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
@@ -182,15 +185,17 @@ public class GUI extends Game {
 
     public void end(Color winner) {
         String winnerText = (winner == Color.WHITE) ? "White" : "Black";
+        String loserText = (winner == Color.WHITE) ? "Black" : "White";
 
         // Display in message board
         if (parentFrame != null) {
-            parentFrame.displayMessage(winnerText + " wins by capturing the King! Game Over.", "info");
+            parentFrame.displayMessage(
+                    "Checkmate! " + loserText + " is in checkmate. " + winnerText + " wins! Game Over.", "info");
         }
 
         JOptionPane.showMessageDialog(null,
-                winnerText + " wins by capturing the King!\n\nGame Over",
-                "Chess Game - Winner!",
+                "Checkmate!\n\n" + loserText + " is in checkmate.\n" + winnerText + " wins!",
+                "Chess Game - Checkmate!",
                 JOptionPane.INFORMATION_MESSAGE);
 
         // Clear the game after user clicks OK

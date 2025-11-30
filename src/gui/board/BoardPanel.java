@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseEvent;
+import javax.swing.Timer;
 
 import gui.utils.UIPalette;
 import gui.utils.UIStyle;
@@ -19,6 +20,7 @@ import utils.Position;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class BoardPanel extends JPanel implements MouseListener, MouseMotionListener {
     private static final int ICON_SIZE = 50; // Adjust this value as needed
@@ -79,6 +81,23 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
     public void setGame(GUI game) {
         this.instance = game;
+        whiteAtBottom = true; // Reset board orientation for new game
+
+        // Clear any ongoing move state from previous game
+        currentMove = null;
+        if (selectedButton != null) {
+            selectedButton.setBorder(originalBorders.get(selectedButton));
+            selectedButton = null;
+        }
+
+        // Clear drag state
+        if (dragLabel != null) {
+            remove(dragLabel);
+            dragLabel = null;
+            dragIcon = null;
+            dragOffset = null;
+        }
+
         drawPieces();
     }
 
@@ -216,6 +235,15 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         Piece piece = instance.getBoard().getPieceAt(pos);
 
         if (piece != null) {
+            // DEBUG: Print piece type and possible moves
+            System.out.println("=== PIECE SELECTED ===");
+            System.out.println("Piece type: " + piece.getClass().getSimpleName());
+            System.out.println("Position: " + pos);
+            System.out.println("Display symbol: " + piece.getDisplaySymbol());
+            Set<Position> possibleMoves = piece.getPossibleMoves(instance.getBoard());
+            System.out.println("Possible moves (" + possibleMoves.size() + "): " + possibleMoves);
+            System.out.println("======================");
+
             currentMove = new MoveState(piece, pos, MoveState.mouseEventType.DRAG, instance);
 
             // Prepare drag icon
@@ -315,7 +343,10 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
             if (moveSuccessful) {
                 System.out.println("mouseReleased: Move executed successfully");
-                flipBoard();
+                // Delay board flip by 150ms for smoother visual transition
+                Timer timer = new Timer(150, evt -> flipBoard());
+                timer.setRepeats(false);
+                timer.start();
             } else {
                 System.out.println("mouseReleased: Move was invalid");
             }
@@ -352,6 +383,15 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
                 if (moveSuccessful) {
                     System.out.println("mouseClicked: Move executed successfully");
+                    // Delay clearing highlights by 150ms for smoother visual transition
+                    Timer timer = new Timer(150, evt -> {
+                        clearHighlights();
+                        drawPieces();
+                    });
+                    timer.setRepeats(false);
+                    timer.start();
+                    currentMove = null;
+                    return;
                 } else {
                     System.out.println("mouseClicked: Move was invalid");
                 }

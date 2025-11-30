@@ -19,10 +19,22 @@ import player.Player;
 public class CheckmateDetector {
     private Board board;
     private AttackMap attackMap;
+    private MoveValidator moveValidator;
 
     public CheckmateDetector(Board board, AttackMap attackMap) {
         this.board = board;
         this.attackMap = attackMap;
+        // MoveValidator will be set after board is fully initialized
+    }
+
+    /**
+     * Sets the move validator for this detector.
+     * Must be called after board initialization to avoid circular dependency.
+     * 
+     * @param validator the MoveValidator instance
+     */
+    public void setMoveValidator(MoveValidator validator) {
+        this.moveValidator = validator;
     }
 
     /**
@@ -61,6 +73,16 @@ public class CheckmateDetector {
         }
 
         return true; // No escape, no block, no capture = checkmate
+    }
+
+    /**
+     * Determines if the specified color's king is currently in check.
+     * 
+     * @param kingColor the color of the king to check (WHITE or BLACK)
+     * @return true if the king is in check, false otherwise
+     */
+    public boolean isKingInCheck(Color kingColor) {
+        return attackMap.isKingInCheck(kingColor);
     }
 
     /**
@@ -328,8 +350,9 @@ public class CheckmateDetector {
      * Checks if any of the defending player's pieces can capture the attacking
      * piece.
      * 
-     * Iterates through all defending pieces to see if any can attack the checker's
-     * position. Uses the same attack calculation logic as king escape simulation.
+     * Iterates through all defending pieces to see if any can legally move to
+     * capture the checker. Uses MoveValidator to ensure the capture doesn't
+     * leave the king in check.
      * 
      * @param checkerPos      the position of the piece giving check
      * @param defendingPlayer the player whose pieces might capture the checker
@@ -342,9 +365,14 @@ public class CheckmateDetector {
                 continue; // skip King as it's capture was already checked in canKingEscape
             }
 
-            // Check if this piece can attack the checker's position
-            if (canPieceAttackSquare(piece, checkerPos, kingPos)) {
-                return true; // Found a piece that can capture the checker
+            Position piecePos = piece.getPosition();
+
+            // Check if this piece can reach the checker's position
+            if (moveValidator != null && moveValidator.isDestinationReachable(piece, checkerPos)) {
+                // Check if capturing would leave king safe
+                if (moveValidator.isMoveKingSafe(piece, piecePos, checkerPos)) {
+                    return true; // Found a piece that can safely capture the checker
+                }
             }
         }
         return false; // No piece can capture the checker
@@ -358,8 +386,7 @@ public class CheckmateDetector {
      * - Linear pieces (Rook, Bishop, Queen) can be blocked by moving a piece
      * into the attack line between the attacker and the king
      * 
-     * Uses the AttackMap to efficiently find pieces that can move to blocking
-     * squares.
+     * Uses MoveValidator to verify that blocking moves don't leave king in check.
      * 
      * @param checker         the piece giving check
      * @param defendingPlayer the player whose pieces might block
@@ -386,15 +413,22 @@ public class CheckmateDetector {
             return false;
         }
 
-        // Check if any defending piece can move to any blocking square
-        Color defendingColor = defendingPlayer.getColor();
-        for (Position blockSquare : blockingSquares) {
-            java.util.Set<Piece> piecesAttackingThisSquare = attackMap.getPiecesAttacking(blockSquare, defendingColor);
+        // Check if any defending piece can legally move to any blocking square
+        for (Piece piece : defendingPlayer.getCurrentPieces()) {
+            if (piece instanceof King) {
+                continue; // King can't block (already tried to escape)
+            }
 
-            // Filter out the king - it can't block (already tried to escape)
-            for (Piece piece : piecesAttackingThisSquare) {
-                if (!(piece instanceof King)) {
-                    return true; // Found a piece that can block!
+            Position piecePos = piece.getPosition();
+
+            // Check each potential blocking square
+            for (Position blockSquare : blockingSquares) {
+                // Can this piece reach the blocking square?
+                if (moveValidator != null && moveValidator.isDestinationReachable(piece, blockSquare)) {
+                    // Would moving there keep the king safe?
+                    if (moveValidator.isMoveKingSafe(piece, piecePos, blockSquare)) {
+                        return true; // Found a piece that can block!
+                    }
                 }
             }
         }

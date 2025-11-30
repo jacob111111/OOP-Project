@@ -25,4 +25,13 @@ public class Queen extends LinearPiece {
         super(color, position);
         this.displaySymbol.append("Q");
     }
+
+    @Override
+    public int[][] getDirections() {
+        // Queen moves in all 8 directions: horizontal, vertical, and diagonal
+        return new int[][] {
+                { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 },
+                { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 }
+        };
+    }
 }

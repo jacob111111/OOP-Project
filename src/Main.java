@@ -16,7 +16,7 @@ import utils.Color;
  * @author Jordan Atchison, Jacob Atchison
  */
 public class Main {
-    
+
     /**
      * Application entry point.
      * 
@@ -28,24 +28,23 @@ public class Main {
      */
     public static void main(String[] args) {
         Scanner scnr = new Scanner(System.in);
-        
+
         System.out.println("Choose game interface:");
         System.out.println("1. GUI (Combined Board & Menu)");
         System.out.println("2. Console");
         System.out.print("Enter choice (1-2): ");
-        
+
         int choice = scnr.nextInt();
-        
-        if(choice == 1) {
+
+        if (choice == 1) {
             // Launch GUI with combined board and menu
             javax.swing.SwingUtilities.invokeLater(() -> {
                 new gui.chessFrame(); // Launches with classic palette and empty board
             });
             scnr.close(); // Close scanner since GUI will handle input
-        } 
-        else if(choice == 2) {
+        } else if (choice == 2) {
             // Console mode
-            Console game = null; 
+            Console game = null;
             System.out.println("Welcome to the Console Chess Game!");
             System.out.println("What type of game would you like to play?");
             System.out.println("1-Player or 2-Player");
@@ -58,8 +57,8 @@ public class Main {
             System.out.print("Input 1-2: ");
             int colorChoice = scnr.nextInt();
             Color p1Color = (colorChoice == 1) ? Color.WHITE : Color.BLACK;
-            
-            switch(choice){
+
+            switch (choice) {
                 case 1:
                     game = new Console(false, p1Color, scnr);
                     break;

@@ -25,4 +25,12 @@ public class Bishop extends LinearPiece {
         super(color, position);
         this.displaySymbol.append("B");
     }
+
+    @Override
+    public int[][] getDirections() {
+        // Bishop moves diagonally only
+        return new int[][] {
+                { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 }
+        };
+    }
 }
