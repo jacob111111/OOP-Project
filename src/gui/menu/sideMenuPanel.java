@@ -377,36 +377,70 @@ public class sideMenuPanel extends JPanel {
      * @param hostColor The color the host wants to play as
      */
     private void startHostGame(int port, utils.Color hostColor) {
-        // Show waiting dialog
+        // Disable board panel while searching
+        parentFrame.setBoardEnabled(false);
+        
+        // Show waiting dialog with stop button
         JDialog waitDialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Hosting Game", false);
         waitDialog.setLayout(new BorderLayout());
-        waitDialog.setSize(300, 100);
+        waitDialog.setSize(300, 130);
         waitDialog.setLocationRelativeTo(this);
+        
         JLabel waitLabel = new JLabel("Hosting on port " + port + "... Waiting for opponent...", SwingConstants.CENTER);
         waitDialog.add(waitLabel, BorderLayout.CENTER);
+        
+        // Add stop button
+        JButton stopButton = new JButton("Stop Searching");
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(stopButton);
+        waitDialog.add(buttonPanel, BorderLayout.SOUTH);
+        
         waitDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        waitDialog.setVisible(true);
-
+        
+        // Track if cancelled
+        final boolean[] cancelled = {false};
+        
         // Create Network game instance as host on a background thread
-        new Thread(() -> {
+        Thread hostThread = new Thread(() -> {
             try {
                 game.Network networkGame = new game.Network(true, hostColor, port);
                 
-                // Update GUI on Swing thread after connection
-                SwingUtilities.invokeLater(() -> {
-                    waitDialog.dispose();
-                    networkGame.setParentFrame(parentFrame);
-                    parentFrame.setGame(networkGame);
-                    setGameInProgress(true);
-                    JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
-                });
+                // Check if cancelled before proceeding
+                if (!cancelled[0]) {
+                    // Update GUI on Swing thread after connection
+                    SwingUtilities.invokeLater(() -> {
+                        waitDialog.dispose();
+                        parentFrame.setBoardEnabled(true);
+                        networkGame.setParentFrame(parentFrame);
+                        parentFrame.setGame(networkGame);
+                        setGameInProgress(true);
+                        JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
+                    });
+                } else {
+                    // Was cancelled, clean up
+                    networkGame.stopNetworkListener();
+                }
             } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> {
-                    waitDialog.dispose();
-                    JOptionPane.showMessageDialog(this, "Failed to host game: " + e.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
-                });
+                if (!cancelled[0]) {
+                    SwingUtilities.invokeLater(() -> {
+                        waitDialog.dispose();
+                        parentFrame.setBoardEnabled(true);
+                        JOptionPane.showMessageDialog(this, "Failed to host game: " + e.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
+                    });
+                }
             }
-        }, "HostGameThread").start();
+        }, "HostGameThread");
+        
+        // Stop button action
+        stopButton.addActionListener(e -> {
+            cancelled[0] = true;
+            waitDialog.dispose();
+            parentFrame.setBoardEnabled(true);
+            hostThread.interrupt();
+        });
+        
+        hostThread.start();
+        waitDialog.setVisible(true);
     }
 
     /**
@@ -416,37 +450,71 @@ public class sideMenuPanel extends JPanel {
      * @param port     The port the server is hosted on
      */
     private void startClientGame(String serverIP, int port) {
-        // Show connecting dialog
+        // Disable board panel while searching
+        parentFrame.setBoardEnabled(false);
+        
+        // Show connecting dialog with stop button
         JDialog waitDialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Joining Game", false);
         waitDialog.setLayout(new BorderLayout());
-        waitDialog.setSize(300, 100);
+        waitDialog.setSize(300, 130);
         waitDialog.setLocationRelativeTo(this);
+        
         JLabel waitLabel = new JLabel("Connecting to " + serverIP + ":" + port + "...", SwingConstants.CENTER);
         waitDialog.add(waitLabel, BorderLayout.CENTER);
+        
+        // Add stop button
+        JButton stopButton = new JButton("Stop Searching");
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(stopButton);
+        waitDialog.add(buttonPanel, BorderLayout.SOUTH);
+        
         waitDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        waitDialog.setVisible(true);
-
+        
+        // Track if cancelled
+        final boolean[] cancelled = {false};
+        
         // Create Network game instance as client on a background thread
-        new Thread(() -> {
+        Thread clientThread = new Thread(() -> {
             try {
                 // Client's color will be assigned by server
                 game.Network networkGame = new game.Network(true, serverIP, port);
                 
-                // Update GUI on Swing thread after connection
-                SwingUtilities.invokeLater(() -> {
-                    waitDialog.dispose();
-                    networkGame.setParentFrame(parentFrame);
-                    parentFrame.setGame(networkGame);
-                    setGameInProgress(true);
-                    JOptionPane.showMessageDialog(this, "Connected to server! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
-                });
+                // Check if cancelled before proceeding
+                if (!cancelled[0]) {
+                    // Update GUI on Swing thread after connection
+                    SwingUtilities.invokeLater(() -> {
+                        waitDialog.dispose();
+                        parentFrame.setBoardEnabled(true);
+                        networkGame.setParentFrame(parentFrame);
+                        parentFrame.setGame(networkGame);
+                        setGameInProgress(true);
+                        JOptionPane.showMessageDialog(this, "Connected to server! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
+                    });
+                } else {
+                    // Was cancelled, clean up
+                    networkGame.stopNetworkListener();
+                }
             } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> {
-                    waitDialog.dispose();
-                    JOptionPane.showMessageDialog(this, "Failed to connect: " + e.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
-                });
+                if (!cancelled[0]) {
+                    SwingUtilities.invokeLater(() -> {
+                        waitDialog.dispose();
+                        parentFrame.setBoardEnabled(true);
+                        JOptionPane.showMessageDialog(this, "Failed to connect: " + e.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
+                    });
+                }
             }
-        }, "ClientGameThread").start();
+        }, "ClientGameThread");
+        
+        // Stop button action
+        stopButton.addActionListener(e -> {
+            cancelled[0] = true;
+            waitDialog.dispose();
+            parentFrame.setBoardEnabled(true);
+            clientThread.interrupt();
+        });
+        
+        clientThread.start();
+        waitDialog.setVisible(true);
     }
 
     /**
