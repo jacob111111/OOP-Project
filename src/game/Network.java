@@ -1,14 +1,19 @@
 package game;
 
 import player.Server;
-import piece.Piece;
 import player.Client;
+
+import piece.Piece;
+
 import utils.Color;
-import utils.NetworkMessageType;
 import utils.NetworkMessage;
 import utils.Position;
+
 import board.Board;
+
 import java.io.*;
+
+import java.lang.Thread;
 
 public class Network extends GUI {
     private int port;
@@ -16,11 +21,15 @@ public class Network extends GUI {
     private Client client = null;
     private boolean isHost;
     private Color myColor;
-
-    // Optimistic update rollback support
+    
+    // Rollback support for client side optimistic updates 
     private Board backupBoard = null;
     private Color backupTurn = null;
-
+    
+    // Network listener thread
+    private Thread networkListenerThread = null;
+    private volatile boolean isListening = false;
+    
     // ============================================================================
     // CONSTRUCTORS
     // ============================================================================
@@ -38,6 +47,9 @@ public class Network extends GUI {
         // Send initial game state to client for sync
         Color clientColor = (p1Color == Color.WHITE) ? Color.BLACK : Color.WHITE;
         server.sendInitialSync(this, clientColor);
+        
+        // Start listening for client moves
+        startNetworkListener();
     }
 
     // Constructor for CLIENT mode
@@ -59,6 +71,9 @@ public class Network extends GUI {
                 this.WhosTurn = syncMsg.gameState.WhosTurn;
             }
         }
+        
+        // Start listening for server moves
+        startNetworkListener();
     }
 
     // ============================================================================
@@ -67,30 +82,14 @@ public class Network extends GUI {
 
     @Override
     public void end(Color winner) {
-        // Once a winner is determined, call methods to display who won in a pop up on
-        // each playes screen
+        // Stop network listener
+        stopNetworkListener();
+        
+        // Once a winner is determined, call methods to display who won in a pop up on each playes screen 
+        // TODO: Show winner popup
     }
 
-    /**
-     * Control flow (whose turn, wait for input)
-     * 
-     */
-    @Override
-    public void turn() {
-        if (WhosTurn == myColor) {
-            // LOCAL TURN: Wait for player to click/drag in GUI
-            // BoardPanel will call executeTurn() when move is made
-        } else {
-            // REMOTE TURN: Listen for opponent's move from network
-            if (isHost) {
-                // Server: receive move request from client, validate, and apply
-                // waitForClientMove();
-            } else {
-                // Client: receive validated move from server and apply
-                // waitForServerMove();
-            }
-        }
-    }
+
 
     /**
      * Action execution (validate and apply a specific move)
@@ -100,74 +99,187 @@ public class Network extends GUI {
     @Override
     public boolean executeTurn(Position from, Position to, Piece piece) {
         if (WhosTurn == myColor) {
-            // LOCAL MOVE (our turn)
             if (isHost) {
-                // Server: validate and apply immediately
+                // Servers Local Move: validate and apply immediately
                 boolean success = super.executeTurn(from, to, piece);
 
                 if (success) {
-                    // Send validated move to client
+                    // Send validated move to client using MOVE_UPDATE
                     server.sendMoveUpdate(from, to);
                 }
 
                 return success;
             } else {
-                // Client: optimistic update
-                // Create backup RIGHT BEFORE applying move
+                // Client local move: Backup game state and perform optimistic update
                 backupBoard = deepCopyBoard(board);
                 backupTurn = WhosTurn;
-
-                // Apply move optimistically (with client-side validation)
+                
                 boolean success = super.executeTurn(from, to, piece);
 
                 if (success) {
-                    // Send move to server for authoritative validation
-                    client.sendMoveRequest(from, to);
-                    // Server will respond async via handleMoveApproval() or handleMoveRejection()
+                    // Send move to server for authoritative validation (async)
+                    // Server will respond via network listener which triggers handleMoveApproval() or handleMoveRejection()
+                    new Thread(() -> {
+                        client.sendMoveRequest(from, to);
+                    }).start();
                 } else {
                     // Client-side validation failed, clear backup
                     backupBoard = null;
                     backupTurn = null;
                 }
-
                 return success;
             }
         } else {
             // REMOTE MOVE (opponent's turn)
-            // Apply the validated move received from network without re-validating
-            Piece capturedPiece = board.getPieceAt(to);
-            boolean kingCaptured = false;
-
-            // Handle captures
-            if (capturedPiece != null && capturedPiece.getColor() != piece.getColor()) {
-                kingCaptured = board.capturePiece(piece, to, capturedPiece);
-            }
-
-            // Update piece position
-            board.updatePiecePosition(piece, from, to);
-
-            // Check if game ended by King capture
-            if (kingCaptured) {
-                winner = WhosTurn;
-                end(winner);
-                return true;
-            }
-
-            // Check for checkmate
-            player.Player opponent = getOpponentPlayer();
-            if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
-                winner = WhosTurn;
-                System.out.println("Checkmate! " + winner + " wins!");
-                end(winner);
-                return true;
-            }
-
-            // Switch turns
-            switchTurn();
-
-            return true;
+            return executeRemoteMove(from, to, piece);
         }
     }
+
+    /**
+     * Executes a move received from the network opponent.
+     * Applies the validated move without re-validating, then checks for game end conditions.
+     * 
+     * @param from Starting position of the piece
+     * @param to Target position for the move
+     * @param piece The piece being moved
+     * @return true if move was successfully applied
+     */
+    private boolean executeRemoteMove(Position from, Position to, Piece piece) {
+        // Apply the validated move received from network without re-validating
+        Piece capturedPiece = board.getPieceAt(to);
+        boolean kingCaptured = false;
+
+        // Handle captures
+        if (capturedPiece != null && capturedPiece.getColor() != piece.getColor()) {
+            kingCaptured = board.capturePiece(piece, to);
+        }
+
+        // Update piece position
+        board.updatePiecePosition(piece, from, to);
+
+        // Check if game ended by King capture
+        if (kingCaptured) {
+            winner = WhosTurn;
+            end(winner);
+            return true;
+        }
+
+        // Check for checkmate using the CheckmateDetector
+        player.Player opponent = getOpponentPlayer();
+        if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
+            winner = WhosTurn;
+            System.out.println("Checkmate! " + winner + " wins!");
+            end(winner);
+            return true;
+        }
+
+        // Switch turns
+        switchTurn();
+        
+        return true;
+    }
+
+    /**
+     * Starts a single background thread that continuously listens for network messages.
+     * This thread runs for the lifetime of the game.
+     */
+    private void startNetworkListener() {
+        isListening = true;
+        networkListenerThread = new Thread(() -> {
+            while (isListening) {
+                try {
+                    if (isHost) {
+                        // Server: Listen for client move requests
+                        NetworkMessage request = server.receiveMoveRequest();
+                        if (request != null && request.from != null && request.to != null) {
+                            handleClientMoveRequest(request);
+                        }
+                    } else {
+                        // Client: Listen for server messages (move updates and move responses)
+                        NetworkMessage message = client.receiveMessage();
+                        if (message != null) {
+                            if (message.type == utils.NetworkMessageType.MOVE_UPDATE && message.from != null && message.to != null) {
+                                handleServerMoveUpdate(message);
+                            } else if (message.type == utils.NetworkMessageType.MOVE_RESPONSE) {
+                                handleServerMoveResponse(message);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    if (isListening) {
+                        System.err.println("Network listener error: " + e.getMessage());
+                    }
+                }
+            }
+        }, "NetworkListener");
+        networkListenerThread.setDaemon(true); // Thread dies when main program exits
+        networkListenerThread.start();
+    }
+    
+    /**
+     * Handles move request from client (server side).
+     * Validates the move and sends response.
+     */
+    private void handleClientMoveRequest(NetworkMessage request) {
+        Piece piece = board.getPieceAt(request.from);
+        
+        // Validate the move on server side
+        boolean isValid = board.attemptMove(request.to, piece);
+        
+        if (isValid) {
+            // Execute the move on server side and notify client
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                executeRemoteMove(request.from, request.to, piece);
+                refreshBoardPanel();
+            });
+            server.sendMoveResponse(true);
+        } else {
+            server.sendMoveResponse(false);
+        }
+    }
+    
+    /**
+     * Handles move update from server (client side).
+     * Applies the validated move to the client's board.
+     */
+    private void handleServerMoveUpdate(NetworkMessage update) {
+        Piece piece = board.getPieceAt(update.from);
+        
+        // Apply the validated move from server
+        // All GUI updates must happen on EDT
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            executeRemoteMove(update.from, update.to, piece);
+            refreshBoardPanel();
+        });
+    }
+    
+    /**
+     * Handles move response from server (client side).
+     * Triggers approval or rejection of the client's optimistic move.
+     */
+    private void handleServerMoveResponse(NetworkMessage response) {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (response.isValid != null && response.isValid) {
+                // Server approved the move
+                handleMoveApproval();
+            } else {
+                // Server rejected the move - rollback
+                handleMoveRejection("Invalid move rejected by server");
+            }
+        });
+    }
+    
+    /**
+     * Stops the network listener thread.
+     * Call this when ending the game.
+     */
+    public void stopNetworkListener() {
+        isListening = false;
+        if (networkListenerThread != null) {
+            networkListenerThread.interrupt();
+        }
+    } 
+
 
     // Syncs game state between host and client (for error recovery)
     public void updateGameState() {
@@ -239,7 +351,7 @@ public class Network extends GUI {
 
         // Show error to user
         if (errorMessage != null && !errorMessage.isEmpty()) {
-            showInvalidMovePopup();
+            showInvalidMoveMessage();
         }
 
         // Clear backup

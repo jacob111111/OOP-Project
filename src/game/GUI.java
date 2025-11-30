@@ -11,10 +11,10 @@ public class GUI extends Game {
     private transient gui.chessFrame parentFrame;
 
     /**
-     * Creates a new Lan game, 1 or 2 player.
+     * Creates a new 1 or 2 player game instance
      * 
-     * @param isPvP   Should the AI be intialized as player 2
-     * @param p1Color The color the 1st player will use, same for if isPVP is false
+     * @param isPvP
+     * @param p1Color The color the 1st player
      */
     public GUI(boolean isPvP, Color p1Color) {
         super(isPvP, p1Color);
@@ -22,12 +22,6 @@ public class GUI extends Game {
         setValidMoveDetector(board.getCheckmateDetector());
     }
 
-    /**
-     * In co-op mode, these method are intentionally left empty because the game
-     * is event-driven rather than blocking based.
-     */
-    public void turn() {
-    }
 
     // ============================================================================
     // SETTERS
@@ -114,7 +108,6 @@ public class GUI extends Game {
         boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
 
         if (!moveSuccessful) {
-            // Invalid move - show message and return false
             showInvalidMoveMessage();
             return false;
         }

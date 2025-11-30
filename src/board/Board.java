@@ -211,16 +211,6 @@ public class Board implements Serializable {
     }
 
     /**
-     * Adds a captured piece to the specified capture dictionary.
-     * 
-     * @param dict     the capture dictionary to add to
-     * @param capPiece the piece that was captured
-     */
-    public void addPieceToCaptures(Dictionary<Piece, Integer> dict, Piece capPiece) {
-        dict.put(capPiece, capPiece.hashCode()); // Using hashCode as piece ID
-    }
-
-    /**
      * Attempts to move a piece to the specified position.
      * 
      * Validates the move using MoveValidator which checks:

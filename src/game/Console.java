@@ -23,9 +23,6 @@ public class Console extends Game {
     /** Scanner for reading user input */
     protected Scanner scnr;
 
-    /** The winner of the console game */
-    private Color winner;
-
     /**
      * Creates a new Console game instance.
      * 
@@ -97,18 +94,9 @@ public class Console extends Game {
     }
 
     public void end(Color winner) {
-
+        // TODO
     }
 
-    /**
-     * Gets the winner of the current game.
-     * 
-     * @return The color of the winner, or null if game is ongoing
-     */
-    @Override
-    public Color getWinner() {
-        return winner;
-    }
 
     /**
      * Processes a single turn in the console game.
@@ -124,7 +112,6 @@ public class Console extends Game {
      * If an invalid move is entered, the player is prompted to try again without
      * switching turns.
      */
-    @Override
     public void turn() {
         System.out.println(WhosTurn + "'s turn");
         System.out.println("");

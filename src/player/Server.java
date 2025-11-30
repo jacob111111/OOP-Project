@@ -75,7 +75,7 @@ public class Server extends Player{
      */
     public void sendMoveUpdate(utils.Position from, utils.Position to) {
         try {
-            NetworkMessage moveUpdate = NetworkMessage.moveRequest(from, to);
+            NetworkMessage moveUpdate = NetworkMessage.moveUpdate(from, to);
             out.writeObject(moveUpdate);
             out.flush();
             
