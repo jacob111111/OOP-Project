@@ -90,13 +90,8 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             selectedButton = null;
         }
 
-        // Clear drag state
-        if (dragLabel != null) {
-            remove(dragLabel);
-            dragLabel = null;
-            dragIcon = null;
-            dragOffset = null;
-        }
+        // Clear drag state properly (removes from layered pane)
+        removeDragVisual();
 
         drawPieces();
     }
