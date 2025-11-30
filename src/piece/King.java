@@ -77,6 +77,86 @@ public class King extends Piece {
             }
         }
 
+        // Castling logic
+        if (!hasMoved) {
+            // King-side castling (O-O)
+            if (canCastle(board, true)) {
+                validMoves.add(new Position(x + 2, y));
+            }
+            // Queen-side castling (O-O-O)
+            if (canCastle(board, false)) {
+                validMoves.add(new Position(x - 2, y));
+            }
+        }
+
         return validMoves;
+    }
+
+    /**
+     * Checks if castling is possible in the specified direction.
+     * 
+     * Castling requirements:
+     * 1. King hasn't moved
+     * 2. Rook hasn't moved
+     * 3. No pieces between king and rook
+     * 4. King is not in check
+     * 5. King doesn't pass through check
+     * 6. King doesn't end up in check
+     * 
+     * @param board    the chess board
+     * @param kingside true for king-side (short) castling, false for queen-side
+     *                 (long)
+     * @return true if castling is legal, false otherwise
+     */
+    private boolean canCastle(board.Board board, boolean kingside) {
+        int x = position.getX();
+        int y = position.getY();
+
+        // Determine rook position and squares to check
+        int rookX = kingside ? 7 : 0;
+        Position rookPos = new Position(rookX, y);
+        Piece rookPiece = board.getPieceAt(rookPos);
+
+        // Check if rook exists and hasn't moved
+        if (!(rookPiece instanceof Rook) || ((Rook) rookPiece).getHasMoved()) {
+            return false;
+        }
+
+        // Check if rook is same color
+        if (rookPiece.getColor() != color) {
+            return false;
+        }
+
+        // Check if squares between king and rook are empty
+        int start = Math.min(x, rookX) + 1;
+        int end = Math.max(x, rookX);
+        for (int i = start; i < end; i++) {
+            if (board.getPieceAt(new Position(i, y)) != null) {
+                return false; // Path blocked
+            }
+        }
+
+        // Check if king is currently in check
+        utils.AttackMap attackMap = board.getAttackMap();
+        Color opponentColor = (color == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        if (attackMap.isSquareAttackedBy(position, opponentColor)) {
+            return false; // Can't castle out of check
+        }
+
+        // Check if king passes through or ends in check
+        // King moves two squares toward rook
+        int direction = kingside ? 1 : -1;
+        Position passThroughSquare = new Position(x + direction, y);
+        Position destinationSquare = new Position(x + (direction * 2), y);
+
+        if (attackMap.isSquareAttackedBy(passThroughSquare, opponentColor)) {
+            return false; // Can't pass through check
+        }
+
+        if (attackMap.isSquareAttackedBy(destinationSquare, opponentColor)) {
+            return false; // Can't end in check
+        }
+
+        return true;
     }
 }

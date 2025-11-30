@@ -13,6 +13,8 @@ import utils.Position;
  * 
  */
 public class Rook extends LinearPiece {
+    /** Tracks whether this rook has moved (used for castling rules) */
+    private boolean hasMoved = false;
 
     /**
      * Creates a new Rook piece with the specified color and position.
@@ -23,6 +25,24 @@ public class Rook extends LinearPiece {
     public Rook(Color color, Position position) {
         super(color, position);
         this.displaySymbol.append("R");
+    }
+
+    /**
+     * Sets whether this rook has moved (affects castling eligibility).
+     * 
+     * @param hasMoved true if the rook has moved, false otherwise
+     */
+    public void setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
+    }
+
+    /**
+     * Gets whether this rook has moved from its starting position.
+     * 
+     * @return true if the rook has moved, false if it's still in starting position
+     */
+    public boolean getHasMoved() {
+        return hasMoved;
     }
 
     @Override

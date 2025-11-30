@@ -58,20 +58,39 @@ public class MoveValidator {
      * @return true if move is fully legal, false otherwise
      */
     public boolean isMoveLegal(Piece piece, Position fromPosition, Position toPosition, Player currentPlayer) {
+        System.out.println("\n=== MOVE VALIDATION START ===");
+        System.out.println("Piece: " + piece.getClass().getSimpleName() + " (" + piece.getColor() + ")");
+        System.out.println("From: " + fromPosition + " -> To: " + toPosition);
+        System.out.println("Current Player: " + currentPlayer.getColor());
+
         // 1. Ownership validation
         if (!isPieceOwnedByPlayer(piece, currentPlayer)) {
+            System.out.println("FAILED: Ownership check - piece belongs to " + piece.getColor() + ", current player is "
+                    + currentPlayer.getColor());
+            System.out.println("=== MOVE VALIDATION END (FAILED) ===\n");
             return false;
         }
+        System.out.println("PASSED: Ownership check");
 
         // 2. Reachability validation
         if (!isDestinationReachable(piece, toPosition)) {
+            Set<Position> validMoves = getValidMovesForPiece(piece);
+            System.out.println("FAILED: Reachability check");
+            System.out.println("  Valid moves for this piece: " + validMoves);
+            System.out.println("  Target position: " + toPosition);
+            System.out.println("=== MOVE VALIDATION END (FAILED) ===\n");
             return false;
         }
+        System.out.println("PASSED: Reachability check");
 
         // 3. King safety validation
         if (!isMoveKingSafe(piece, fromPosition, toPosition)) {
+            System.out.println("FAILED: King safety check - this move would leave your king in check");
+            System.out.println("=== MOVE VALIDATION END (FAILED) ===\n");
             return false;
         }
+        System.out.println("PASSED: King safety check");
+        System.out.println("=== MOVE VALIDATION END (SUCCESS) ===\n");
 
         return true;
     }
