@@ -117,9 +117,11 @@ public class Network extends GUI {
                 boolean success = super.executeTurn(from, to, piece);
                 
                 if (success) {
-                    // Send move to server for authoritative validation
-                    client.sendMoveRequest(from, to);
-                    // Server will respond async via handleMoveApproval() or handleMoveRejection()
+                    // Send move to server for authoritative validation (async)
+                    // Server will respond via network listener which triggers handleMoveApproval() or handleMoveRejection()
+                    new Thread(() -> {
+                        client.sendMoveRequest(from, to);
+                    }).start();
                 } else {
                     // Client-side validation failed, clear backup
                     backupBoard = null;
@@ -193,10 +195,14 @@ public class Network extends GUI {
                             handleClientMoveRequest(request);
                         }
                     } else {
-                        // Client: Listen for server move updates
-                        NetworkMessage update = client.receiveMoveUpdate();
-                        if (update != null && update.from != null && update.to != null) {
-                            handleServerMoveUpdate(update);
+                        // Client: Listen for server messages (move updates and move responses)
+                        NetworkMessage message = client.receiveMessage();
+                        if (message != null) {
+                            if (message.type == utils.NetworkMessageType.MOVE_UPDATE && message.from != null && message.to != null) {
+                                handleServerMoveUpdate(message);
+                            } else if (message.type == utils.NetworkMessageType.MOVE_RESPONSE) {
+                                handleServerMoveResponse(message);
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -244,6 +250,22 @@ public class Network extends GUI {
         javax.swing.SwingUtilities.invokeLater(() -> {
             executeRemoteMove(update.from, update.to, piece);
             refreshBoardPanel();
+        });
+    }
+    
+    /**
+     * Handles move response from server (client side).
+     * Triggers approval or rejection of the client's optimistic move.
+     */
+    private void handleServerMoveResponse(NetworkMessage response) {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (response.isValid != null && response.isValid) {
+                // Server approved the move
+                handleMoveApproval();
+            } else {
+                // Server rejected the move - rollback
+                handleMoveRejection("Invalid move rejected by server");
+            }
         });
     }
     

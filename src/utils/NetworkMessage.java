@@ -65,10 +65,10 @@ public class NetworkMessage implements Serializable {
     }
 
     // Constructor for game intialization
-    public static NetworkMessage intializeGame(Color p1Color) {
+    public static NetworkMessage initializeGame(Color p1Color) {
         NetworkMessage msg = new NetworkMessage();
         msg.type = NetworkMessageType.PLAYER_CONNECTED;
-        msg.winner = p1Color;
+        msg.p1Color = p1Color;
         return msg;
     }
 

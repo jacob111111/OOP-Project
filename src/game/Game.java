@@ -9,16 +9,10 @@ import utils.Color;
 /**
  * Abstract base class for different types of chess games.
  * 
- * This class provides the common structure and functionality for all game modes
+ * Provides common structure and functionality for all game modes
  * including turn management, game state tracking, and basic game flow control.
  * Specific game implementations (Console, PVE, Lan) extend this class to
- * provide
- * their own user interface and game logic while sharing common functionality.
- * 
- * The class follows the Template Method pattern where the overall game
- * structure
- * is defined here, but specific implementations of play() and turn() are left
- * to subclasses.
+ * provide their own user interface and game logic while sharing common functionality.
  */
 public abstract class Game implements Serializable {
     private static final long serialVersionUID = 1L;

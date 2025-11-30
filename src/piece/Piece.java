@@ -9,17 +9,7 @@ import utils.Position;
  * Abstract base class for all chess pieces.
  * 
  * This class provides the common functionality and properties shared by all
- * chess pieces,
- * including color, position, movement tracking, and display representation.
- * Each specific
- * piece type extends this class and implements its own movement rules through
- * the
- * findPossibleMoves() method.
- * 
- * The class follows the Template Method pattern where the structure of piece
- * behavior
- * is defined here, but specific movement calculations are delegated to
- * subclasses.
+ * chess pieces
  * 
  */
 public abstract class Piece implements Serializable {
@@ -34,10 +24,8 @@ public abstract class Piece implements Serializable {
     /**
      * Constructs a new chess piece with the specified color and position.
      * 
-     * Initializes the piece's color, position, and display symbol. The display
-     * symbol
-     * starts with 'w' for white pieces or 'b' for black pieces. Subclasses should
-     * call this constructor first, then append their specific piece symbol.
+     * Initializes the piece's color, position, and display symbol. 
+     * The display symbol starts with 'w' for white pieces or 'b' for black pieces.
      * 
      * @param color    The color of the piece (WHITE or BLACK)
      * @param position The initial position of the piece on the board
