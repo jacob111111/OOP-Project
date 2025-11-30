@@ -253,28 +253,73 @@ public class sideMenuPanel extends JPanel {
     }
 
     /**
-     * Displays the online game dialog with IP address and port input fields.
-     * Shows Host and Join buttons for network gameplay setup.
+     * Displays the online game mode selection dialog.
+     * First asks user to choose between hosting or joining a game.
      */
     private void showOnlineGameDialog() {
+        // Create custom dialog for mode selection
+        JDialog modeDialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Online Game", true);
+        modeDialog.setLayout(new BorderLayout());
+        modeDialog.setSize(300, 180);
+        modeDialog.setLocationRelativeTo(this);
+
+        // Create panel for buttons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Add instruction label
+        JLabel instructionLabel = new JLabel("Choose your role:", SwingConstants.CENTER);
+        instructionLabel.setAlignmentX(CENTER_ALIGNMENT);
+        instructionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+        // Create buttons
+        JButton hostButton = new JButton("Host Game");
+        JButton joinButton = new JButton("Join Game");
+
+        // Style buttons
+        Dimension buttonSize = new Dimension(200, 40);
+        hostButton.setAlignmentX(CENTER_ALIGNMENT);
+        hostButton.setMaximumSize(buttonSize);
+        joinButton.setAlignmentX(CENTER_ALIGNMENT);
+        joinButton.setMaximumSize(buttonSize);
+
+        // Host button action - show host configuration dialog
+        hostButton.addActionListener(e -> {
+            modeDialog.dispose();
+            showHostConfigDialog();
+        });
+
+        // Join button action - show join configuration dialog
+        joinButton.addActionListener(e -> {
+            modeDialog.dispose();
+            showJoinConfigDialog();
+        });
+
+        // Add components to panel
+        buttonPanel.add(instructionLabel);
+        buttonPanel.add(hostButton);
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        buttonPanel.add(joinButton);
+
+        modeDialog.add(buttonPanel, BorderLayout.CENTER);
+        modeDialog.setVisible(true);
+    }
+
+    /**
+     * Displays the host configuration dialog with port and color selection.
+     */
+    private void showHostConfigDialog() {
         // Create custom dialog
-        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Online Game", true);
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Host Game", true);
         dialog.setLayout(new BorderLayout());
-        dialog.setSize(350, 250);
+        dialog.setSize(300, 200);
         dialog.setLocationRelativeTo(this);
 
         // Create panel for input fields
         JPanel inputPanel = new JPanel();
         inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
         inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
-
-        // IP Address field
-        JPanel ipPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel ipLabel = new JLabel("IP Address:");
-        ipLabel.setPreferredSize(new Dimension(80, 25));
-        JTextField ipField = new JTextField(15);
-        ipPanel.add(ipLabel);
-        ipPanel.add(ipField);
 
         // Port field
         JPanel portPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -285,7 +330,7 @@ public class sideMenuPanel extends JPanel {
         portPanel.add(portLabel);
         portPanel.add(portField);
 
-        // Color selection (for host)
+        // Color selection
         JPanel colorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel colorLabel = new JLabel("Your Color:");
         colorLabel.setPreferredSize(new Dimension(80, 25));
@@ -293,19 +338,17 @@ public class sideMenuPanel extends JPanel {
         colorPanel.add(colorLabel);
         colorPanel.add(colorSelector);
 
-        inputPanel.add(ipPanel);
-        inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         inputPanel.add(portPanel);
         inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         inputPanel.add(colorPanel);
 
         // Create panel for buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        JButton hostButton = new JButton("Host");
-        JButton joinButton = new JButton("Join");
+        JButton startButton = new JButton("Start Hosting");
+        JButton cancelButton = new JButton("Cancel");
 
-        // Host button action
-        hostButton.addActionListener(e -> {
+        // Start button action
+        startButton.addActionListener(e -> {
             String portText = portField.getText().trim();
             if (portText.isEmpty()) {
                 JOptionPane.showMessageDialog(dialog, "Enter a port number", "Invalid Input",
@@ -334,8 +377,60 @@ public class sideMenuPanel extends JPanel {
             }
         });
 
-        // Join button action
-        joinButton.addActionListener(e -> {
+        // Cancel button action
+        cancelButton.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(startButton);
+        buttonPanel.add(cancelButton);
+
+        dialog.add(inputPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    /**
+     * Displays the join configuration dialog with IP address and port input.
+     */
+    private void showJoinConfigDialog() {
+        // Create custom dialog
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Join Game", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(300, 200);
+        dialog.setLocationRelativeTo(this);
+
+        // Create panel for input fields
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
+        inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        // IP Address field
+        JPanel ipPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel ipLabel = new JLabel("IP Address:");
+        ipLabel.setPreferredSize(new Dimension(80, 25));
+        JTextField ipField = new JTextField(15);
+        ipPanel.add(ipLabel);
+        ipPanel.add(ipField);
+
+        // Port field
+        JPanel portPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel portLabel = new JLabel("Port:");
+        portLabel.setPreferredSize(new Dimension(80, 25));
+        JTextField portField = new JTextField(15);
+        portField.setText("8080"); // Default port
+        portPanel.add(portLabel);
+        portPanel.add(portField);
+
+        inputPanel.add(ipPanel);
+        inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        inputPanel.add(portPanel);
+
+        // Create panel for buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        JButton connectButton = new JButton("Connect");
+        JButton cancelButton = new JButton("Cancel");
+
+        // Connect button action
+        connectButton.addActionListener(e -> {
             String ip = ipField.getText().trim();
             String portText = portField.getText().trim();
 
@@ -362,8 +457,11 @@ public class sideMenuPanel extends JPanel {
             }
         });
 
-        buttonPanel.add(hostButton);
-        buttonPanel.add(joinButton);
+        // Cancel button action
+        cancelButton.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(connectButton);
+        buttonPanel.add(cancelButton);
 
         dialog.add(inputPanel, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
