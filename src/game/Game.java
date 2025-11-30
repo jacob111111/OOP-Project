@@ -27,10 +27,10 @@ public abstract class Game implements Serializable {
     protected Color winner;
 
     /** Reference to the current player (avoids repeated ternary operations) */
-    protected player.Player currentPlayer;
+    protected transient player.Player currentPlayer;
 
     /** Move validation and checkmate detector (set by subclasses) */
-    protected CheckmateDetector validMoveDetector;
+    protected transient CheckmateDetector validMoveDetector;
 
     /**
      * Creates a new Game with the specified parameters.
@@ -117,5 +117,17 @@ public abstract class Game implements Serializable {
 
     public Board getBoard() {
         return board;
+    }
+
+    /**
+     * Custom deserialization method to reinitialize transient fields.
+     * Called automatically during deserialization to restore non-serializable objects.
+     */
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        // Reinitialize currentPlayer based on WhosTurn
+        this.currentPlayer = board.getPlayer(WhosTurn);
+        // Reinitialize validMoveDetector from board
+        this.validMoveDetector = board.getCheckmateDetector();
     }
 }

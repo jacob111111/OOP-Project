@@ -406,4 +406,17 @@ public class Board implements Serializable {
 
         return new Position(x, y);
     }
+
+    /**
+     * Custom deserialization method to reinitialize transient fields.
+     * Called automatically during deserialization to restore non-serializable helper objects.
+     */
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        // Reinitialize transient helper objects after deserialization
+        this.attackMap = new AttackMap(this);
+        this.moveValidator = new MoveValidator(this, attackMap);
+        this.checkmateDetector = new CheckmateDetector(this, attackMap);
+        this.checkmateDetector.setMoveValidator(moveValidator);
+    }
 }
