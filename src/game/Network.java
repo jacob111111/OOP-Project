@@ -119,9 +119,11 @@ public class Network extends GUI {
                 if (success) {
                     // Send move to server for authoritative validation (async)
                     // Server will respond via network listener which triggers handleMoveApproval() or handleMoveRejection()
-                    new Thread(() -> {
+                    Thread sendThread = new Thread(() -> {
                         client.sendMoveRequest(from, to);
-                    }).start();
+                    }, "ClientMoveRequest");
+                    sendThread.setDaemon(true);
+                    sendThread.start();
                 } else {
                     // Client-side validation failed, clear backup
                     backupBoard = null;
@@ -137,7 +139,8 @@ public class Network extends GUI {
 
     /**
      * Executes a move received from the network opponent.
-     * Applies the validated move without re-validating, then checks for game end conditions.
+     * Applies the already-validated move from the server without re-validating.
+     * The server is authoritative - it has already checked all game-ending conditions.
      * 
      * @param from Starting position of the piece
      * @param to Target position for the move
@@ -145,35 +148,16 @@ public class Network extends GUI {
      * @return true if move was successfully applied
      */
     private boolean executeRemoteMove(Position from, Position to, Piece piece) {
-        // Apply the validated move received from network without re-validating
+        // Apply the validated move received from network
         Piece capturedPiece = board.getPieceAt(to);
-        boolean kingCaptured = false;
 
-        // Handle captures
+        // Handle captures if any
         if (capturedPiece != null && capturedPiece.getColor() != piece.getColor()) {
-            kingCaptured = board.capturePiece(piece, to, capturedPiece);
+            board.capturePiece(piece, to, capturedPiece);
         }
 
-        // Update piece position
         board.updatePiecePosition(piece, from, to);
 
-        // Check if game ended by King capture
-        if (kingCaptured) {
-            winner = WhosTurn;
-            end(winner);
-            return true;
-        }
-
-        // Check for checkmate using the CheckmateDetector
-        player.Player opponent = getOpponentPlayer();
-        if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
-            winner = WhosTurn;
-            System.out.println("Checkmate! " + winner + " wins!");
-            end(winner);
-            return true;
-        }
-
-        // Switch turns
         switchTurn();
         
         return true;
@@ -189,13 +173,15 @@ public class Network extends GUI {
             while (isListening) {
                 try {
                     if (isHost) {
-                        // Server: Listen for client move requests
+                        // Server: Listen for client move requests (with 1-second timeout)
+                        // On null: timeout, then loop continue checking isListening
                         NetworkMessage request = server.receiveMoveRequest();
                         if (request != null && request.from != null && request.to != null) {
                             handleClientMoveRequest(request);
                         }
                     } else {
-                        // Client: Listen for server messages (move updates and move responses)
+                        // Client: Listen for server messages (with 1-second timeout)
+                        // On null: timeout, then loop continue checking isListening
                         NetworkMessage message = client.receiveMessage();
                         if (message != null) {
                             if (message.type == utils.NetworkMessageType.MOVE_UPDATE && message.from != null && message.to != null) {
@@ -212,7 +198,7 @@ public class Network extends GUI {
                 }
             }
         }, "NetworkListener");
-        networkListenerThread.setDaemon(true); // Thread dies when main program exits
+        networkListenerThread.setDaemon(true);
         networkListenerThread.start();
     }
     
@@ -246,7 +232,6 @@ public class Network extends GUI {
         Piece piece = board.getPieceAt(update.from);
         
         // Apply the validated move from server
-        // All GUI updates must happen on EDT
         javax.swing.SwingUtilities.invokeLater(() -> {
             executeRemoteMove(update.from, update.to, piece);
             refreshBoardPanel();
@@ -260,23 +245,29 @@ public class Network extends GUI {
     private void handleServerMoveResponse(NetworkMessage response) {
         javax.swing.SwingUtilities.invokeLater(() -> {
             if (response.isValid != null && response.isValid) {
-                // Server approved the move
                 handleMoveApproval();
             } else {
-                // Server rejected the move - rollback
-                handleMoveRejection("Invalid move rejected by server");
+                handleMoveRejection("Move rejected by server, ROLLBACK initiated");
             }
         });
     }
     
     /**
-     * Stops the network listener thread.
+     * Stops the network listener thread and closes all network resources.
      * Call this when ending the game.
      */
     public void stopNetworkListener() {
         isListening = false;
         if (networkListenerThread != null) {
             networkListenerThread.interrupt();
+        }
+        
+        // Close network resources to prevent resource leaks
+        if (server != null) {
+            server.close();
+        }
+        if (client != null) {
+            client.close();
         }
     } 
 

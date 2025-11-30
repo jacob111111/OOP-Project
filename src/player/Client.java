@@ -22,6 +22,9 @@ public class Client extends Player{
         try {
             clientSocket = new Socket(serverIP, port);
             
+            // Set socket timeout for cleaner shutdown (1 second)
+            clientSocket.setSoTimeout(1000);
+            
             out = new ObjectOutputStream(clientSocket.getOutputStream()); 
             out.flush();
             in = new ObjectInputStream(clientSocket.getInputStream());
@@ -101,14 +104,47 @@ public class Client extends Player{
      * Receives any type of network message from the server.
      * Used by the network listener thread to handle multiple message types.
      * 
-     * @return NetworkMessage of any type, or null if error
+     * @return NetworkMessage of any type, or null if error or timeout
      */
     public NetworkMessage receiveMessage() {
         try {
             return (NetworkMessage) in.readObject();
+        } catch (java.net.SocketTimeoutException e) {
+            // Timeout is normal - allows thread to check if it should continue listening
+            return null;
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Error receiving message: " + e.getMessage());
             return null;
+        }
+    }
+
+    /**
+     * Closes all network resources (streams and socket).
+     * Should be called when the game ends to prevent resource leaks.
+     */
+    public void close() {
+        try {
+            if (in != null) {
+                in.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Error closing input stream: " + e.getMessage());
+        }
+
+        try {
+            if (out != null) {
+                out.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Error closing output stream: " + e.getMessage());
+        }
+
+        try {
+            if (clientSocket != null && !clientSocket.isClosed()) {
+                clientSocket.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Error closing client socket: " + e.getMessage());
         }
     }
 }

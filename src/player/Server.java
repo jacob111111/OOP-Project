@@ -37,6 +37,9 @@ public class Server extends Player{
         try {
             clientSocket = serverSocket.accept();
             
+            // Set socket timeout for cleaner shutdown (1 second)
+            clientSocket.setSoTimeout(1000);
+            
             // Set up streams
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             out.flush();
@@ -103,9 +106,50 @@ public class Server extends Player{
                 return request;
             }
             return null;
+        } catch (java.net.SocketTimeoutException e) {
+            // Timeout is normal - allows thread to check if it should continue listening
+            return null;
         } catch (IOException | ClassNotFoundException e) {
             System.out.println(e);
             return null;
+        }
+    }
+
+    /**
+     * Closes all network resources (streams and sockets).
+     * Should be called when the game ends to prevent resource leaks.
+     */
+    public void close() {
+        try {
+            if (in != null) {
+                in.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Error closing input stream: " + e.getMessage());
+        }
+
+        try {
+            if (out != null) {
+                out.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Error closing output stream: " + e.getMessage());
+        }
+
+        try {
+            if (clientSocket != null && !clientSocket.isClosed()) {
+                clientSocket.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Error closing client socket: " + e.getMessage());
+        }
+
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Error closing server socket: " + e.getMessage());
         }
     }
 }
