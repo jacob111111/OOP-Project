@@ -206,4 +206,21 @@ public class chessFrame extends JFrame {
             menuPanel.clearHoverInfo();
         }
     }
+
+    /**
+     * Enables or disables the board panel for user interaction.
+     * Used to prevent moves while searching for online games.
+     * 
+     * @param enabled true to enable board interaction, false to disable
+     */
+    public void setBoardEnabled(boolean enabled) {
+        if (boardPanel != null) {
+            boardPanel.setEnabled(enabled);
+            // Recursively enable/disable all child components
+            java.awt.Component[] components = boardPanel.getComponents();
+            for (java.awt.Component comp : components) {
+                comp.setEnabled(enabled);
+            }
+        }
+    }
 }
