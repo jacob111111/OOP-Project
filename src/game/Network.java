@@ -128,43 +128,53 @@ public class Network extends GUI {
                 return success;
             }
         } else {
-
-            // THE GAME LOGIC HERE MIGHT HAVE BEEN ABSTRACTED TO ANTHER CLASS ASK JORDAN
-
             // REMOTE MOVE (opponent's turn)
-            // Apply the validated move received from network without re-validating
-            Piece capturedPiece = board.getPieceAt(to);
-            boolean kingCaptured = false;
+            return executeRemoteMove(from, to, piece);
+        }
+    }
 
-            // Handle captures
-            if (capturedPiece != null && capturedPiece.getColor() != piece.getColor()) {
-                kingCaptured = board.capturePiece(piece, to);
-            }
+    /**
+     * Executes a move received from the network opponent.
+     * Applies the validated move without re-validating, then checks for game end conditions.
+     * 
+     * @param from Starting position of the piece
+     * @param to Target position for the move
+     * @param piece The piece being moved
+     * @return true if move was successfully applied
+     */
+    private boolean executeRemoteMove(Position from, Position to, Piece piece) {
+        // Apply the validated move received from network without re-validating
+        Piece capturedPiece = board.getPieceAt(to);
+        boolean kingCaptured = false;
 
-            // Update piece position
-            board.updatePiecePosition(piece, from, to);
+        // Handle captures
+        if (capturedPiece != null && capturedPiece.getColor() != piece.getColor()) {
+            kingCaptured = board.capturePiece(piece, to);
+        }
 
-            // Check if game ended by King capture
-            if (kingCaptured) {
-                winner = WhosTurn;
-                end(winner);
-                return true;
-            }
+        // Update piece position
+        board.updatePiecePosition(piece, from, to);
 
-            // Check for checkmate
-            player.Player opponent = getOpponentPlayer();
-            if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
-                winner = WhosTurn;
-                System.out.println("Checkmate! " + winner + " wins!");
-                end(winner);
-                return true;
-            }
-
-            // Switch turns
-            switchTurn();
-            
+        // Check if game ended by King capture
+        if (kingCaptured) {
+            winner = WhosTurn;
+            end(winner);
             return true;
         }
+
+        // Check for checkmate using the CheckmateDetector
+        player.Player opponent = getOpponentPlayer();
+        if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
+            winner = WhosTurn;
+            System.out.println("Checkmate! " + winner + " wins!");
+            end(winner);
+            return true;
+        }
+
+        // Switch turns
+        switchTurn();
+        
+        return true;
     }
 
 
@@ -238,7 +248,7 @@ public class Network extends GUI {
         
         // Show error to user
         if (errorMessage != null && !errorMessage.isEmpty()) {
-            showInvalidMovePopup();
+            showInvalidMoveMessage();
         }
         
         // Clear backup
