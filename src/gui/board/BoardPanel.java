@@ -345,10 +345,14 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                     currentMove.getSelectedPiece());
 
             if (moveSuccessful) {
-                // Delay board flip by 150ms for smoother visual transition
-                Timer timer = new Timer(150, evt -> flipBoard());
-                timer.setRepeats(false);
-                timer.start();
+                // Only flip board for local games, NOT network games
+                // Network games maintain fixed perspective per player
+                if (!(instance instanceof game.Network)) {
+                    // Delay board flip by 150ms for smoother visual transition
+                    Timer timer = new Timer(150, evt -> flipBoard());
+                    timer.setRepeats(false);
+                    timer.start();
+                }
             }
         }
 

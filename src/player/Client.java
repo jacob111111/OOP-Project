@@ -113,7 +113,10 @@ public class Client extends Player{
             // Timeout is normal - allows thread to check if it should continue listening
             return null;
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Error receiving message: " + e.getMessage());
+            // Only show error for non-timeout issues
+            if (!(e instanceof java.net.SocketTimeoutException)) {
+                System.err.println("Error receiving message: " + e.getMessage());
+            }
             return null;
         }
     }
