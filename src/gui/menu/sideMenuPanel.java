@@ -377,17 +377,36 @@ public class sideMenuPanel extends JPanel {
      * @param hostColor The color the host wants to play as
      */
     private void startHostGame(int port, utils.Color hostColor) {
-        JOptionPane.showMessageDialog(this,
-                "Hosting on port " + port + " as " + (hostColor == utils.Color.WHITE ? "White" : "Black")
-                        + "\nWaiting for opponent...",
-                "Hosting Game",
-                JOptionPane.INFORMATION_MESSAGE);
+        // Show waiting dialog
+        JDialog waitDialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Hosting Game", false);
+        waitDialog.setLayout(new BorderLayout());
+        waitDialog.setSize(300, 100);
+        waitDialog.setLocationRelativeTo(this);
+        JLabel waitLabel = new JLabel("Hosting on port " + port + "... Waiting for opponent...", SwingConstants.CENTER);
+        waitDialog.add(waitLabel, BorderLayout.CENTER);
+        waitDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        waitDialog.setVisible(true);
 
-        // TODO: Create Network game instance as host
-        // game.Network networkGame = new game.Network(true, hostColor, port);
-        // networkGame.setParentFrame(parentFrame);
-        // parentFrame.setGame(networkGame);
-        // setGameInProgress(true);
+        // Create Network game instance as host on a background thread
+        new Thread(() -> {
+            try {
+                game.Network networkGame = new game.Network(true, hostColor, port);
+                
+                // Update GUI on Swing thread after connection
+                SwingUtilities.invokeLater(() -> {
+                    waitDialog.dispose();
+                    networkGame.setParentFrame(parentFrame);
+                    parentFrame.setGame(networkGame);
+                    setGameInProgress(true);
+                    JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
+                });
+            } catch (Exception e) {
+                SwingUtilities.invokeLater(() -> {
+                    waitDialog.dispose();
+                    JOptionPane.showMessageDialog(this, "Failed to host game: " + e.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
+                });
+            }
+        }, "HostGameThread").start();
     }
 
     /**
@@ -397,19 +416,37 @@ public class sideMenuPanel extends JPanel {
      * @param port     The port the server is hosted on
      */
     private void startClientGame(String serverIP, int port) {
-        JOptionPane.showMessageDialog(this,
-                "Connecting to " + serverIP + ":" + port + "...",
-                "Joining Game",
-                JOptionPane.INFORMATION_MESSAGE);
+        // Show connecting dialog
+        JDialog waitDialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Joining Game", false);
+        waitDialog.setLayout(new BorderLayout());
+        waitDialog.setSize(300, 100);
+        waitDialog.setLocationRelativeTo(this);
+        JLabel waitLabel = new JLabel("Connecting to " + serverIP + ":" + port + "...", SwingConstants.CENTER);
+        waitDialog.add(waitLabel, BorderLayout.CENTER);
+        waitDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        waitDialog.setVisible(true);
 
-        // TODO: Create Network game instance as client
-        // Client's color will be assigned by server (opposite of host)
-        // For now, pass WHITE as placeholder - will be updated by server
-        // game.Network networkGame = new game.Network(true, utils.Color.WHITE,
-        // serverIP, port);
-        // networkGame.setParentFrame(parentFrame);
-        // parentFrame.setGame(networkGame);
-        // setGameInProgress(true);
+        // Create Network game instance as client on a background thread
+        new Thread(() -> {
+            try {
+                // Client's color will be assigned by server
+                game.Network networkGame = new game.Network(true, serverIP, port);
+                
+                // Update GUI on Swing thread after connection
+                SwingUtilities.invokeLater(() -> {
+                    waitDialog.dispose();
+                    networkGame.setParentFrame(parentFrame);
+                    parentFrame.setGame(networkGame);
+                    setGameInProgress(true);
+                    JOptionPane.showMessageDialog(this, "Connected to server! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
+                });
+            } catch (Exception e) {
+                SwingUtilities.invokeLater(() -> {
+                    waitDialog.dispose();
+                    JOptionPane.showMessageDialog(this, "Failed to connect: " + e.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
+                });
+            }
+        }, "ClientGameThread").start();
     }
 
     /**
