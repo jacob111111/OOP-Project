@@ -22,12 +22,6 @@ public class GUI extends Game {
         setValidMoveDetector(board.getCheckmateDetector());
     }
 
-    /**
-     * In co-op mode, these method are intentionally left empty because the game
-     * is event-driven rather than blocking based.
-     */
-    public void turn() {
-    }
 
     // ============================================================================
     // SETTERS
@@ -97,7 +91,7 @@ public class GUI extends Game {
      * @return true if move was valid and executed, false if invalid
      */
     public boolean executeTurn(Position fromPosition, Position toPosition, Piece pieceToMove) {
-        // Piece color validation is done here to maintain OOP architecture
+        // Piece color validation is done here to maintain OOP architecture -- ASK JORDAN
         if (pieceToMove.getColor() != currentPlayer.getColor()) {
             // Player tried to move opponent's piece
             showWrongColorError();
@@ -108,12 +102,11 @@ public class GUI extends Game {
         boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
 
         if (!moveSuccessful) {
-            // Invalid move - show message and return false
             showInvalidMoveMessage();
             return false;
         }
 
-        // Step 4: Execute the move on backend And Step 5: Handle captures
+        // Execute the move on backend and Handle captures
         Piece capturedPiece = board.getPieceAt(toPosition);
         boolean kingCaptured = false;
 

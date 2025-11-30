@@ -1,14 +1,19 @@
 package game;
 
 import player.Server;
-import piece.Piece;
 import player.Client;
+
+import piece.Piece;
+
 import utils.Color;
-import utils.NetworkMessageType;
 import utils.NetworkMessage;
 import utils.Position;
+
 import board.Board;
+
 import java.io.*;
+
+import java.lang.Thread;
 
 public class Network extends GUI {
     private int port;
@@ -20,6 +25,10 @@ public class Network extends GUI {
     // Rollback support for client side optimistic updates 
     private Board backupBoard = null;
     private Color backupTurn = null;
+    
+    // Network listener thread
+    private Thread networkListenerThread = null;
+    private volatile boolean isListening = false;
     
     // ============================================================================
     // CONSTRUCTORS
@@ -38,6 +47,9 @@ public class Network extends GUI {
         // Send initial game state to client for sync
         Color clientColor = (p1Color == Color.WHITE) ? Color.BLACK : Color.WHITE;
         server.sendInitialSync(this, clientColor);
+        
+        // Start listening for client moves
+        startNetworkListener();
     }
     
     // Constructor for CLIENT mode
@@ -59,6 +71,9 @@ public class Network extends GUI {
                 this.WhosTurn = syncMsg.gameState.WhosTurn;
             }
         }
+        
+        // Start listening for server moves
+        startNetworkListener();
     }
 
     // ============================================================================
@@ -67,29 +82,14 @@ public class Network extends GUI {
 
     @Override
     public void end(Color winner) {
+        // Stop network listener
+        stopNetworkListener();
+        
         // Once a winner is determined, call methods to display who won in a pop up on each playes screen 
+        // TODO: Show winner popup
     }
 
-    /**
-     * Control flow (whose turn, wait for input)
-     * 
-     */
-    @Override
-    public void turn() {
-        if (WhosTurn == myColor) {
-            // LOCAL TURN: Wait for player to click/drag in GUI
-            // BoardPanel will call executeTurn() when move is made
-        } else {
-            // REMOTE TURN: Listen for opponent's move from network
-            if (isHost) {
-                // Server: receive move request from client, validate, and apply
-                //waitForClientMove();
-            } else {
-                // Client: receive validated move from server and apply
-                //waitForServerMove();
-            }
-        }
-    }
+
 
     /** 
      * Action execution (validate and apply a specific move)
@@ -176,6 +176,87 @@ public class Network extends GUI {
         
         return true;
     }
+
+    /**
+     * Starts a single background thread that continuously listens for network messages.
+     * This thread runs for the lifetime of the game.
+     */
+    private void startNetworkListener() {
+        isListening = true;
+        networkListenerThread = new Thread(() -> {
+            while (isListening) {
+                try {
+                    if (isHost) {
+                        // Server: Listen for client move requests
+                        NetworkMessage request = server.receiveMoveRequest();
+                        if (request != null && request.from != null && request.to != null) {
+                            handleClientMoveRequest(request);
+                        }
+                    } else {
+                        // Client: Listen for server move updates
+                        NetworkMessage update = client.receiveMoveUpdate();
+                        if (update != null && update.from != null && update.to != null) {
+                            handleServerMoveUpdate(update);
+                        }
+                    }
+                } catch (Exception e) {
+                    if (isListening) {
+                        System.err.println("Network listener error: " + e.getMessage());
+                    }
+                }
+            }
+        }, "NetworkListener");
+        networkListenerThread.setDaemon(true); // Thread dies when main program exits
+        networkListenerThread.start();
+    }
+    
+    /**
+     * Handles move request from client (server side).
+     * Validates the move and sends response.
+     */
+    private void handleClientMoveRequest(NetworkMessage request) {
+        Piece piece = board.getPieceAt(request.from);
+        
+        // Validate the move on server side
+        boolean isValid = board.attemptMove(request.to, piece);
+        
+        if (isValid) {
+            // Execute the move on server side and notify client
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                executeRemoteMove(request.from, request.to, piece);
+                refreshBoardPanel();
+            });
+            server.sendMoveResponse(true);
+        } else {
+            server.sendMoveResponse(false);
+        }
+    }
+    
+    /**
+     * Handles move update from server (client side).
+     * Applies the validated move to the client's board.
+     */
+    private void handleServerMoveUpdate(NetworkMessage update) {
+        Piece piece = board.getPieceAt(update.from);
+        
+        // Apply the validated move from server
+        // All GUI updates must happen on EDT
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            executeRemoteMove(update.from, update.to, piece);
+            refreshBoardPanel();
+        });
+    }
+    
+    /**
+     * Stops the network listener thread.
+     * Call this when ending the game.
+     */
+    public void stopNetworkListener() {
+        isListening = false;
+        if (networkListenerThread != null) {
+            networkListenerThread.interrupt();
+        }
+    } 
 
 
     // Syncs game state between host and client (for error recovery)

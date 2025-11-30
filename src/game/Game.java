@@ -121,14 +121,6 @@ public abstract class Game implements Serializable {
      */
     public abstract void end(Color winner);
 
-    /**
-     * Abstract method to handle a single turn of the game.
-     * 
-     * Each game type must implement this method to define how individual
-     * turns are processed, including input handling and move validation.
-     */
-    public abstract void turn();
-
     public Board getBoard() {
         return board;
     }
