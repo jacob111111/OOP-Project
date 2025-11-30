@@ -35,17 +35,22 @@ public class Network extends GUI {
     // HOST-ONLY METHODS (Server-specific functionality)
     // ============================================================================
 
-    public Network(boolean isPvP, Color p1Color, int port) {
-        super(isPvP, p1Color);
-        this.port = port;
+    /**
+     * Constructor for host with pre-created and connected server.
+     * Used when the server connection is managed externally (e.g., with cancellation support).
+     * 
+     * @param connectedServer Already connected Server instance
+     * @param hostColor The color the host wants to play as
+     */
+    public Network(Server connectedServer, Color hostColor) {
+        super(true, hostColor);
+        this.port = 0; // Port already set in server
         this.isHost = true;
-        this.myColor = p1Color;
-
-        server = new Server(p1Color, port);
-        server.acceptClient(); // Block until client connects
+        this.myColor = hostColor;
+        this.server = connectedServer;
 
         // Send initial game state to client for sync
-        Color clientColor = (p1Color == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        Color clientColor = (hostColor == Color.WHITE) ? Color.BLACK : Color.WHITE;
         server.sendInitialSync(this, clientColor);
         
         // Start listening for client moves

@@ -397,29 +397,45 @@ public class sideMenuPanel extends JPanel {
         
         waitDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         
-        // Track if cancelled
+        // Track if cancelled and store server reference for cleanup
         final boolean[] cancelled = {false};
+        final player.Server[] serverRef = {null};
         
         // Create Network game instance as host on a background thread
         Thread hostThread = new Thread(() -> {
+            game.Network networkGame = null;
             try {
-                game.Network networkGame = new game.Network(true, hostColor, port);
+                // Create server first so we can cancel it
+                serverRef[0] = new player.Server(hostColor, port);
                 
-                // Check if cancelled before proceeding
-                if (!cancelled[0]) {
-                    // Update GUI on Swing thread after connection
-                    SwingUtilities.invokeLater(() -> {
-                        waitDialog.dispose();
-                        parentFrame.setBoardEnabled(true);
-                        networkGame.setParentFrame(parentFrame);
-                        parentFrame.setGame(networkGame);
-                        setGameInProgress(true);
-                        JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
-                    });
-                } else {
-                    // Was cancelled, clean up
-                    networkGame.stopNetworkListener();
+                // Check if already cancelled
+                if (cancelled[0]) {
+                    serverRef[0].close();
+                    return;
                 }
+                
+                // This will block until client connects (or socket is closed)
+                serverRef[0].acceptClient();
+                
+                // Check if cancelled after accepting
+                if (cancelled[0]) {
+                    serverRef[0].close();
+                    return;
+                }
+                
+                // Create the network game with the connected server
+                networkGame = new game.Network(serverRef[0], hostColor);
+                
+                // Connection successful
+                final game.Network finalGame = networkGame;
+                SwingUtilities.invokeLater(() -> {
+                    waitDialog.dispose();
+                    parentFrame.setBoardEnabled(true);
+                    finalGame.setParentFrame(parentFrame);
+                    parentFrame.setGame(finalGame);
+                    setGameInProgress(true);
+                    JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
+                });
             } catch (Exception e) {
                 if (!cancelled[0]) {
                     SwingUtilities.invokeLater(() -> {
@@ -427,6 +443,10 @@ public class sideMenuPanel extends JPanel {
                         parentFrame.setBoardEnabled(true);
                         JOptionPane.showMessageDialog(this, "Failed to host game: " + e.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
                     });
+                }
+                // Clean up on error
+                if (serverRef[0] != null) {
+                    serverRef[0].close();
                 }
             }
         }, "HostGameThread");
@@ -436,6 +456,10 @@ public class sideMenuPanel extends JPanel {
             cancelled[0] = true;
             waitDialog.dispose();
             parentFrame.setBoardEnabled(true);
+            // Close the server socket to unblock acceptClient()
+            if (serverRef[0] != null) {
+                serverRef[0].close();
+            }
             hostThread.interrupt();
         });
         

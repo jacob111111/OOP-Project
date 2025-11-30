@@ -24,7 +24,6 @@ public class Server extends Player{
 
         try {
             serverSocket = new ServerSocket(this.port);
-            clientSocket = acceptClient();
 
         } catch(IOException e)
         {
