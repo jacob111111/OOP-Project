@@ -321,17 +321,14 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         Point panelPoint = SwingUtilities.convertPoint((Component) e.getSource(), e.getPoint(), this);
         Component comp = getComponentAt(panelPoint);
         JButton button = (comp instanceof JButton) ? (JButton) comp : null;
-        System.out.println("mouseReleased: comp=" + comp + ", button=" + button);
 
         if (button == null) {
-            System.out.println("mouseReleased: Not released over a button, aborting move.");
             removeDragVisual();
             currentMove = null;
             return;
         }
 
         Position destPos = buttonToPosition(button);
-        System.out.println("mouseReleased: destPos=" + destPos + ", sourcePos=" + currentMove.getSourcePosition());
 
         // Execute move through GUI (handles validation, BE update, FE update)
         if (!destPos.equals(currentMove.getSourcePosition())) {
@@ -342,16 +339,11 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                     currentMove.getSelectedPiece());
 
             if (moveSuccessful) {
-                System.out.println("mouseReleased: Move executed successfully");
                 // Delay board flip by 150ms for smoother visual transition
                 Timer timer = new Timer(150, evt -> flipBoard());
                 timer.setRepeats(false);
                 timer.start();
-            } else {
-                System.out.println("mouseReleased: Move was invalid");
             }
-        } else {
-            System.out.println("mouseReleased: Destination is same as source, no move executed.");
         }
 
         removeDragVisual();
@@ -382,7 +374,6 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                         currentMove.getSelectedPiece());
 
                 if (moveSuccessful) {
-                    System.out.println("mouseClicked: Move executed successfully");
                     // Delay clearing highlights by 150ms for smoother visual transition
                     Timer timer = new Timer(150, evt -> {
                         clearHighlights();
@@ -392,8 +383,6 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                     timer.start();
                     currentMove = null;
                     return;
-                } else {
-                    System.out.println("mouseClicked: Move was invalid");
                 }
             }
             clearHighlights();
