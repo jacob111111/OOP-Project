@@ -17,7 +17,7 @@ public class Network extends GUI {
     private boolean isHost;
     private Color myColor;
     
-    // Optimistic update rollback support
+    // Rollback support for client side optimistic updates 
     private Board backupBoard = null;
     private Color backupTurn = null;
     
@@ -99,24 +99,21 @@ public class Network extends GUI {
     @Override
     public boolean executeTurn(Position from, Position to, Piece piece) {
         if (WhosTurn == myColor) {
-            // LOCAL MOVE (our turn)
             if (isHost) {
-                // Server: validate and apply immediately
+                // Servers Local Move: validate and apply immediately
                 boolean success = super.executeTurn(from, to, piece);
                 
                 if (success) {
-                    // Send validated move to client
+                    // Send validated move to client using MOVE_UPDATE
                     server.sendMoveUpdate(from, to);
                 }
                 
                 return success;
             } else {
-                // Client: optimistic update
-                // Create backup RIGHT BEFORE applying move
+                // Client local move: Backup game state and perform optimistic update
                 backupBoard = deepCopyBoard(board);
                 backupTurn = WhosTurn;
                 
-                // Apply move optimistically (with client-side validation)
                 boolean success = super.executeTurn(from, to, piece);
                 
                 if (success) {
@@ -128,10 +125,12 @@ public class Network extends GUI {
                     backupBoard = null;
                     backupTurn = null;
                 }
-                
                 return success;
             }
         } else {
+
+            // THE GAME LOGIC HERE MIGHT HAVE BEEN ABSTRACTED TO ANTHER CLASS ASK JORDAN
+
             // REMOTE MOVE (opponent's turn)
             // Apply the validated move received from network without re-validating
             Piece capturedPiece = board.getPieceAt(to);

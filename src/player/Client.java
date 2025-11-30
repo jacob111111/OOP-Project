@@ -83,4 +83,23 @@ public class Client extends Player{
             return null;
         }
     }
+
+    /**
+     * Receives a move update from the server (opponent's move).
+     * This is a blocking call that waits for the server to send a move.
+     * 
+     * @return NetworkMessage containing the move (from, to), or null if error/wrong type
+     */
+    public NetworkMessage receiveMoveUpdate() {
+        try {
+            NetworkMessage update = (NetworkMessage) in.readObject();
+            if (update.type == NetworkMessageType.MOVE_UPDATE) {
+                return update;
+            }
+            return null;
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error receiving move update: " + e.getMessage());
+            return null;
+        }
+    }
 }

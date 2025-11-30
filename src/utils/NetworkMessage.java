@@ -31,6 +31,15 @@ public class NetworkMessage implements Serializable {
         return msg;
     }
 
+    // Constructor for move update (server notifying client of opponent's move)
+    public static NetworkMessage moveUpdate(Position from, Position to) {
+        NetworkMessage msg = new NetworkMessage();
+        msg.type = NetworkMessageType.MOVE_UPDATE;
+        msg.from = from;
+        msg.to = to;
+        return msg;
+    }
+
     // Constructor for syncing game state
     public static NetworkMessage gameSync(Game gameState) {
         NetworkMessage msg = new NetworkMessage();
