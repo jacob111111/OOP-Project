@@ -11,10 +11,10 @@ import utils.NetworkMessage;
 import utils.Color;
 
 public class Server extends Player{
-    private Socket clientSocket = null;
-    private ServerSocket serverSocket = null;
-    private ObjectInputStream in = null;
-    private ObjectOutputStream out = null;
+    private transient Socket clientSocket = null;
+    private transient ServerSocket serverSocket = null;
+    private transient ObjectInputStream in = null;
+    private transient ObjectOutputStream out = null;
 
     private int port;
 

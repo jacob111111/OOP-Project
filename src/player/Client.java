@@ -12,9 +12,9 @@ import utils.NetworkMessageType;
 import utils.Position;
 
 public class Client extends Player{
-    private Socket clientSocket = null;
-    private ObjectInputStream in = null;
-    private ObjectOutputStream out = null;
+    private transient Socket clientSocket = null;
+    private transient ObjectInputStream in = null;
+    private transient ObjectOutputStream out = null;
 
     public Client(Color color, String serverIP, int port) {
         super(color);
