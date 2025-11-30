@@ -1,5 +1,8 @@
 package piece;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import utils.Color;
 import utils.Position;
 
@@ -44,5 +47,36 @@ public class King extends Piece {
      */
     public boolean getHasMoved() {
         return hasMoved;
+    }
+
+    @Override
+    public Set<Position> getPossibleMoves(Object boardObj) {
+        board.Board board = (board.Board) boardObj;
+        Set<Position> validMoves = new HashSet<>();
+        int x = position.getX();
+        int y = position.getY();
+
+        // All 8 adjacent squares
+        int[][] kingMoves = {
+                { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 },
+                { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 }
+        };
+
+        for (int[] move : kingMoves) {
+            int newX = x + move[0];
+            int newY = y + move[1];
+
+            if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8) {
+                Position target = new Position(newX, newY);
+                Piece targetPiece = board.getPieceAt(target);
+
+                // Can move if square is empty or occupied by enemy
+                if (targetPiece == null || targetPiece.getColor() != color) {
+                    validMoves.add(target);
+                }
+            }
+        }
+
+        return validMoves;
     }
 }

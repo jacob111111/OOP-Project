@@ -1,6 +1,7 @@
 package piece;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import utils.Color;
 import utils.Position;
@@ -95,4 +96,15 @@ public abstract class Piece implements Serializable {
     public void setPosition(Position newPos) {
         this.position = newPos;
     }
+
+    /**
+     * Gets all possible moves for this piece from its current position.
+     * This method calculates where the piece can move based on its movement rules,
+     * but does NOT validate check safety or turn ownership.
+     * 
+     * @param board The board to calculate moves on (needed to check for pieces
+     *              blocking paths)
+     * @return Set of all positions this piece can potentially move to
+     */
+    public abstract Set<Position> getPossibleMoves(Object board);
 }

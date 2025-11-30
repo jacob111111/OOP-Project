@@ -11,6 +11,7 @@ import piece.*;
 import player.*;
 import utils.AttackMap;
 import utils.CheckmateDetector;
+import utils.MoveValidator;
 import utils.Color;
 import utils.Position;
 
@@ -49,6 +50,9 @@ public class Board implements Serializable {
 
     /** Checkmate detector using the cached attack map */
     private transient CheckmateDetector checkmateDetector;
+
+    /** Move validator for centralized move validation logic */
+    private transient MoveValidator moveValidator;
 
     /**
      * Constructs a new chess board with players based on game mode.
@@ -94,9 +98,12 @@ public class Board implements Serializable {
             positionIndex.put(piece.getPosition(), piece);
         }
 
-        // Initialize attack map and checkmate detector
+        // Initialize attack map, move validator, and checkmate detector
         this.attackMap = new AttackMap(this);
+        this.moveValidator = new MoveValidator(this, attackMap);
         this.checkmateDetector = new CheckmateDetector(this, attackMap);
+        // Set MoveValidator on CheckmateDetector (avoid circular dependency)
+        this.checkmateDetector.setMoveValidator(moveValidator);
     }
 
     /**
@@ -129,6 +136,15 @@ public class Board implements Serializable {
     }
 
     /**
+     * Gets the move validator for this board.
+     * 
+     * @return The MoveValidator instance
+     */
+    public MoveValidator getMoveValidator() {
+        return moveValidator;
+    }
+
+    /**
      * Gets the piece at the specified position, if any.
      * 
      * Uses the position index for O(1) lookup performance.
@@ -144,7 +160,8 @@ public class Board implements Serializable {
      * Updates a piece's position in both the piece object and the position index.
      * 
      * This method maintains consistency between the piece's internal position
-     * and the board's position tracking system, and updates the attack map.
+     * and the board's position tracking system. Note that the attack map is
+     * updated during move validation, so no additional update is needed here.
      * 
      * @param piece  the piece being moved
      * @param oldPos the piece's previous position
@@ -154,11 +171,6 @@ public class Board implements Serializable {
         positionIndex.remove(oldPos);
         positionIndex.put(newPos, piece);
         piece.setPosition(newPos);
-
-        // Update attack map after piece movement
-        if (attackMap != null) {
-            attackMap.updateAfterMove(piece, oldPos, newPos);
-        }
     }
 
     /**
@@ -166,14 +178,14 @@ public class Board implements Serializable {
      * 
      * This method is called once a valid capture has been confirmed. It removes
      * the captured piece from the appropriate player's piece collection, adds it
-     * to the capturing player's capture list, and updates the position index.
+     * to the capturing player's capture list, and removes from position index.
      * 
      * @param capturingPiece the piece performing the capture
      * @param capturePos     the position where the capture occurs
+     * @param capturedPiece  the piece being captured
      * @return true if a King was captured, false otherwise
      */
-    public boolean capturePiece(Piece capturingPiece, Position capturePos) {
-        Piece capturedPiece = positionIndex.get(capturePos);
+    public boolean capturePiece(Piece capturingPiece, Position capturePos, Piece capturedPiece) {
         boolean kingCaptured = false;
 
         if (capturedPiece != null) {
@@ -190,10 +202,10 @@ public class Board implements Serializable {
                 black.getCurrentPieces().remove(capturedPiece);
                 whiteHasCaptured.put(capturedPiece, capturedPiece.hashCode()); // Using hashCode as ID
             }
+
+            // Remove captured piece from position index
+            positionIndex.remove(capturePos);
         }
-        // Update position index
-        positionIndex.remove(capturingPiece.getPosition());
-        positionIndex.put(capturePos, capturingPiece);
 
         return kingCaptured;
     }
@@ -201,42 +213,37 @@ public class Board implements Serializable {
     /**
      * Attempts to move a piece to the specified position.
      * 
-     * Validates that the target position is actually reachable by checking
-     * the AttackMap, which accounts for blocked squares and piece obstructions.
-     * This provides proper move validation logic.
+     * Validates the move using MoveValidator which checks:
+     * 1. Can the piece reach the target square?
+     * 2. Does the move leave the king in check?
+     * 
+     * Note: Ownership validation should be done by the caller (GUI/Game layer).
      * 
      * @param possibleMove the target position for the move
      * @param pieceToMove  the piece that should be moved
      * @return true if the move was successful, false if invalid
      */
     public boolean attemptMove(Position possibleMove, Piece pieceToMove) {
-        // Validate the move using AttackMap to account for blocked squares
-        if (isValidMove(pieceToMove, possibleMove)) {
-            pieceToMove.move(possibleMove);
+        Position oldPosition = pieceToMove.getPosition();
 
-            // Update pawn's hasMoved flag after first move
-            if (pieceToMove instanceof Pawn) {
-                ((Pawn) pieceToMove).setHasMoved(true);
-            }
-
-            return true;
+        // Validate reachability and king safety using MoveValidator
+        if (!moveValidator.isDestinationReachable(pieceToMove, possibleMove)) {
+            return false;
         }
-        return false;
-    }
 
-    /**
-     * Validates if a move is legal by checking if the piece can reach the target.
-     * Uses cached AttackMap to check actual reachable squares accounting for
-     * obstructions and piece-specific movement rules (like pawn diagonal captures).
-     * 
-     * @param piece  the piece attempting to move
-     * @param target the target position
-     * @return true if the move is valid
-     */
-    private boolean isValidMove(Piece piece, Position target) {
-        // Use AttackMap's getValidMovesForPiece which properly handles pawn movement
-        // rules
-        return attackMap.getValidMovesForPiece(piece).contains(target);
+        if (!moveValidator.isMoveKingSafe(pieceToMove, oldPosition, possibleMove)) {
+            return false;
+        }
+
+        // Move is valid and safe, execute it
+        pieceToMove.move(possibleMove);
+
+        // Update pawn's hasMoved flag after first move
+        if (pieceToMove instanceof Pawn) {
+            ((Pawn) pieceToMove).setHasMoved(true);
+        }
+
+        return true;
     }
 
     /**

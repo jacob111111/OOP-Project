@@ -1,5 +1,8 @@
 package piece;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import utils.Color;
 import utils.Position;
 
@@ -51,5 +54,57 @@ public abstract class LinearPiece extends Piece {
         }
 
         return false;
+    }
+
+    /**
+     * Gets the movement direction vectors for this linear piece.
+     * Each direction is represented as [dx, dy] where:
+     * - Horizontal: [±1, 0]
+     * - Vertical: [0, ±1]
+     * - Diagonal: [±1, ±1]
+     * 
+     * @return array of direction vectors this piece can move along
+     */
+    public abstract int[][] getDirections();
+
+    @Override
+    public Set<Position> getPossibleMoves(Object boardObj) {
+        board.Board board = (board.Board) boardObj;
+        Set<Position> validMoves = new HashSet<>();
+        int x = position.getX();
+        int y = position.getY();
+
+        int[][] directions = getDirections();
+
+        for (int[] dir : directions) {
+            // Slide along this direction until we hit something
+            for (int i = 1; i < 8; i++) {
+                int newX = x + (dir[0] * i);
+                int newY = y + (dir[1] * i);
+
+                // Check board boundaries
+                if (newX < 0 || newX >= 8 || newY < 0 || newY >= 8) {
+                    break;
+                }
+
+                Position target = new Position(newX, newY);
+                Piece targetPiece = board.getPieceAt(target);
+
+                if (targetPiece == null) {
+                    // Empty square - can move here and continue
+                    validMoves.add(target);
+                } else {
+                    // Hit a piece
+                    if (targetPiece.getColor() != color) {
+                        // Enemy piece - can capture
+                        validMoves.add(target);
+                    }
+                    // Stop sliding in this direction (whether enemy or ally)
+                    break;
+                }
+            }
+        }
+
+        return validMoves;
     }
 }
