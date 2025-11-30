@@ -208,8 +208,7 @@ public class sideMenuPanel extends JPanel {
         // AI button action
         aiButton.addActionListener(e -> {
             dialog.dispose();
-            JOptionPane.showMessageDialog(this, "AI mode not yet implemented!", "Not Implemented",
-                    JOptionPane.INFORMATION_MESSAGE);
+            showAIDifficultyDialog();
         });
 
         // Co-op button action
@@ -255,6 +254,130 @@ public class sideMenuPanel extends JPanel {
     /**
      * Displays the online game mode selection dialog.
      * First asks user to choose between hosting or joining a game.
+     * Shows AI difficulty selection dialog.
+     */
+    private void showAIDifficultyDialog() {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "AI Game Setup", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(300, 220);
+        dialog.setLocationRelativeTo(this);
+
+        JPanel settingsPanel = new JPanel();
+        settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
+        settingsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        JPanel colorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel colorLabel = new JLabel("Your Color:");
+        colorLabel.setPreferredSize(new Dimension(100, 25));
+        JComboBox<String> colorSelector = new JComboBox<>(new String[] { "White", "Black", "Random" });
+        colorPanel.add(colorLabel);
+        colorPanel.add(colorSelector);
+
+        JPanel difficultyPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel difficultyLabel = new JLabel("AI Difficulty:");
+        difficultyLabel.setPreferredSize(new Dimension(100, 25));
+        JComboBox<String> difficultySelector = new JComboBox<>(new String[] { "Easy", "Medium", "Hard" });
+        difficultySelector.setSelectedIndex(1);
+        difficultyPanel.add(difficultyLabel);
+        difficultyPanel.add(difficultySelector);
+
+        settingsPanel.add(colorPanel);
+        settingsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        settingsPanel.add(difficultyPanel);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        JButton startButton = new JButton("Start Game");
+        JButton cancelButton = new JButton("Cancel");
+
+        startButton.addActionListener(e -> {
+            String selectedColor = (String) colorSelector.getSelectedItem();
+            String selectedDifficulty = (String) difficultySelector.getSelectedItem();
+
+            utils.Color playerColor;
+            if (selectedColor.equals("White")) {
+                playerColor = utils.Color.WHITE;
+            } else if (selectedColor.equals("Black")) {
+                playerColor = utils.Color.BLACK;
+            } else {
+                playerColor = utils.Color.RANDOM;
+            }
+
+            int difficulty = selectedDifficulty.equals("Easy") ? 1
+                    : (selectedDifficulty.equals("Hard") ? 3 : 2);
+
+            dialog.dispose();
+            startAIGame(playerColor, difficulty);
+        });
+
+        cancelButton.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(startButton);
+        buttonPanel.add(cancelButton);
+
+        dialog.add(settingsPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    /**
+     * Starts a new game against the AI.
+     */
+    private void startAIGame(utils.Color playerColor, int difficulty) {
+        if (parentFrame.getCurrentGame() != null) {
+            int result = JOptionPane.showConfirmDialog(
+                    this,
+                    "This will override the current game. Are you sure?",
+                    "Warning",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+
+            if (result != JOptionPane.YES_OPTION) {
+                return;
+            }
+        }
+
+        game.GUI aiGame = new game.GUI(false, playerColor);
+        aiGame.setParentFrame(parentFrame);
+
+        board.Board board = aiGame.getBoard();
+
+        // Determine actual colors after Board resolves RANDOM
+        player.Player whitePlayer = board.getPlayer(utils.Color.WHITE);
+        player.Player blackPlayer = board.getPlayer(utils.Color.BLACK);
+
+        // Find which player is AI and set difficulty
+        final player.AI aiPlayer;
+        final utils.Color humanColor;
+
+        if (whitePlayer instanceof player.AI) {
+            aiPlayer = (player.AI) whitePlayer;
+            humanColor = utils.Color.BLACK;
+        } else if (blackPlayer instanceof player.AI) {
+            aiPlayer = (player.AI) blackPlayer;
+            humanColor = utils.Color.WHITE;
+        } else {
+            aiPlayer = null;
+            humanColor = null;
+        }
+
+        if (aiPlayer != null) {
+            aiPlayer.setDifficulty(difficulty);
+        }
+
+        parentFrame.setGame(aiGame);
+        setGameInProgress(true);
+
+        String difficultyName = (difficulty == 1) ? "Easy" : (difficulty == 3 ? "Hard" : "Medium");
+        String humanColorName = (humanColor == utils.Color.WHITE) ? "White" : "Black";
+        displayMessage("Started AI game (" + difficultyName + ") as " + humanColorName, "info");
+
+        // Trigger AI's first move if it's playing as white
+        aiGame.triggerAIFirstMoveIfNeeded();
+    }
+
+    /**
+     * Displays the online game dialog with IP address and port input fields.
+     * Shows Host and Join buttons for network gameplay setup.
      */
     private void showOnlineGameDialog() {
         // Create custom dialog for mode selection
@@ -477,53 +600,53 @@ public class sideMenuPanel extends JPanel {
     private void startHostGame(int port, utils.Color hostColor) {
         // Disable board panel while searching
         parentFrame.setBoardEnabled(false);
-        
+
         // Show waiting dialog with stop button
         JDialog waitDialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Hosting Game", false);
         waitDialog.setLayout(new BorderLayout());
         waitDialog.setSize(300, 130);
         waitDialog.setLocationRelativeTo(this);
-        
+
         JLabel waitLabel = new JLabel("Hosting on port " + port + "... Waiting for opponent...", SwingConstants.CENTER);
         waitDialog.add(waitLabel, BorderLayout.CENTER);
-        
+
         // Add stop button
         JButton stopButton = new JButton("Stop Searching");
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(stopButton);
         waitDialog.add(buttonPanel, BorderLayout.SOUTH);
-        
+
         waitDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        
+
         // Track if cancelled and store server reference for cleanup
-        final boolean[] cancelled = {false};
-        final player.Server[] serverRef = {null};
-        
+        final boolean[] cancelled = { false };
+        final player.Server[] serverRef = { null };
+
         // Create Network game instance as host on a background thread
         Thread hostThread = new Thread(() -> {
             game.Network networkGame = null;
             try {
                 // Create server first so we can cancel it
                 serverRef[0] = new player.Server(hostColor, port);
-                
+
                 // Check if already cancelled
                 if (cancelled[0]) {
                     serverRef[0].close();
                     return;
                 }
-                
+
                 // This will block until client connects (or socket is closed)
                 serverRef[0].acceptClient();
-                
+
                 // Check if cancelled after accepting
                 if (cancelled[0]) {
                     serverRef[0].close();
                     return;
                 }
-                
+
                 // Create the network game with the connected server
                 networkGame = new game.Network(serverRef[0], hostColor);
-                
+
                 // Connection successful
                 final game.Network finalGame = networkGame;
                 SwingUtilities.invokeLater(() -> {
@@ -531,21 +654,23 @@ public class sideMenuPanel extends JPanel {
                     parentFrame.setBoardEnabled(true);
                     finalGame.setParentFrame(parentFrame);
                     parentFrame.setGame(finalGame);
-                    
+
                     // Flip board if host is playing as black
                     if (hostColor == utils.Color.BLACK) {
                         parentFrame.flipBoard();
                     }
-                    
+
                     setGameInProgress(true);
-                    JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected",
+                            JOptionPane.INFORMATION_MESSAGE);
                 });
             } catch (Exception e) {
                 if (!cancelled[0]) {
                     SwingUtilities.invokeLater(() -> {
                         waitDialog.dispose();
                         parentFrame.setBoardEnabled(true);
-                        JOptionPane.showMessageDialog(this, "Failed to host game: " + e.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(this, "Failed to host game: " + e.getMessage(),
+                                "Connection Error", JOptionPane.ERROR_MESSAGE);
                     });
                 }
                 // Clean up on error
@@ -554,7 +679,7 @@ public class sideMenuPanel extends JPanel {
                 }
             }
         }, "HostGameThread");
-        
+
         // Stop button action
         stopButton.addActionListener(e -> {
             cancelled[0] = true;
@@ -566,7 +691,7 @@ public class sideMenuPanel extends JPanel {
             }
             hostThread.interrupt();
         });
-        
+
         hostThread.start();
         waitDialog.setVisible(true);
     }
@@ -580,33 +705,33 @@ public class sideMenuPanel extends JPanel {
     private void startClientGame(String serverIP, int port) {
         // Disable board panel while searching
         parentFrame.setBoardEnabled(false);
-        
+
         // Show connecting dialog with stop button
         JDialog waitDialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Joining Game", false);
         waitDialog.setLayout(new BorderLayout());
         waitDialog.setSize(300, 130);
         waitDialog.setLocationRelativeTo(this);
-        
+
         JLabel waitLabel = new JLabel("Connecting to " + serverIP + ":" + port + "...", SwingConstants.CENTER);
         waitDialog.add(waitLabel, BorderLayout.CENTER);
-        
+
         // Add stop button
         JButton stopButton = new JButton("Stop Searching");
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(stopButton);
         waitDialog.add(buttonPanel, BorderLayout.SOUTH);
-        
+
         waitDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        
+
         // Track if cancelled
-        final boolean[] cancelled = {false};
-        
+        final boolean[] cancelled = { false };
+
         // Create Network game instance as client on a background thread
         Thread clientThread = new Thread(() -> {
             try {
                 // Client's color will be assigned by server
                 game.Network networkGame = new game.Network(true, serverIP, port);
-                
+
                 // Check if cancelled before proceeding
                 if (!cancelled[0]) {
                     // Update GUI on Swing thread after connection
@@ -615,14 +740,15 @@ public class sideMenuPanel extends JPanel {
                         parentFrame.setBoardEnabled(true);
                         networkGame.setParentFrame(parentFrame);
                         parentFrame.setGame(networkGame);
-                        
+
                         // Flip board if client is playing as black
                         if (networkGame.getMyColor() == utils.Color.BLACK) {
                             parentFrame.flipBoard();
                         }
-                        
+
                         setGameInProgress(true);
-                        JOptionPane.showMessageDialog(this, "Connected to server! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(this, "Connected to server! Game started.", "Connected",
+                                JOptionPane.INFORMATION_MESSAGE);
                     });
                 } else {
                     // Was cancelled, clean up
@@ -633,12 +759,13 @@ public class sideMenuPanel extends JPanel {
                     SwingUtilities.invokeLater(() -> {
                         waitDialog.dispose();
                         parentFrame.setBoardEnabled(true);
-                        JOptionPane.showMessageDialog(this, "Failed to connect: " + e.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(this, "Failed to connect: " + e.getMessage(), "Connection Error",
+                                JOptionPane.ERROR_MESSAGE);
                     });
                 }
             }
         }, "ClientGameThread");
-        
+
         // Stop button action
         stopButton.addActionListener(e -> {
             cancelled[0] = true;
@@ -646,7 +773,7 @@ public class sideMenuPanel extends JPanel {
             parentFrame.setBoardEnabled(true);
             clientThread.interrupt();
         });
-        
+
         clientThread.start();
         waitDialog.setVisible(true);
     }
