@@ -151,7 +151,7 @@ public class Network extends GUI {
 
         // Handle captures
         if (capturedPiece != null && capturedPiece.getColor() != piece.getColor()) {
-            kingCaptured = board.capturePiece(piece, to);
+            kingCaptured = board.capturePiece(piece, to, capturedPiece);
         }
 
         // Update piece position
