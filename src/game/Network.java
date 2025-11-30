@@ -16,38 +16,38 @@ public class Network extends GUI {
     private Client client = null;
     private boolean isHost;
     private Color myColor;
-    
+
     // Optimistic update rollback support
     private Board backupBoard = null;
     private Color backupTurn = null;
-    
+
     // ============================================================================
     // CONSTRUCTORS
     // ============================================================================
-    
+
     // Constructor for HOST mode
     public Network(boolean isPvP, Color p1Color, int port) {
         super(isPvP, p1Color);
         this.port = port;
         this.isHost = true;
         this.myColor = p1Color;
-        
+
         server = new Server(p1Color, port);
         server.acceptClient(); // Block until client connects
-        
+
         // Send initial game state to client for sync
         Color clientColor = (p1Color == Color.WHITE) ? Color.BLACK : Color.WHITE;
         server.sendInitialSync(this, clientColor);
     }
-    
+
     // Constructor for CLIENT mode
     public Network(boolean isPvP, Color p1Color, String serverIP, int port) {
         super(isPvP, p1Color);
         this.port = port;
         this.isHost = false;
-        
+
         client = new Client(p1Color, serverIP, port);
-        
+
         // Receive initial sync from server
         NetworkMessage syncMsg = client.receiveInitialSync();
         if (syncMsg != null) {
@@ -67,7 +67,8 @@ public class Network extends GUI {
 
     @Override
     public void end(Color winner) {
-        // Once a winner is determined, call methods to display who won in a pop up on each playes screen 
+        // Once a winner is determined, call methods to display who won in a pop up on
+        // each playes screen
     }
 
     /**
@@ -83,15 +84,15 @@ public class Network extends GUI {
             // REMOTE TURN: Listen for opponent's move from network
             if (isHost) {
                 // Server: receive move request from client, validate, and apply
-                //waitForClientMove();
+                // waitForClientMove();
             } else {
                 // Client: receive validated move from server and apply
-                //waitForServerMove();
+                // waitForServerMove();
             }
         }
     }
 
-    /** 
+    /**
      * Action execution (validate and apply a specific move)
      * Uses optimistic updates for client moves - immediately applies move to GUI,
      * then validates with server. Rollback occurs if server rejects.
@@ -103,22 +104,22 @@ public class Network extends GUI {
             if (isHost) {
                 // Server: validate and apply immediately
                 boolean success = super.executeTurn(from, to, piece);
-                
+
                 if (success) {
                     // Send validated move to client
                     server.sendMoveUpdate(from, to);
                 }
-                
+
                 return success;
             } else {
                 // Client: optimistic update
                 // Create backup RIGHT BEFORE applying move
                 backupBoard = deepCopyBoard(board);
                 backupTurn = WhosTurn;
-                
+
                 // Apply move optimistically (with client-side validation)
                 boolean success = super.executeTurn(from, to, piece);
-                
+
                 if (success) {
                     // Send move to server for authoritative validation
                     client.sendMoveRequest(from, to);
@@ -128,7 +129,7 @@ public class Network extends GUI {
                     backupBoard = null;
                     backupTurn = null;
                 }
-                
+
                 return success;
             }
         } else {
@@ -139,7 +140,7 @@ public class Network extends GUI {
 
             // Handle captures
             if (capturedPiece != null && capturedPiece.getColor() != piece.getColor()) {
-                kingCaptured = board.capturePiece(piece, to);
+                kingCaptured = board.capturePiece(piece, to, capturedPiece);
             }
 
             // Update piece position
@@ -163,11 +164,10 @@ public class Network extends GUI {
 
             // Switch turns
             switchTurn();
-            
+
             return true;
         }
     }
-
 
     // Syncs game state between host and client (for error recovery)
     public void updateGameState() {
@@ -184,11 +184,11 @@ public class Network extends GUI {
             }
         }
     }
-    
+
     public Color getMyColor() {
         return myColor;
     }
-    
+
     /**
      * Deep copy of Board using serialization.
      * Leverages existing Serializable implementation.
@@ -202,7 +202,7 @@ public class Network extends GUI {
             ObjectOutputStream out = new ObjectOutputStream(bos);
             out.writeObject(original);
             out.flush();
-            
+
             ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
             ObjectInputStream in = new ObjectInputStream(bis);
             return (Board) in.readObject();
@@ -212,7 +212,7 @@ public class Network extends GUI {
             return null;
         }
     }
-    
+
     /**
      * Called when server approves the client's optimistic move.
      * Clears the backup state as the move is confirmed valid.
@@ -222,7 +222,7 @@ public class Network extends GUI {
         backupBoard = null;
         backupTurn = null;
     }
-    
+
     /**
      * Called when server rejects the client's optimistic move.
      * Rolls back the board state to the pre-move backup.
@@ -233,15 +233,15 @@ public class Network extends GUI {
         // Restore backup state
         this.board = backupBoard;
         this.WhosTurn = backupTurn;
-        
+
         // Update GUI to reflect rollback
         refreshBoardPanel();
-        
+
         // Show error to user
         if (errorMessage != null && !errorMessage.isEmpty()) {
             showInvalidMovePopup();
         }
-        
+
         // Clear backup
         backupBoard = null;
         backupTurn = null;
@@ -260,17 +260,14 @@ public class Network extends GUI {
         NetworkMessage request = server.receiveMoveRequest();
         if (request != null) {
             // Validate Move needs to use CheckMateDetector
-            
+
             // Send validation response back to client
-            
+
         }
     }
-
-
 
     // ============================================================================
     // CLIENT-ONLY METHODS (Client-specific functionality)
     // ============================================================================
-
 
 }

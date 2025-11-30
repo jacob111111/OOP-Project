@@ -24,4 +24,12 @@ public class Rook extends LinearPiece {
         super(color, position);
         this.displaySymbol.append("R");
     }
+
+    @Override
+    public int[][] getDirections() {
+        // Rook moves horizontally and vertically only
+        return new int[][] {
+                { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }
+        };
+    }
 }

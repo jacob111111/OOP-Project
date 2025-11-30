@@ -82,8 +82,8 @@ public class GUI extends Game {
      * Entry point for moves executed through the GUI.
      * 
      * Flow:
-     * 1. Get current player
-     * 2. Validate move (BE)
+     * 1. Validate ownership (player moving their own piece)
+     * 2. Validate move legality (reachability + king safety)
      * 3. If invalid, show popup and return false
      * 4. If valid, update backend board state
      * 5. Handle captures if needed
@@ -97,14 +97,20 @@ public class GUI extends Game {
      * @return true if move was valid and executed, false if invalid
      */
     public boolean executeTurn(Position fromPosition, Position toPosition, Piece pieceToMove) {
-        // Piece color validation is done here to maintain OOP architecture
-        if (pieceToMove.getColor() != currentPlayer.getColor()) {
-            // Player tried to move opponent's piece
+        // Use MoveValidator for comprehensive validation
+        utils.MoveValidator validator = board.getMoveValidator();
+
+        // Ownership validation
+        if (!validator.isPieceOwnedByPlayer(pieceToMove, currentPlayer)) {
             showWrongColorError();
             return false;
         }
 
-        // Validate the move (BE validation) - includes check validation
+        // Step 4: Check for captures BEFORE moving
+        Piece capturedPiece = board.getPieceAt(toPosition);
+        boolean isCapture = capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor();
+
+        // Validate the move (reachability + king safety)
         boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
 
         if (!moveSuccessful) {
@@ -113,13 +119,10 @@ public class GUI extends Game {
             return false;
         }
 
-        // Step 4: Execute the move on backend And Step 5: Handle captures
-        Piece capturedPiece = board.getPieceAt(toPosition);
-
-        // Check if there's a piece to capture and it's not the same color
-        if (capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor()) {
+        // Step 5: Execute the move on backend and handle captures
+        if (isCapture) {
             // Capture the piece at destination
-            board.capturePiece(pieceToMove, toPosition);
+            board.capturePiece(pieceToMove, toPosition, capturedPiece);
         }
 
         // Update piece position on backend
