@@ -30,11 +30,11 @@ public class Network extends GUI {
     private Thread networkListenerThread = null;
     private volatile boolean isListening = false;
     
+
     // ============================================================================
-    // CONSTRUCTORS
+    // HOST-ONLY METHODS (Server-specific functionality)
     // ============================================================================
 
-    // Constructor for HOST mode
     public Network(boolean isPvP, Color p1Color, int port) {
         super(isPvP, p1Color);
         this.port = port;
@@ -52,13 +52,67 @@ public class Network extends GUI {
         startNetworkListener();
     }
 
-    // Constructor for CLIENT mode
-    public Network(boolean isPvP, Color p1Color, String serverIP, int port) {
-        super(isPvP, p1Color);
+    /**
+     * Executes a move on the host/server side.
+     * Validates and applies immediately, then broadcasts to client.
+     * 
+     * @param from Starting position
+     * @param to Target position
+     * @param piece The piece being moved
+     * @return true if move was valid and executed
+     */
+    private boolean executeHostTurn(Position from, Position to, Piece piece) {
+        // Servers Local Move: validate and apply immediately
+        boolean success = super.executeTurn(from, to, piece);
+
+        if (success) {
+            // Send validated move to client using MOVE_UPDATE
+            server.sendMoveUpdate(from, to);
+        }
+        return success;
+    }
+
+    /**
+     * Sends current game state to client for synchronization.
+     */
+    private void sendGameStateToClient() {
+        // Host sends current game state to client
+        Color clientColor = (myColor == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        server.sendInitialSync(this, clientColor);
+    }
+
+    /**
+     * Handles move request from client (server side).
+     * Validates the move and sends response.
+     */
+    private void handleClientMoveRequest(NetworkMessage request) {
+        Piece piece = board.getPieceAt(request.from);
+        
+        // Validate the move on server side
+        boolean isValid = board.attemptMove(request.to, piece);
+        
+        if (isValid) {
+            // Execute the move on server side and notify client
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                executeRemoteMove(request.from, request.to, piece);
+                refreshBoardPanel();
+            });
+            server.sendMoveResponse(true);
+        } else {
+            server.sendMoveResponse(false);
+        }
+    }
+
+    // ============================================================================
+    // CLIENT-ONLY METHODS (Client-specific functionality)
+    // ============================================================================
+
+    public Network(boolean isPvP, String serverIP, int port) {
+        super(isPvP, null);
         this.port = port;
         this.isHost = false;
 
-        client = new Client(p1Color, serverIP, port);
+        client = new Client(null, serverIP, port);
 
         // Receive initial sync from server
         NetworkMessage syncMsg = client.receiveInitialSync();
@@ -76,10 +130,142 @@ public class Network extends GUI {
         startNetworkListener();
     }
 
+    /**
+     * Executes a move on the client side with optimistic update.
+     * Applies move immediately, then sends to server for validation.
+     * Will rollback if server rejects.
+     * 
+     * @param from Starting position
+     * @param to Target position
+     * @param piece The piece being moved
+     * @return true if move was locally valid (may still be rejected by server)
+     */
+    private boolean executeClientTurn(Position from, Position to, Piece piece) {
+        // Client local move: Backup game state and perform optimistic update
+        backupBoard = deepCopyBoard(board);
+        backupTurn = WhosTurn;
+        
+        boolean success = super.executeTurn(from, to, piece);
+
+        if (success) {
+            // Send move to server for authoritative validation (async)
+            // Server will respond via network listener which triggers handleMoveApproval() or handleMoveRejection()
+            Thread sendThread = new Thread(() -> {
+                client.sendMoveRequest(from, to);
+            }, "ClientMoveRequest");
+            sendThread.setDaemon(true);
+            sendThread.start();
+        } else {
+            // Client-side validation failed, clear backup
+            backupBoard = null;
+            backupTurn = null;
+        }
+        return success;
+    }
+
+    /**
+     * Receives and applies game state update from server.
+     */
+    private void receiveGameStateFromServer() {
+        // Client receives updated game state from host
+        NetworkMessage syncMsg = client.receiveInitialSync();
+        if (syncMsg != null && syncMsg.gameState != null) {
+            this.board = syncMsg.gameState.getBoard();
+            this.WhosTurn = syncMsg.gameState.WhosTurn;
+        }
+    }
+
+    /**
+     * Deep copy of Board using serialization.
+     * Leverages existing Serializable implementation.
+     * 
+     * @param original The board to copy
+     * @return A deep copy of the board
+     */
+    private Board deepCopyBoard(Board original) {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bos);
+            out.writeObject(original);
+            out.flush();
+
+            ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(bis);
+            return (Board) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Failed to deep copy board: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Handles move update from server (client side).
+     * Applies the validated move to the client's board.
+     */
+    private void handleServerMoveUpdate(NetworkMessage update) {
+        Piece piece = board.getPieceAt(update.from);
+        
+        // Apply the validated move from server
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            executeRemoteMove(update.from, update.to, piece);
+            refreshBoardPanel();
+        });
+    }
+
+    /**
+     * Handles move response from server (client side).
+     * Triggers approval or rejection of the client's optimistic move.
+     */
+    private void handleServerMoveResponse(NetworkMessage response) {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (response.isValid != null && response.isValid) {
+                handleMoveApproval();
+            } else {
+                handleMoveRejection("Move rejected by server, ROLLBACK initiated");
+            }
+        });
+    }
+
+    /**
+     * Called when server approves the client's optimistic move.
+     * Clears the backup state as the move is confirmed valid.
+     */
+    public void handleMoveApproval() {
+        // Move was valid, just clear backup
+        backupBoard = null;
+        backupTurn = null;
+    }
+
+    /**
+     * Called when server rejects the client's optimistic move.
+     * Rolls back the board state to the pre-move backup.
+     * 
+     * @param errorMessage Optional error message to display to user
+     */
+    public void handleMoveRejection(String errorMessage) {
+        // Restore backup state
+        this.board = backupBoard;
+        this.WhosTurn = backupTurn;
+
+        // Update GUI to reflect rollback
+        refreshBoardPanel();
+
+        // Show error to user
+        if (errorMessage != null && !errorMessage.isEmpty()) {
+            showInvalidMoveMessage();
+        }
+
+        // Clear backup
+        backupBoard = null;
+        backupTurn = null;
+    }
+
+
     // ============================================================================
     // SHARED METHODS (Both host and client use)
     // ============================================================================
-
+    
     @Override
     public void end(Color winner) {
         // Stop network listener
@@ -87,54 +273,6 @@ public class Network extends GUI {
         
         // Once a winner is determined, call methods to display who won in a pop up on each playes screen 
         // TODO: Show winner popup
-    }
-
-
-
-    /**
-     * Action execution (validate and apply a specific move)
-     * Uses optimistic updates for client moves - immediately applies move to GUI,
-     * then validates with server. Rollback occurs if server rejects.
-     */
-    @Override
-    public boolean executeTurn(Position from, Position to, Piece piece) {
-        if (WhosTurn == myColor) {
-            if (isHost) {
-                // Servers Local Move: validate and apply immediately
-                boolean success = super.executeTurn(from, to, piece);
-
-                if (success) {
-                    // Send validated move to client using MOVE_UPDATE
-                    server.sendMoveUpdate(from, to);
-                }
-
-                return success;
-            } else {
-                // Client local move: Backup game state and perform optimistic update
-                backupBoard = deepCopyBoard(board);
-                backupTurn = WhosTurn;
-                
-                boolean success = super.executeTurn(from, to, piece);
-
-                if (success) {
-                    // Send move to server for authoritative validation (async)
-                    // Server will respond via network listener which triggers handleMoveApproval() or handleMoveRejection()
-                    Thread sendThread = new Thread(() -> {
-                        client.sendMoveRequest(from, to);
-                    }, "ClientMoveRequest");
-                    sendThread.setDaemon(true);
-                    sendThread.start();
-                } else {
-                    // Client-side validation failed, clear backup
-                    backupBoard = null;
-                    backupTurn = null;
-                }
-                return success;
-            }
-        } else {
-            // REMOTE MOVE (opponent's turn)
-            return executeRemoteMove(from, to, piece);
-        }
     }
 
     /**
@@ -203,56 +341,6 @@ public class Network extends GUI {
     }
     
     /**
-     * Handles move request from client (server side).
-     * Validates the move and sends response.
-     */
-    private void handleClientMoveRequest(NetworkMessage request) {
-        Piece piece = board.getPieceAt(request.from);
-        
-        // Validate the move on server side
-        boolean isValid = board.attemptMove(request.to, piece);
-        
-        if (isValid) {
-            // Execute the move on server side and notify client
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                executeRemoteMove(request.from, request.to, piece);
-                refreshBoardPanel();
-            });
-            server.sendMoveResponse(true);
-        } else {
-            server.sendMoveResponse(false);
-        }
-    }
-    
-    /**
-     * Handles move update from server (client side).
-     * Applies the validated move to the client's board.
-     */
-    private void handleServerMoveUpdate(NetworkMessage update) {
-        Piece piece = board.getPieceAt(update.from);
-        
-        // Apply the validated move from server
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            executeRemoteMove(update.from, update.to, piece);
-            refreshBoardPanel();
-        });
-    }
-    
-    /**
-     * Handles move response from server (client side).
-     * Triggers approval or rejection of the client's optimistic move.
-     */
-    private void handleServerMoveResponse(NetworkMessage response) {
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            if (response.isValid != null && response.isValid) {
-                handleMoveApproval();
-            } else {
-                handleMoveRejection("Move rejected by server, ROLLBACK initiated");
-            }
-        });
-    }
-    
-    /**
      * Stops the network listener thread and closes all network resources.
      * Call this when ending the game.
      */
@@ -269,108 +357,37 @@ public class Network extends GUI {
         if (client != null) {
             client.close();
         }
-    } 
+    }
 
 
-    // Syncs game state between host and client (for error recovery)
+    // ============================================================================
+    // Context-dependent (Based on isHost)
+    // ============================================================================
+    
+    /**
+     * Action execution (validate and apply a specific move)
+     * Delegates to host or client specific implementation.
+     * Uses optimistic updates for client moves.
+     */
+    @Override
+    public boolean executeTurn(Position from, Position to, Piece piece) {
+        if (WhosTurn == myColor) {
+            return isHost ? executeHostTurn(from, to, piece) : executeClientTurn(from, to, piece);
+        } else {
+            // REMOTE MOVE (opponent's turn)
+            return executeRemoteMove(from, to, piece);
+        }
+    }
+
+    /**
+     * Syncs game state between host and client (for error recovery).
+     * Delegates to host or client specific implementation.
+     */
     public void updateGameState() {
         if (isHost) {
-            // Host sends current game state to client
-            Color clientColor = (myColor == Color.WHITE) ? Color.BLACK : Color.WHITE;
-            server.sendInitialSync(this, clientColor);
+            sendGameStateToClient();
         } else {
-            // Client receives updated game state from host
-            NetworkMessage syncMsg = client.receiveInitialSync();
-            if (syncMsg != null && syncMsg.gameState != null) {
-                this.board = syncMsg.gameState.getBoard();
-                this.WhosTurn = syncMsg.gameState.WhosTurn;
-            }
+            receiveGameStateFromServer();
         }
     }
-
-    public Color getMyColor() {
-        return myColor;
-    }
-
-    /**
-     * Deep copy of Board using serialization.
-     * Leverages existing Serializable implementation.
-     * 
-     * @param original The board to copy
-     * @return A deep copy of the board
-     */
-    private Board deepCopyBoard(Board original) {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream out = new ObjectOutputStream(bos);
-            out.writeObject(original);
-            out.flush();
-
-            ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(bis);
-            return (Board) in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Failed to deep copy board: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * Called when server approves the client's optimistic move.
-     * Clears the backup state as the move is confirmed valid.
-     */
-    public void handleMoveApproval() {
-        // Move was valid, just clear backup
-        backupBoard = null;
-        backupTurn = null;
-    }
-
-    /**
-     * Called when server rejects the client's optimistic move.
-     * Rolls back the board state to the pre-move backup.
-     * 
-     * @param errorMessage Optional error message to display to user
-     */
-    public void handleMoveRejection(String errorMessage) {
-        // Restore backup state
-        this.board = backupBoard;
-        this.WhosTurn = backupTurn;
-
-        // Update GUI to reflect rollback
-        refreshBoardPanel();
-
-        // Show error to user
-        if (errorMessage != null && !errorMessage.isEmpty()) {
-            showInvalidMoveMessage();
-        }
-
-        // Clear backup
-        backupBoard = null;
-        backupTurn = null;
-    }
-
-    // ============================================================================
-    // HOST-ONLY METHODS (Server-specific functionality)
-    // ============================================================================
-
-    // Handle incoming move request from client (only for host)
-    public void handleMoveRequest() {
-        if (!isHost) {
-            throw new IllegalStateException("Only server can handle move requests");
-        }
-
-        NetworkMessage request = server.receiveMoveRequest();
-        if (request != null) {
-            // Validate Move needs to use CheckMateDetector
-
-            // Send validation response back to client
-
-        }
-    }
-
-    // ============================================================================
-    // CLIENT-ONLY METHODS (Client-specific functionality)
-    // ============================================================================
-
 }
