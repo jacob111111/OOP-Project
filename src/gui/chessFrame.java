@@ -223,4 +223,14 @@ public class chessFrame extends JFrame {
             }
         }
     }
+
+    /**
+     * Flips the board perspective for network games.
+     * Used to show black's perspective for the client player.
+     */
+    public void flipBoard() {
+        if (boardPanel != null) {
+            boardPanel.flipBoard();
+        }
+    }
 }

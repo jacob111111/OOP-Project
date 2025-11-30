@@ -91,16 +91,7 @@ public class GUI extends Game {
      * @return true if move was valid and executed, false if invalid
      */
     public boolean executeTurn(Position fromPosition, Position toPosition, Piece pieceToMove) {
-        // Use MoveValidator for comprehensive validation
-        utils.MoveValidator validator = board.getMoveValidator();
-
-        // Ownership validation
-        if (!validator.isPieceOwnedByPlayer(pieceToMove, currentPlayer)) {
-            showWrongColorError();
-            return false;
-        }
-
-        // Step 4: Check for captures BEFORE moving
+        // Check for captures BEFORE moving
         Piece capturedPiece = board.getPieceAt(toPosition);
         boolean isCapture = capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor();
 
@@ -146,22 +137,20 @@ public class GUI extends Game {
     }
 
     /**
-     * Shows an error message when a player tries to move the opponent's piece.
-     */
-    protected void showWrongColorError() {
-        if (parentFrame != null) {
-            String currentColor = (currentPlayer.getColor() == Color.WHITE) ? "White" : "Black";
-            parentFrame.displayMessage("You cannot move your opponent's pieces! It is " + currentColor + "'s turn.",
-                    "error");
-        }
-    }
-
-    /**
      * Shows a message when an invalid move is attempted.
      */
     protected void showInvalidMoveMessage() {
         if (parentFrame != null) {
             parentFrame.displayMessage("Invalid move! Please try a different move.", "warning");
+        }
+    }
+
+    /**
+     * Shows a message when player tries to move during opponent's turn.
+     */
+    protected void showWaitForOpponentMessage() {
+        if (parentFrame != null) {
+            parentFrame.displayMessage("Wait for your opponent's move!", "warning");
         }
     }
 

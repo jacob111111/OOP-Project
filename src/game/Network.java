@@ -30,6 +30,14 @@ public class Network extends GUI {
     private Thread networkListenerThread = null;
     private volatile boolean isListening = false;
     
+    /**
+     * Gets the color this player is playing as in the network game.
+     * 
+     * @return The color this player controls (WHITE or BLACK)
+     */
+    public Color getMyColor() {
+        return myColor;
+    }
 
     // ============================================================================
     // HOST-ONLY METHODS (Server-specific functionality)
@@ -128,6 +136,9 @@ public class Network extends GUI {
             if (syncMsg.gameState != null) {
                 this.board = syncMsg.gameState.getBoard();
                 this.WhosTurn = syncMsg.gameState.WhosTurn;
+                // Reinitialize transient fields after deserialization
+                this.currentPlayer = board.getPlayer(WhosTurn);
+                this.validMoveDetector = board.getCheckmateDetector();
             }
         }
         
@@ -376,6 +387,13 @@ public class Network extends GUI {
      */
     @Override
     public boolean executeTurn(Position from, Position to, Piece piece) {
+        // Only allow moves when it's this player's turn
+        if (WhosTurn != myColor) {
+            System.out.println("Not your turn! Current turn: " + WhosTurn + ", Your color: " + myColor);
+            showWaitForOpponentMessage();
+            return false;
+        }
+        
         if (WhosTurn == myColor) {
             return isHost ? executeHostTurn(from, to, piece) : executeClientTurn(from, to, piece);
         } else {

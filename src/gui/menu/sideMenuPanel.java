@@ -531,6 +531,12 @@ public class sideMenuPanel extends JPanel {
                     parentFrame.setBoardEnabled(true);
                     finalGame.setParentFrame(parentFrame);
                     parentFrame.setGame(finalGame);
+                    
+                    // Flip board if host is playing as black
+                    if (hostColor == utils.Color.BLACK) {
+                        parentFrame.flipBoard();
+                    }
+                    
                     setGameInProgress(true);
                     JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
                 });
@@ -609,6 +615,12 @@ public class sideMenuPanel extends JPanel {
                         parentFrame.setBoardEnabled(true);
                         networkGame.setParentFrame(parentFrame);
                         parentFrame.setGame(networkGame);
+                        
+                        // Flip board if client is playing as black
+                        if (networkGame.getMyColor() == utils.Color.BLACK) {
+                            parentFrame.flipBoard();
+                        }
+                        
                         setGameInProgress(true);
                         JOptionPane.showMessageDialog(this, "Connected to server! Game started.", "Connected", JOptionPane.INFORMATION_MESSAGE);
                     });
