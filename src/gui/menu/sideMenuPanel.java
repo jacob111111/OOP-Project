@@ -538,7 +538,7 @@ public class sideMenuPanel extends JPanel {
         JPanel portPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel portLabel = new JLabel("Port:");
         portLabel.setPreferredSize(new Dimension(80, 25));
-        JTextField portField = new JTextField(15);
+        JTextField portField = new JTextField(12);
         portField.setText("8080"); // Default port
         portPanel.add(portLabel);
         portPanel.add(portField);
