@@ -75,10 +75,11 @@ public class Server extends Player{
      * @param from The starting position of the move
      * @param to The ending position of the move
      * @param currentTurn The current turn after the move is executed
+     * @param isCheck Whether the move puts the opponent in check
      */
-    public void sendMoveUpdate(utils.Position from, utils.Position to, utils.Color currentTurn) {
+    public void sendMoveUpdate(utils.Position from, utils.Position to, utils.Color currentTurn, Boolean isCheck) {
         try {
-            NetworkMessage moveUpdate = NetworkMessage.moveUpdate(from, to, currentTurn);
+            NetworkMessage moveUpdate = NetworkMessage.moveUpdate(from, to, currentTurn, isCheck);
             out.writeObject(moveUpdate);
             out.flush();
             
