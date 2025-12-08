@@ -827,102 +827,21 @@ public class SideMenuPanel extends JPanel {
 
     /**
      * Handles saving the current game state to a file.
-     * 
-     * Opens a file chooser dialog and serializes the current game
-     * object to the selected file. Shows error messages if save fails.
+     * Delegates to SaveLoadManager.
      */
     private void handleSaveGame() {
-        if (parentFrame.getCurrentGame() == null) {
-            JOptionPane.showMessageDialog(this, "No game to save!", "Save Game", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Save Game");
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Chess Game Files (*.chess)", "chess"));
-        fileChooser.setSelectedFile(new File("game.chess"));
-
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            if (!file.getName().endsWith(".chess")) {
-                file = new File(file.getAbsolutePath() + ".chess");
-            }
-
-            try {
-                saveGameToFile(file);
-                JOptionPane.showMessageDialog(this, "Game saved successfully!", "Save Game",
-                        JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Failed to save game: " + e.getMessage(), "Save Error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        }
+        SaveLoadManager.handleSaveGame(this, parentFrame.getCurrentGame());
     }
 
     /**
      * Handles loading a game state from a file.
-     * 
-     * Opens a file chooser dialog and deserializes a game object
-     * from the selected file. Replaces current game if one exists.
+     * Delegates to SaveLoadManager.
      */
     private void handleLoadGame() {
-        if (parentFrame.getCurrentGame() != null) {
-            int result = JOptionPane.showConfirmDialog(
-                    this,
-                    "This will replace the current game. Are you sure?",
-                    "Load Game",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE);
-
-            if (result != JOptionPane.YES_OPTION) {
-                return;
-            }
-        }
-
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Load Game");
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Chess Game Files (*.chess)", "chess"));
-
-        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-
-            try {
-                loadGameFromFile(file);
-                setGameInProgress(true);
-                JOptionPane.showMessageDialog(this, "Game loaded successfully!", "Load Game",
-                        JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException | ClassNotFoundException e) {
-                JOptionPane.showMessageDialog(this, "Failed to load game: " + e.getMessage(), "Load Error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    /**
-     * Serializes and saves the current game to the specified file.
-     * 
-     * @param file The file to save the game state to
-     * @throws IOException if file writing fails
-     */
-    private void saveGameToFile(File file) throws IOException {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
-            // Save the current game state
-            oos.writeObject(parentFrame.getCurrentGame());
-        }
-    }
-
-    /**
-     * Deserializes and loads a game from the specified file.
-     * 
-     * @param file The file to load the game state from
-     * @throws IOException            if file reading fails
-     * @throws ClassNotFoundException if game class cannot be found
-     */
-    private void loadGameFromFile(File file) throws IOException, ClassNotFoundException {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-            // Load the game state
-            game.GUI loadedGame = (game.GUI) ois.readObject();
+        game.GUI loadedGame = SaveLoadManager.handleLoadGame(this, parentFrame.getCurrentGame());
+        if (loadedGame != null) {
             parentFrame.setGame(loadedGame);
+            setGameInProgress(true);
         }
     }
 
