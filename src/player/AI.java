@@ -144,7 +144,7 @@ public class AI extends Player {
         MoveValidator validator = board.getMoveValidator();
 
         for (Piece piece : getCurrentPieces()) {
-            Set<Position> possibleMoves = piece.getPossibleMoves(board);
+            Set<Position> possibleMoves = piece.getLegalMoves(board);
             Position from = piece.getPosition();
 
             for (Position to : possibleMoves) {

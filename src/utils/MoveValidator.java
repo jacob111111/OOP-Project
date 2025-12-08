@@ -198,17 +198,17 @@ public class MoveValidator {
     /**
      * Gets all squares a piece can legally move to (without check validation).
      * 
-     * Delegates to the piece's own getPossibleMoves() method, which handles
+     * Delegates to the piece's getLegalMoves() method, which handles
      * piece-specific movement rules including:
      * - Pawns: Forward movement and diagonal captures
      * - Knights: L-shaped jumps
-     * - Kings: One square in any direction
+     * - Kings: One square in any direction + castling
      * - Linear pieces: Sliding along lines until blocked
      * 
      * @param piece the piece to get moves for
      * @return Set of positions the piece can move to
      */
     public Set<Position> getValidMovesForPiece(Piece piece) {
-        return piece.getPossibleMoves(board);
+        return piece.getLegalMoves(board);
     }
 }

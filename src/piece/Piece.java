@@ -102,9 +102,29 @@ public abstract class Piece implements Serializable {
      * This method calculates where the piece can move based on its movement rules,
      * but does NOT validate check safety or turn ownership.
      * 
+     * This is used primarily by AttackMap to determine which squares are under attack.
+     * For UI and move validation, use getLegalMoves() instead.
+     * 
      * @param board The board to calculate moves on (needed to check for pieces
      *              blocking paths)
-     * @return Set of all positions this piece can potentially move to
+     * @return Set of all positions this piece can potentially move to (basic moves only)
      */
     public abstract Set<Position> getPossibleMoves(Object board);
+
+    /**
+     * Gets all legal moves for this piece, including special moves and rule constraints.
+     * 
+     * This method builds on getPossibleMoves() and adds:
+     * - Special moves (e.g., castling for King, en passant for Pawn)
+     * - Rule-based constraints that require access to AttackMap
+     * 
+     * Default implementation just returns getPossibleMoves(). Pieces with special
+     * moves (King, Pawn) should override this method.
+     * 
+     * @param board The board to calculate legal moves on
+     * @return Set of all positions this piece can legally move to
+     */
+    public Set<Position> getLegalMoves(board.Board board) {
+        return getPossibleMoves(board);
+    }
 }
