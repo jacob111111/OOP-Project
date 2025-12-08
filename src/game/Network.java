@@ -385,6 +385,12 @@ public class Network extends GUI {
                             }
                         }
                     }
+                } catch (IOException e) {
+                    // Disconnection detected
+                    if (isListening) {
+                        handleDisconnect(e.getMessage());
+                    }
+                    break; // Exit listener loop
                 } catch (Exception e) {
                     if (isListening) {
                         System.err.println("Network listener error: " + e.getMessage());
@@ -413,6 +419,38 @@ public class Network extends GUI {
         if (client != null) {
             client.close();
         }
+    }
+    
+    /**
+     * Handles network disconnection by displaying error and ending game.
+     * 
+     * @param errorDetails Details about the disconnection
+     */
+    private void handleDisconnect(String errorDetails) {
+        isListening = false; // Stop listening immediately
+        
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            // Determine disconnect message based on role
+            String disconnectType = isHost ? "Client Disconnected" : "Server Disconnected";
+            
+            // Display error message
+            if (parentFrame != null) {
+                parentFrame.displayMessage(disconnectType + ": Ending game", "error");
+            }
+            
+            // Show popup notification
+            javax.swing.JOptionPane.showMessageDialog(null,
+                    "Network connection lost.\n" + disconnectType + "\n\nThe game will now end.",
+                    "Connection Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            
+            // Clean up and end game
+            stopNetworkListener();
+            
+            if (parentFrame != null) {
+                parentFrame.clearGame();
+            }
+        });
     }
 
 
