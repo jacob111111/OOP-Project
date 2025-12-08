@@ -226,6 +226,10 @@ public class Board implements Serializable {
      * 1. Can the piece reach the target square?
      * 2. Does the move leave the king in check?
      * 
+     * NOTE: This method only VALIDATES the move, it does not execute it.
+     * The caller (GUI/Game layer) is responsible for calling updatePiecePosition()
+     * to actually move the piece.
+     * 
      * Note: Ownership validation should be done by the caller (GUI/Game layer).
      * 
      * @param possibleMove the target position for the move
@@ -244,20 +248,16 @@ public class Board implements Serializable {
             return false;
         }
 
-        // Move is valid and safe, execute it
-        pieceToMove.move(possibleMove);
-
-        // Update pawn's hasMoved flag after first move
+        // Move is valid and safe
+        // Update piece flags for special moves (but don't move the piece yet)
         if (pieceToMove instanceof Pawn) {
             ((Pawn) pieceToMove).setHasMoved(true);
         }
 
-        // Update king's hasMoved flag after first move
         if (pieceToMove instanceof King) {
             ((King) pieceToMove).setHasMoved(true);
         }
 
-        // Update rook's hasMoved flag after first move
         if (pieceToMove instanceof Rook) {
             ((Rook) pieceToMove).setHasMoved(true);
         }
@@ -409,7 +409,8 @@ public class Board implements Serializable {
 
     /**
      * Custom deserialization method to reinitialize transient fields.
-     * Called automatically during deserialization to restore non-serializable helper objects.
+     * Called automatically during deserialization to restore non-serializable
+     * helper objects.
      */
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
         in.defaultReadObject();
