@@ -22,9 +22,9 @@ import gui.utils.UIStyle;
 public class SideMenuPanel extends JPanel {
     private ChessFrame parentFrame;
     private JButton newGameButton, saveGameButton, loadGameButton;
-    private JLabel gameTitle, themeLabel, pieceThemeLabel;
-    private JComboBox<String> themeSelector, pieceThemeSelector;
-    private JPanel settingsPanel, gameControlPanel;
+    private JLabel gameTitle;
+    private ThemeSettingsPanel themeSettingsPanel;
+    private JPanel gameControlPanel;
     private MessageBoardPanel messageBoardPanel;
     private GameInfoPanel gameInfoPanel;
 
@@ -80,41 +80,8 @@ public class SideMenuPanel extends JPanel {
         gameControlPanel.add(loadGameButton);
         gameControlPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // Settings panel (with border, no label)
-        settingsPanel = new JPanel();
-        settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
-        settingsPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createEmptyBorder(5, 5, 5, 5),
-            BorderFactory.createLineBorder(java.awt.Color.GRAY, 1)
-        ));
-
-        // Board theme selection
-        JPanel boardThemePanel = new JPanel(new FlowLayout());
-        themeLabel = new JLabel("Board Theme:");
-        themeSelector = new JComboBox<>(new String[] { "Classic", "Modern" });
-        themeSelector.addActionListener(e -> {
-            String selectedTheme = (String) themeSelector.getSelectedItem();
-            parentFrame.changeTheme(selectedTheme);
-        });
-
-        boardThemePanel.add(themeLabel);
-        boardThemePanel.add(themeSelector);
-
-        // Piece theme selection
-        JPanel pieceThemePanel = new JPanel(new FlowLayout());
-        pieceThemeLabel = new JLabel("Piece Theme:");
-        pieceThemeSelector = new JComboBox<>(new String[] { "Classic", "Modern" });
-        pieceThemeSelector.addActionListener(e -> {
-            String selectedPieceTheme = (String) pieceThemeSelector.getSelectedItem();
-            parentFrame.changePieceTheme(selectedPieceTheme);
-        });
-
-        pieceThemePanel.add(pieceThemeLabel);
-        pieceThemePanel.add(pieceThemeSelector);
-
-        // Add both theme panels to settings panel
-        settingsPanel.add(boardThemePanel);
-        settingsPanel.add(pieceThemePanel);
+        // Theme settings panel
+        themeSettingsPanel = new ThemeSettingsPanel(parentFrame);
 
         // Message board panel
         messageBoardPanel = new MessageBoardPanel();
@@ -132,7 +99,7 @@ public class SideMenuPanel extends JPanel {
         // Add components to main panel
         add(gameTitle, BorderLayout.NORTH);
         add(centerContainer, BorderLayout.CENTER);
-        add(settingsPanel, BorderLayout.SOUTH);
+        add(themeSettingsPanel, BorderLayout.SOUTH);
 
         // Set initial button states
         setGameInProgress(false);
@@ -887,31 +854,14 @@ public class SideMenuPanel extends JPanel {
         // Style panels
         gameControlPanel.setBackground(palette.labelBackground);
         
-        settingsPanel.setBackground(palette.labelBackground);
-        settingsPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createEmptyBorder(5, 5, 5, 5),
-            BorderFactory.createLineBorder(palette.labelForeground, 1)
-        ));
-
         gameInfoPanel.setBackground(palette.labelBackground);
 
         // Style labels and components
         gameTitle.setFont(palette.font);
         gameTitle.setForeground(palette.labelForeground);
 
-        themeLabel.setFont(palette.font);
-        themeLabel.setForeground(palette.labelForeground);
-
-        pieceThemeLabel.setFont(palette.font);
-        pieceThemeLabel.setForeground(palette.labelForeground);
-
-        themeSelector.setFont(palette.font);
-        themeSelector.setForeground(palette.labelForeground);
-        themeSelector.setBackground(palette.labelBackground);
-
-        pieceThemeSelector.setFont(palette.font);
-        pieceThemeSelector.setForeground(palette.labelForeground);
-        pieceThemeSelector.setBackground(palette.labelBackground);
+        // Style theme settings panel
+        themeSettingsPanel.updateStyle(palette);
 
         // Style game info panel
         gameInfoPanel.updateStyle(palette);
