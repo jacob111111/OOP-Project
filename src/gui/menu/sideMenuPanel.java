@@ -21,10 +21,9 @@ import gui.utils.UIStyle;
  */
 public class SideMenuPanel extends JPanel {
     private ChessFrame parentFrame;
-    private JButton newGameButton, saveGameButton, loadGameButton;
     private JLabel gameTitle;
+    private GameControlPanel gameControlPanel;
     private ThemeSettingsPanel themeSettingsPanel;
-    private JPanel gameControlPanel;
     private MessageBoardPanel messageBoardPanel;
     private GameInfoPanel gameInfoPanel;
 
@@ -53,32 +52,12 @@ public class SideMenuPanel extends JPanel {
         gameTitle = new JLabel("CHESS", SwingConstants.CENTER);
         gameTitle.setPreferredSize(new Dimension(220, 50));
 
-        // Game control panel for new/save/load
-        gameControlPanel = new JPanel();
-        gameControlPanel.setLayout(new BoxLayout(gameControlPanel, BoxLayout.Y_AXIS));
-
-        // Game control buttons
-        newGameButton = new JButton("New Game");
-        saveGameButton = new JButton("Save Game");
-        loadGameButton = new JButton("Load Game");
-
-        // Add action listeners for game controls
-        newGameButton.addActionListener(e -> handleNewGame());
-        saveGameButton.addActionListener(e -> handleSaveGame());
-        loadGameButton.addActionListener(e -> handleLoadGame());
-
-        // Style buttons
-        styleMenuButton(newGameButton);
-        styleMenuButton(saveGameButton);
-        styleMenuButton(loadGameButton);
-
-        // Add game control buttons to panel
-        gameControlPanel.add(newGameButton);
-        gameControlPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        gameControlPanel.add(saveGameButton);
-        gameControlPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        gameControlPanel.add(loadGameButton);
-        gameControlPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        // Game control panel
+        gameControlPanel = new GameControlPanel(
+            this::handleNewGame,
+            this::handleSaveGame,
+            this::handleLoadGame
+        );
 
         // Theme settings panel
         themeSettingsPanel = new ThemeSettingsPanel(parentFrame);
@@ -776,10 +755,8 @@ public class SideMenuPanel extends JPanel {
      * Enables or disables buttons based on game state
      */
     public void setGameInProgress(boolean gameInProgress) {
-        // Game control buttons
-        saveGameButton.setEnabled(gameInProgress); // Only enable save when there's a game
-        loadGameButton.setEnabled(true); // Always allow loading
-        newGameButton.setEnabled(true); // Always allow new game
+        // Delegate to game control panel
+        gameControlPanel.setGameInProgress(gameInProgress);
         
         // Turn indicator visibility
         gameInfoPanel.setGameInProgress(gameInProgress);
@@ -846,14 +823,10 @@ public class SideMenuPanel extends JPanel {
         // Style the main panel (no border, no label)
         setBackground(palette.labelBackground);
 
-        // Style all buttons
-        style.styleCellButton(newGameButton, true, palette);
-        style.styleCellButton(saveGameButton, true, palette);
-        style.styleCellButton(loadGameButton, true, palette);
+        // Style game control panel
+        gameControlPanel.updateStyle(style, palette);
 
         // Style panels
-        gameControlPanel.setBackground(palette.labelBackground);
-        
         gameInfoPanel.setBackground(palette.labelBackground);
 
         // Style labels and components
@@ -871,19 +844,5 @@ public class SideMenuPanel extends JPanel {
 
         repaint();
         revalidate();
-    }
-
-    /**
-     * Applies consistent styling to menu buttons.
-     * 
-     * Sets standard dimensions and alignment properties for buttons
-     * used in the menu interface.
-     * 
-     * @param button The button to apply menu styling to
-     */
-    private void styleMenuButton(JButton button) {
-        button.setAlignmentX(CENTER_ALIGNMENT);
-        button.setPreferredSize(new Dimension(200, 35)); // Slightly smaller for more buttons
-        button.setMaximumSize(new Dimension(200, 35));
     }
 }
