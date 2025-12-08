@@ -24,9 +24,9 @@ public class SideMenuPanel extends JPanel {
     private JButton newGameButton, saveGameButton, loadGameButton;
     private JLabel gameTitle, themeLabel, pieceThemeLabel;
     private JComboBox<String> themeSelector, pieceThemeSelector;
-    private JPanel settingsPanel, gameControlPanel, gameInfoPanel;
+    private JPanel settingsPanel, gameControlPanel;
     private MessageBoardPanel messageBoardPanel;
-    private JLabel hoverInfoLabel, turnIndicatorLabel;
+    private GameInfoPanel gameInfoPanel;
 
     /**
      * Creates a new side menu panel with the specified parent frame.
@@ -116,35 +116,11 @@ public class SideMenuPanel extends JPanel {
         settingsPanel.add(boardThemePanel);
         settingsPanel.add(pieceThemePanel);
 
-        // Game info panel (no border, no label)
-        gameInfoPanel = new JPanel();
-        gameInfoPanel.setLayout(new BoxLayout(gameInfoPanel, BoxLayout.Y_AXIS));
-        gameInfoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // Turn indicator label (hidden by default, maintains spacing)
-        turnIndicatorLabel = new JLabel("Current Player: WHITE", SwingConstants.CENTER);
-        turnIndicatorLabel.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
-        turnIndicatorLabel.setForeground(java.awt.Color.WHITE);
-        turnIndicatorLabel.setAlignmentX(CENTER_ALIGNMENT);
-        turnIndicatorLabel.setVisible(false); // Hidden until game starts
-        turnIndicatorLabel.setPreferredSize(new Dimension(250, 30));
-        turnIndicatorLabel.setMaximumSize(new Dimension(250, 30));
-
-        // Hover info label
-        hoverInfoLabel = new JLabel(" ", SwingConstants.CENTER);
-        hoverInfoLabel.setAlignmentX(CENTER_ALIGNMENT);
-        hoverInfoLabel.setPreferredSize(new Dimension(200, 25));
-        hoverInfoLabel.setMaximumSize(new Dimension(200, 25));
-
         // Message board panel
         messageBoardPanel = new MessageBoardPanel();
 
-        // Add components to game info panel
-        gameInfoPanel.add(turnIndicatorLabel);
-        gameInfoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        gameInfoPanel.add(hoverInfoLabel);
-        gameInfoPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        gameInfoPanel.add(messageBoardPanel);
+        // Game info panel
+        gameInfoPanel = new GameInfoPanel(messageBoardPanel);
 
         // Create container for game controls and game info
         JPanel centerContainer = new JPanel();
@@ -839,9 +815,7 @@ public class SideMenuPanel extends JPanel {
         newGameButton.setEnabled(true); // Always allow new game
         
         // Turn indicator visibility
-        if (turnIndicatorLabel != null) {
-            turnIndicatorLabel.setVisible(gameInProgress);
-        }
+        gameInfoPanel.setGameInProgress(gameInProgress);
     }
 
     /**
@@ -865,40 +839,31 @@ public class SideMenuPanel extends JPanel {
 
     /**
      * Updates the hover info label to show the currently hovered piece.
+     * Delegates to GameInfoPanel.
      * 
-     * @param pieceName  The name of the piece being hovered over (e.g., "King",
-     *                   "Queen")
-     * @param pieceColor The color of the piece ("White" or "Black")
+     * @param pieceName  The name of the piece being hovered over
+     * @param pieceColor The color of the piece
      */
     public void updateHoverInfo(String pieceName, String pieceColor) {
-        if (pieceName != null && pieceColor != null) {
-            hoverInfoLabel.setText("Hovering: " + pieceColor + " " + pieceName);
-        } else {
-            hoverInfoLabel.setText(" ");
-        }
+        gameInfoPanel.updateHoverInfo(pieceName, pieceColor);
     }
 
     /**
      * Clears the hover info label.
+     * Delegates to GameInfoPanel.
      */
     public void clearHoverInfo() {
-        hoverInfoLabel.setText(" ");
+        gameInfoPanel.clearHoverInfo();
     }
 
     /**
      * Updates the turn indicator to show whose turn it is.
+     * Delegates to GameInfoPanel.
      * 
      * @param currentTurn The color of the player whose turn it is
      */
     public void updateTurnIndicator(utils.Color currentTurn) {
-        if (turnIndicatorLabel != null) {
-            String turnText = (currentTurn == utils.Color.WHITE) ? "Current Player: WHITE" : "Current Player: BLACK";
-            java.awt.Color textColor = (currentTurn == utils.Color.WHITE) ? java.awt.Color.WHITE : java.awt.Color.BLACK;
-            
-            turnIndicatorLabel.setText(turnText);
-            turnIndicatorLabel.setForeground(textColor);
-            turnIndicatorLabel.setVisible(true); // Show when game is active
-        }
+        gameInfoPanel.updateTurnIndicator(currentTurn);
     }
 
     /**
@@ -948,14 +913,11 @@ public class SideMenuPanel extends JPanel {
         pieceThemeSelector.setForeground(palette.labelForeground);
         pieceThemeSelector.setBackground(palette.labelBackground);
 
+        // Style game info panel
+        gameInfoPanel.updateStyle(palette);
+
         // Style message board panel
         messageBoardPanel.updateStyle(palette);
-
-        // Style turn indicator and hover info labels
-        turnIndicatorLabel.setFont(palette.font.deriveFont(java.awt.Font.BOLD, 18f));
-        
-        hoverInfoLabel.setFont(palette.font);
-        hoverInfoLabel.setForeground(palette.labelForeground);
 
         repaint();
         revalidate();
