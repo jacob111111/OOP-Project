@@ -81,8 +81,8 @@ public class Network extends GUI {
         boolean success = super.executeTurn(from, to, piece);
 
         if (success) {
-            // Send validated move to client using MOVE_UPDATE
-            server.sendMoveUpdate(from, to);
+            // Send validated move to client using MOVE_UPDATE (include current turn state)
+            server.sendMoveUpdate(from, to, WhosTurn);
             // Refresh board to show the move
             refreshBoardPanel();
         }
@@ -105,19 +105,20 @@ public class Network extends GUI {
     private void handleClientMoveRequest(NetworkMessage request) {
         Piece piece = board.getPieceAt(request.from);
         
-        // Validate the move on server side
-        boolean isValid = board.attemptMove(request.from, request.to, piece);
-        
-        if (isValid) {
-            // Execute the move on server side and notify client
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                executeRemoteMove(request.from, request.to, piece);
+        // Execute the move on server side using full game logic
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            boolean success = super.executeTurn(request.from, request.to, piece);
+            
+            if (success) {
+                // Send success response and move update with current turn state
+                server.sendMoveResponse(true);
+                server.sendMoveUpdate(request.from, request.to, WhosTurn);
                 refreshBoardPanel();
-            });
-            server.sendMoveResponse(true);
-        } else {
-            server.sendMoveResponse(false);
-        }
+            } else {
+                // Send failure response
+                server.sendMoveResponse(false);
+            }
+        });
     }
 
     // ============================================================================
@@ -228,9 +229,9 @@ public class Network extends GUI {
     private void handleServerMoveUpdate(NetworkMessage update) {
         Piece piece = board.getPieceAt(update.from);
         
-        // Apply the validated move from server
+        // Apply the validated move from server (with turn state sync)
         javax.swing.SwingUtilities.invokeLater(() -> {
-            executeRemoteMove(update.from, update.to, piece);
+            executeRemoteMove(update.from, update.to, piece, update.currentTurn);
             refreshBoardPanel();
         });
     }
@@ -305,9 +306,10 @@ public class Network extends GUI {
      * @param from Starting position of the piece
      * @param to Target position for the move
      * @param piece The piece being moved
+     * @param newTurn The turn state after the move (from server)
      * @return true if move was successfully applied
      */
-    private boolean executeRemoteMove(Position from, Position to, Piece piece) {
+    private boolean executeRemoteMove(Position from, Position to, Piece piece, Color newTurn) {
         // Move is already validated by server, just apply it
         // attemptMove will handle any captures automatically
         Map<Position, Piece> positionIndex = board.getPositionIndex();
@@ -331,7 +333,14 @@ public class Network extends GUI {
         positionIndex.put(to, piece);
         piece.setPosition(to);
 
-        switchTurn();
+        // Sync turn state from server (don't call switchTurn, just update to server's state)
+        WhosTurn = newTurn;
+        currentPlayer = board.getPlayer(WhosTurn);
+        
+        // Update turn indicator in UI
+        if (parentFrame != null) {
+            parentFrame.updateTurnDisplay(WhosTurn);
+        }
         
         return true;
     }
@@ -413,12 +422,8 @@ public class Network extends GUI {
             return false;
         }
         
-        if (WhosTurn == myColor) {
-            return isHost ? executeHostTurn(from, to, piece) : executeClientTurn(from, to, piece);
-        } else {
-            // REMOTE MOVE (opponent's turn)
-            return executeRemoteMove(from, to, piece);
-        }
+        // Execute the player's own move
+        return isHost ? executeHostTurn(from, to, piece) : executeClientTurn(from, to, piece);
     }
 
     /**

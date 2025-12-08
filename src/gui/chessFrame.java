@@ -152,6 +152,8 @@ public class chessFrame extends JFrame {
         GUI newGame = new GUI(true, utils.Color.WHITE);
         newGame.setParentFrame(this); // Set parent reference for clearing
         setGame(newGame);
+        // Initialize turn display to WHITE (always starts first)
+        updateTurnDisplay(utils.Color.WHITE);
     }
 
     // Method to change board theme (called from side menu)
@@ -204,6 +206,17 @@ public class chessFrame extends JFrame {
     public void clearHoverInfo() {
         if (menuPanel != null) {
             menuPanel.clearHoverInfo();
+        }
+    }
+
+    /**
+     * Updates the turn indicator in the side menu.
+     * 
+     * @param currentTurn The color of the player whose turn it is
+     */
+    public void updateTurnDisplay(utils.Color currentTurn) {
+        if (menuPanel != null) {
+            menuPanel.updateTurnIndicator(currentTurn);
         }
     }
 

@@ -63,6 +63,26 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         this(UIPalette.CLASSIC);
     }
 
+    /**
+     * Override to maintain square aspect ratio for the chess board.
+     * This ensures buttons maintain their square shape and piece images don't get squished.
+     */
+    @Override
+    public Dimension getPreferredSize() {
+        // Get the parent container's size
+        Container parent = getParent();
+        if (parent != null) {
+            Dimension parentSize = parent.getSize();
+            // Use the smaller dimension to keep the board square
+            int size = Math.min(parentSize.width, parentSize.height);
+            // Ensure minimum size
+            size = Math.max(size, 400);
+            return new Dimension(size, size);
+        }
+        // Default size if no parent
+        return new Dimension(600, 600);
+    }
+
     public void setPalette(UIPalette newPalette) {
         this.palette = newPalette;
         for (int i = 0; i < getComponentCount(); i++) {
