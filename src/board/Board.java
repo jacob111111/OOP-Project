@@ -166,21 +166,16 @@ public class Board implements Serializable {
     }
 
     /**
-     * Updates a piece's position in both the piece object and the position index.
+     * Gets the position index map for direct access.
+     * Needed for move simulation and network synchronization.
      * 
-     * This method maintains consistency between the piece's internal position
-     * and the board's position tracking system. Note that the attack map is
-     * updated during move validation, so no additional update is needed here.
-     * 
-     * @param piece  the piece being moved
-     * @param oldPos the piece's previous position
-     * @param newPos the piece's new position
+     * @return The position index map
      */
-    public void updatePiecePosition(Piece piece, Position oldPos, Position newPos) {
-        positionIndex.remove(oldPos);
-        positionIndex.put(newPos, piece);
-        piece.setPosition(newPos);
+    public Map<Position, Piece> getPositionIndex() {
+        return positionIndex;
     }
+
+
 
     /**
      * Handles piece capture mechanics while maintaining position index consistency.
@@ -226,30 +221,42 @@ public class Board implements Serializable {
      * 1. Can the piece reach the target square?
      * 2. Does the move leave the king in check?
      * 
-     * NOTE: This method only VALIDATES the move, it does not execute it.
-     * The caller (GUI/Game layer) is responsible for calling updatePiecePosition()
-     * to actually move the piece.
+     * If the move is valid, this method executes it by:
+     * 1. Handling any captures at the destination
+     * 2. Updating both the piece's internal position and the board's position index
      * 
      * Note: Ownership validation should be done by the caller (GUI/Game layer).
      * 
-     * @param possibleMove the target position for the move
+     * @param fromPosition the starting position of the piece
+     * @param toPosition   the target position for the move
      * @param pieceToMove  the piece that should be moved
-     * @return true if the move was successful, false if invalid
+     * @return true if the move was valid and executed, false if invalid
      */
-    public boolean attemptMove(Position possibleMove, Piece pieceToMove) {
-        Position oldPosition = pieceToMove.getPosition();
-
+    public boolean attemptMove(Position fromPosition, Position toPosition, Piece pieceToMove) {
         // Validate reachability and king safety using MoveValidator
-        if (!moveValidator.isDestinationReachable(pieceToMove, possibleMove)) {
+        if (!moveValidator.isDestinationReachable(pieceToMove, toPosition)) {
             return false;
         }
 
-        if (!moveValidator.isMoveKingSafe(pieceToMove, oldPosition, possibleMove)) {
+        if (!moveValidator.isMoveKingSafe(pieceToMove, fromPosition, toPosition)) {
             return false;
         }
 
-        // Move is valid and safe
-        // Update piece flags for special moves (but don't move the piece yet)
+        // Move is valid and safe - handle capture BEFORE moving
+        Piece capturedPiece = getPieceAt(toPosition);
+        if (capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor()) {
+            // Remove captured piece from player's pieces and add to captures
+            if (capturedPiece.getColor() == Color.WHITE) {
+                white.getCurrentPieces().remove(capturedPiece);
+                blackHasCaptured.put(capturedPiece, capturedPiece.hashCode());
+            } else {
+                black.getCurrentPieces().remove(capturedPiece);
+                whiteHasCaptured.put(capturedPiece, capturedPiece.hashCode());
+            }
+            // Position will be cleared when we update the moving piece's position
+        }
+
+        // Update piece flags for special moves
         if (pieceToMove instanceof Pawn) {
             ((Pawn) pieceToMove).setHasMoved(true);
         }
@@ -261,6 +268,11 @@ public class Board implements Serializable {
         if (pieceToMove instanceof Rook) {
             ((Rook) pieceToMove).setHasMoved(true);
         }
+
+        // Update piece position and board index (this overwrites the captured piece in index)
+        positionIndex.remove(fromPosition);
+        positionIndex.put(toPosition, pieceToMove);
+        pieceToMove.setPosition(toPosition);
 
         return true;
     }
@@ -309,7 +321,9 @@ public class Board implements Serializable {
             Rook rook = (Rook) rookPiece;
 
             // Move the rook
-            updatePiecePosition(rook, rookFrom, rookTo);
+            positionIndex.remove(rookFrom);
+            positionIndex.put(rookTo, rook);
+            rook.setPosition(rookTo);
             rook.setHasMoved(true);
 
             System.out.println(

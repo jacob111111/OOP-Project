@@ -1,5 +1,6 @@
 package utils;
 
+import java.util.Map;
 import java.util.Set;
 
 import board.Board;
@@ -27,6 +28,9 @@ import player.Player;
 public class MoveValidator {
     private Board board;
     private AttackMap attackMap;
+    
+    // Cached reference to board's position index for move simulation
+    private Map<Position, Piece> positionIndex;
 
     /**
      * Creates a new MoveValidator with references to board and attack map.
@@ -37,6 +41,7 @@ public class MoveValidator {
     public MoveValidator(Board board, AttackMap attackMap) {
         this.board = board;
         this.attackMap = attackMap;
+        this.positionIndex = board.getPositionIndex();
     }
 
     // ============================================================================
@@ -145,8 +150,9 @@ public class MoveValidator {
         }
 
         // Simulate the move: update both piece position AND board's position index
+        positionIndex.remove(fromPosition);
+        positionIndex.put(toPosition, piece);
         piece.setPosition(toPosition);
-        board.updatePiecePosition(piece, fromPosition, toPosition);
 
         // Regenerate attack map with the new board state
         attackMap.updateAfterMove(piece, fromPosition, toPosition);
@@ -159,8 +165,9 @@ public class MoveValidator {
         boolean kingIsSafe = !attackMap.isSquareAttackedBy(kingPos, opponentColor);
 
         // Rollback the simulation: restore piece position and board state
+        positionIndex.remove(toPosition);
+        positionIndex.put(fromPosition, piece);
         piece.setPosition(fromPosition);
-        board.updatePiecePosition(piece, toPosition, fromPosition);
 
         if (!kingIsSafe) {
             // Move leaves king in check - restore captured piece to player list

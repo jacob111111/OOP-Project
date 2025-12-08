@@ -109,7 +109,7 @@ public class GUI extends Game {
             return false;
         }
 
-        // Check for captures BEFORE moving
+        // Check for captures BEFORE attempting move (for logging purposes)
         Piece capturedPiece = board.getPieceAt(toPosition);
         boolean isCapture = capturedPiece != null && capturedPiece.getColor() != pieceToMove.getColor();
         if (isCapture) {
@@ -117,9 +117,9 @@ public class GUI extends Game {
                     + capturedPiece.getColor() + ") at " + toPosition);
         }
 
-        // Validate the move (reachability + king safety)
+        // Validate and execute the move (attemptMove handles captures internally)
         System.out.println("Calling board.attemptMove()...");
-        boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
+        boolean moveSuccessful = board.attemptMove(fromPosition, toPosition, pieceToMove);
 
         if (!moveSuccessful) {
             System.out.println("FAILED at executeTurn: board.attemptMove() returned false");
@@ -136,17 +136,6 @@ public class GUI extends Game {
             System.out.println("Castling move detected!");
             // Execute castling (moves both king and rook)
             board.executeCastling((piece.King) pieceToMove, fromPosition, toPosition);
-        }
-
-        // NOTE: attemptMove() already called piece.move() which updated the piece's
-        // position
-        // We need to update the position index to reflect the move
-        board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
-
-        // Then handle captures (after the piece has moved)
-        if (isCapture) {
-            // Capture the piece at destination
-            board.capturePiece(pieceToMove, toPosition, capturedPiece);
         }
 
         // Check for pawn promotion

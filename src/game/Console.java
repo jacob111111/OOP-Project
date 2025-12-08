@@ -145,16 +145,14 @@ public class Console extends Game {
             return;
         }
 
-        // Validate the move first
-        boolean moveSuccessful = board.attemptMove(toPosition, pieceToMove);
+        // Validate and execute the move
+        boolean moveSuccessful = board.attemptMove(fromPosition, toPosition, pieceToMove);
 
         if (!moveSuccessful) {
             System.out.println("Invalid move! That piece cannot move to " + toSquare);
             return;
         }
 
-        // Execute the move
-        board.updatePiecePosition(pieceToMove, fromPosition, toPosition);
         System.out.println("Move successful: " + fromSquare + " to " + toSquare);
 
         // Check if opponent is in checkmate after this move

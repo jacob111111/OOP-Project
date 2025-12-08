@@ -9,6 +9,8 @@ import utils.Color;
 import utils.NetworkMessage;
 import utils.Position;
 
+import java.util.Map;
+
 import board.Board;
 
 import java.io.*;
@@ -104,7 +106,7 @@ public class Network extends GUI {
         Piece piece = board.getPieceAt(request.from);
         
         // Validate the move on server side
-        boolean isValid = board.attemptMove(request.to, piece);
+        boolean isValid = board.attemptMove(request.from, request.to, piece);
         
         if (isValid) {
             // Execute the move on server side and notify client
@@ -306,15 +308,28 @@ public class Network extends GUI {
      * @return true if move was successfully applied
      */
     private boolean executeRemoteMove(Position from, Position to, Piece piece) {
-        // Apply the validated move received from network
+        // Move is already validated by server, just apply it
+        // attemptMove will handle any captures automatically
+        Map<Position, Piece> positionIndex = board.getPositionIndex();
+        
+        // Check if there's a capture (for potential future logging)
         Piece capturedPiece = board.getPieceAt(to);
-
-        // Handle captures if any
+        
         if (capturedPiece != null && capturedPiece.getColor() != piece.getColor()) {
-            board.capturePiece(piece, to, capturedPiece);
+            // Handle capture before moving
+            if (capturedPiece.getColor() == utils.Color.WHITE) {
+                board.getPlayer(utils.Color.WHITE).getCurrentPieces().remove(capturedPiece);
+                board.getCaptures(utils.Color.BLACK).put(capturedPiece, capturedPiece.hashCode());
+            } else {
+                board.getPlayer(utils.Color.BLACK).getCurrentPieces().remove(capturedPiece);
+                board.getCaptures(utils.Color.WHITE).put(capturedPiece, capturedPiece.hashCode());
+            }
         }
-
-        board.updatePiecePosition(piece, from, to);
+        
+        // Update piece position directly (move already validated by server)
+        positionIndex.remove(from);
+        positionIndex.put(to, piece);
+        piece.setPosition(to);
 
         switchTurn();
         
