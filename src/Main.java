@@ -39,7 +39,7 @@ public class Main {
         if (choice == 1) {
             // Launch GUI with combined board and menu
             javax.swing.SwingUtilities.invokeLater(() -> {
-                new gui.chessFrame(); // Launches with classic palette and empty board
+                new gui.ChessFrame(); // Launches with classic palette and empty board
             });
             scnr.close(); // Close scanner since GUI will handle input
         } else if (choice == 2) {

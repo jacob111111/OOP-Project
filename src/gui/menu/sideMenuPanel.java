@@ -8,7 +8,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.*;
 
-import gui.chessFrame;
+import gui.ChessFrame;
 import gui.utils.UIPalette;
 import gui.utils.UIStyle;
 
@@ -19,8 +19,8 @@ import gui.utils.UIStyle;
  * game state (save/load), and configuring application settings. It remains
  * visible alongside the chess board during gameplay.
  */
-public class sideMenuPanel extends JPanel {
-    private chessFrame parentFrame;
+public class SideMenuPanel extends JPanel {
+    private ChessFrame parentFrame;
     private JButton newGameButton, saveGameButton, loadGameButton;
     private JLabel gameTitle, themeLabel, pieceThemeLabel;
     private JComboBox<String> themeSelector, pieceThemeSelector;
@@ -34,7 +34,7 @@ public class sideMenuPanel extends JPanel {
      * 
      * @param parent The parent chess frame that contains this panel
      */
-    public sideMenuPanel(chessFrame parent) {
+    public SideMenuPanel(ChessFrame parent) {
         this.parentFrame = parent;
         initializeComponents();
         updateStyle();

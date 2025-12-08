@@ -473,7 +473,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             hoveredButton = null;
         }
         // Clear hover info when mouse leaves the board
-        gui.chessFrame frame = (gui.chessFrame) SwingUtilities.getWindowAncestor(this);
+        gui.ChessFrame frame = (gui.ChessFrame) SwingUtilities.getWindowAncestor(this);
         if (frame != null) {
             frame.clearHoverInfo();
         }
@@ -502,7 +502,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             if (instance != null && instance.getBoard() != null) {
                 Position pos = buttonToPosition(button);
                 Piece piece = instance.getBoard().getPieceAt(pos);
-                gui.chessFrame frame = (gui.chessFrame) SwingUtilities.getWindowAncestor(this);
+                gui.ChessFrame frame = (gui.ChessFrame) SwingUtilities.getWindowAncestor(this);
                 if (frame != null) {
                     if (piece != null) {
                         String pieceName = piece.getName();
