@@ -127,8 +127,8 @@ public class sideMenuPanel extends JPanel {
         turnIndicatorLabel.setForeground(java.awt.Color.WHITE);
         turnIndicatorLabel.setAlignmentX(CENTER_ALIGNMENT);
         turnIndicatorLabel.setVisible(false); // Hidden until game starts
-        turnIndicatorLabel.setPreferredSize(new Dimension(200, 30));
-        turnIndicatorLabel.setMaximumSize(new Dimension(200, 30));
+        turnIndicatorLabel.setPreferredSize(new Dimension(250, 30));
+        turnIndicatorLabel.setMaximumSize(new Dimension(250, 30));
 
         // Hover info label
         hoverInfoLabel = new JLabel(" ", SwingConstants.CENTER);
@@ -1073,7 +1073,7 @@ public class sideMenuPanel extends JPanel {
         messageBoard.setBackground(palette.labelBackground);
 
         // Style turn indicator and hover info labels
-        turnIndicatorLabel.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
+        turnIndicatorLabel.setFont(palette.font.deriveFont(java.awt.Font.BOLD, 18f));
         
         hoverInfoLabel.setFont(palette.font);
         hoverInfoLabel.setForeground(palette.labelForeground);
