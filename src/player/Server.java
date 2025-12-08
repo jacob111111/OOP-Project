@@ -74,10 +74,11 @@ public class Server extends Player{
      * 
      * @param from The starting position of the move
      * @param to The ending position of the move
+     * @param currentTurn The current turn after the move is executed
      */
-    public void sendMoveUpdate(utils.Position from, utils.Position to) {
+    public void sendMoveUpdate(utils.Position from, utils.Position to, utils.Color currentTurn) {
         try {
-            NetworkMessage moveUpdate = NetworkMessage.moveUpdate(from, to);
+            NetworkMessage moveUpdate = NetworkMessage.moveUpdate(from, to, currentTurn);
             out.writeObject(moveUpdate);
             out.flush();
             

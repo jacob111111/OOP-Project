@@ -13,6 +13,7 @@ public class NetworkMessage implements Serializable {
     public Color clientColor;
     public Color winner;
     public String welcomeMsg;
+    public Color currentTurn; // The current turn after a move is executed
     
     // Constructor for move request
     public static NetworkMessage moveRequest(Position from, Position to) {
@@ -32,11 +33,12 @@ public class NetworkMessage implements Serializable {
     }
 
     // Constructor for move update (server notifying client of opponent's move)
-    public static NetworkMessage moveUpdate(Position from, Position to) {
+    public static NetworkMessage moveUpdate(Position from, Position to, Color currentTurn) {
         NetworkMessage msg = new NetworkMessage();
         msg.type = NetworkMessageType.MOVE_UPDATE;
         msg.from = from;
         msg.to = to;
+        msg.currentTurn = currentTurn;
         return msg;
     }
 

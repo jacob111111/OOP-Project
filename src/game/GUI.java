@@ -8,7 +8,7 @@ import piece.Piece;
 
 public class GUI extends Game {
     private transient gui.board.BoardPanel boardPanel;
-    private transient gui.chessFrame parentFrame;
+    protected transient gui.chessFrame parentFrame;
     private boolean aiShouldMakeFirstMove = false;
     private boolean aiIsThinking = false; // Prevent recursive AI moves
 
