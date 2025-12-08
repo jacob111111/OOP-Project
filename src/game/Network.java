@@ -333,6 +333,11 @@ public class Network extends GUI {
 
         switchTurn();
         
+        // Update turn indicator in UI
+        if (parentFrame != null) {
+            parentFrame.updateTurnDisplay(WhosTurn);
+        }
+        
         return true;
     }
 

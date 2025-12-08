@@ -23,10 +23,10 @@ public class sideMenuPanel extends JPanel {
     private JButton newGameButton, saveGameButton, loadGameButton;
     private JLabel gameTitle, themeLabel, pieceThemeLabel;
     private JComboBox<String> themeSelector, pieceThemeSelector;
-    private JPanel themePanel, gameControlPanel, messagePanel;
+    private JPanel settingsPanel, gameControlPanel, messagePanel, gameInfoPanel;
     private JTextArea messageBoard;
     private JScrollPane messageScrollPane;
-    private JLabel hoverInfoLabel;
+    private JLabel hoverInfoLabel, turnIndicatorLabel;
 
     /**
      * Creates a new side menu panel with the specified parent frame.
@@ -80,9 +80,13 @@ public class sideMenuPanel extends JPanel {
         gameControlPanel.add(loadGameButton);
         gameControlPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // Theme selection panel
-        themePanel = new JPanel();
-        themePanel.setLayout(new BoxLayout(themePanel, BoxLayout.Y_AXIS));
+        // Settings panel (with border, no label)
+        settingsPanel = new JPanel();
+        settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
+        settingsPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(5, 5, 5, 5),
+            BorderFactory.createLineBorder(java.awt.Color.GRAY, 1)
+        ));
 
         // Board theme selection
         JPanel boardThemePanel = new JPanel(new FlowLayout());
@@ -108,16 +112,41 @@ public class sideMenuPanel extends JPanel {
         pieceThemePanel.add(pieceThemeLabel);
         pieceThemePanel.add(pieceThemeSelector);
 
-        // Add both theme panels to main theme panel
-        themePanel.add(boardThemePanel);
-        themePanel.add(pieceThemePanel);
+        // Add both theme panels to settings panel
+        settingsPanel.add(boardThemePanel);
+        settingsPanel.add(pieceThemePanel);
 
-        // Message board panel
+        // Game info panel (no border, no label)
+        gameInfoPanel = new JPanel();
+        gameInfoPanel.setLayout(new BoxLayout(gameInfoPanel, BoxLayout.Y_AXIS));
+        gameInfoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Turn indicator label (hidden by default, maintains spacing)
+        turnIndicatorLabel = new JLabel("Current Player: WHITE", SwingConstants.CENTER);
+        turnIndicatorLabel.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
+        turnIndicatorLabel.setForeground(java.awt.Color.WHITE);
+        turnIndicatorLabel.setAlignmentX(CENTER_ALIGNMENT);
+        turnIndicatorLabel.setVisible(false); // Hidden until game starts
+        turnIndicatorLabel.setPreferredSize(new Dimension(200, 30));
+        turnIndicatorLabel.setMaximumSize(new Dimension(200, 30));
+
+        // Hover info label
+        hoverInfoLabel = new JLabel(" ", SwingConstants.CENTER);
+        hoverInfoLabel.setAlignmentX(CENTER_ALIGNMENT);
+        hoverInfoLabel.setPreferredSize(new Dimension(200, 25));
+        hoverInfoLabel.setMaximumSize(new Dimension(200, 25));
+
+        // Message board panel (with border and label)
         messagePanel = new JPanel();
         messagePanel.setLayout(new BorderLayout());
-        messagePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        messagePanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(10, 0, 0, 0),
+            BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(java.awt.Color.BLACK, 1),
+                "Messages"
+            )
+        ));
 
-        JLabel messageLabel = new JLabel("Messages:");
         messageBoard = new JTextArea(5, 15);
         messageBoard.setEditable(false);
         messageBoard.setLineWrap(true);
@@ -125,24 +154,26 @@ public class sideMenuPanel extends JPanel {
         messageScrollPane = new JScrollPane(messageBoard);
         messageScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-        hoverInfoLabel = new JLabel(" ");
-        hoverInfoLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
-
-        messagePanel.add(messageLabel, BorderLayout.NORTH);
         messagePanel.add(messageScrollPane, BorderLayout.CENTER);
-        messagePanel.add(hoverInfoLabel, BorderLayout.SOUTH);
 
-        // Create container for game controls and messages
+        // Add components to game info panel
+        gameInfoPanel.add(turnIndicatorLabel);
+        gameInfoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        gameInfoPanel.add(hoverInfoLabel);
+        gameInfoPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        gameInfoPanel.add(messagePanel);
+
+        // Create container for game controls and game info
         JPanel centerContainer = new JPanel();
         centerContainer.setLayout(new BoxLayout(centerContainer, BoxLayout.Y_AXIS));
         centerContainer.add(gameControlPanel);
         centerContainer.add(Box.createRigidArea(new Dimension(0, 10)));
-        centerContainer.add(messagePanel);
+        centerContainer.add(gameInfoPanel);
 
         // Add components to main panel
         add(gameTitle, BorderLayout.NORTH);
         add(centerContainer, BorderLayout.CENTER);
-        add(themePanel, BorderLayout.SOUTH);
+        add(settingsPanel, BorderLayout.SOUTH);
 
         // Set initial button states
         setGameInProgress(false);
@@ -370,6 +401,9 @@ public class sideMenuPanel extends JPanel {
         String difficultyName = (difficulty == 1) ? "Easy" : (difficulty == 3 ? "Hard" : "Medium");
         String humanColorName = (humanColor == utils.Color.WHITE) ? "White" : "Black";
         displayMessage("Started AI game (" + difficultyName + ") as " + humanColorName, "info");
+
+        // Initialize turn display to WHITE (always starts first)
+        parentFrame.updateTurnDisplay(utils.Color.WHITE);
 
         // Trigger AI's first move if it's playing as white
         aiGame.triggerAIFirstMoveIfNeeded();
@@ -660,6 +694,9 @@ public class sideMenuPanel extends JPanel {
                         parentFrame.flipBoard();
                     }
 
+                    // Initialize turn display to WHITE (always starts first)
+                    parentFrame.updateTurnDisplay(utils.Color.WHITE);
+
                     setGameInProgress(true);
                     JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected",
                             JOptionPane.INFORMATION_MESSAGE);
@@ -745,6 +782,9 @@ public class sideMenuPanel extends JPanel {
                         if (networkGame.getMyColor() == utils.Color.BLACK) {
                             parentFrame.flipBoard();
                         }
+
+                        // Initialize turn display to WHITE (always starts first)
+                        parentFrame.updateTurnDisplay(utils.Color.WHITE);
 
                         setGameInProgress(true);
                         JOptionPane.showMessageDialog(this, "Connected to server! Game started.", "Connected",
@@ -887,6 +927,11 @@ public class sideMenuPanel extends JPanel {
         saveGameButton.setEnabled(gameInProgress); // Only enable save when there's a game
         loadGameButton.setEnabled(true); // Always allow loading
         newGameButton.setEnabled(true); // Always allow new game
+        
+        // Turn indicator visibility
+        if (turnIndicatorLabel != null) {
+            turnIndicatorLabel.setVisible(gameInProgress);
+        }
     }
 
     /**
@@ -948,6 +993,22 @@ public class sideMenuPanel extends JPanel {
     }
 
     /**
+     * Updates the turn indicator to show whose turn it is.
+     * 
+     * @param currentTurn The color of the player whose turn it is
+     */
+    public void updateTurnIndicator(utils.Color currentTurn) {
+        if (turnIndicatorLabel != null) {
+            String turnText = (currentTurn == utils.Color.WHITE) ? "Current Player: WHITE" : "Current Player: BLACK";
+            java.awt.Color textColor = (currentTurn == utils.Color.WHITE) ? java.awt.Color.WHITE : java.awt.Color.BLACK;
+            
+            turnIndicatorLabel.setText(turnText);
+            turnIndicatorLabel.setForeground(textColor);
+            turnIndicatorLabel.setVisible(true); // Show when game is active
+        }
+    }
+
+    /**
      * Updates the visual styling of all components using current palette.
      * 
      * Applies the current UI palette and styling to all buttons, panels,
@@ -957,8 +1018,8 @@ public class sideMenuPanel extends JPanel {
         UIStyle style = parentFrame.getStyle();
         UIPalette palette = parentFrame.getPalette();
 
-        // Style the main panel
-        style.styleLabelPanel(this, palette, "Game Menu");
+        // Style the main panel (no border, no label)
+        setBackground(palette.labelBackground);
 
         // Style all buttons
         style.styleCellButton(newGameButton, true, palette);
@@ -966,8 +1027,15 @@ public class sideMenuPanel extends JPanel {
         style.styleCellButton(loadGameButton, true, palette);
 
         // Style panels
-        style.styleLabelPanel(gameControlPanel, palette, "Game Controls");
-        style.styleLabelPanel(themePanel, palette, "Settings");
+        gameControlPanel.setBackground(palette.labelBackground);
+        
+        settingsPanel.setBackground(palette.labelBackground);
+        settingsPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(5, 5, 5, 5),
+            BorderFactory.createLineBorder(palette.labelForeground, 1)
+        ));
+
+        gameInfoPanel.setBackground(palette.labelBackground);
 
         // Style labels and components
         gameTitle.setFont(palette.font);
@@ -987,12 +1055,26 @@ public class sideMenuPanel extends JPanel {
         pieceThemeSelector.setForeground(palette.labelForeground);
         pieceThemeSelector.setBackground(palette.labelBackground);
 
-        // Style message board
-        style.styleLabelPanel(messagePanel, palette, "Messages");
+        // Style message panel with themed border
+        messagePanel.setBackground(palette.labelBackground);
+        messagePanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(10, 0, 0, 0),
+            BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(palette.labelForeground, 1),
+                "Messages",
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+                javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                palette.font,
+                palette.labelForeground
+            )
+        ));
         messageBoard.setFont(palette.font);
         messageBoard.setForeground(palette.labelForeground);
         messageBoard.setBackground(palette.labelBackground);
 
+        // Style turn indicator and hover info labels
+        turnIndicatorLabel.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
+        
         hoverInfoLabel.setFont(palette.font);
         hoverInfoLabel.setForeground(palette.labelForeground);
 

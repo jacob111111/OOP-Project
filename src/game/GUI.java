@@ -169,6 +169,12 @@ public class GUI extends Game {
 
         // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
         switchTurn();
+        
+        // Update turn indicator in UI
+        if (parentFrame != null) {
+            parentFrame.updateTurnDisplay(WhosTurn);
+        }
+        
         System.out.println("Move executed successfully!");
         System.out.println("========== EXECUTE TURN END (SUCCESS) ==========\n");
 
