@@ -163,7 +163,7 @@ public class GUI extends Game {
         if (validMoveDetector != null && validMoveDetector.isKingInCheck(opponent.getColor())) {
             String opponentColorName = (opponent.getColor() == Color.WHITE) ? "White" : "Black";
             if (parentFrame != null) {
-                parentFrame.displayMessage(opponentColorName + " is in check!", "warning");
+                parentFrame.displayMessage("Check: " + opponentColorName + " is in check", "info");
             }
         }
 
@@ -260,9 +260,7 @@ public class GUI extends Game {
      */
     protected void showWrongColorError() {
         if (parentFrame != null) {
-            String currentColor = (currentPlayer.getColor() == Color.WHITE) ? "White" : "Black";
-            parentFrame.displayMessage("You cannot move your opponent's pieces! It is " + currentColor + "'s turn.",
-                    "error");
+            parentFrame.displayMessage("Invalid Move: Not your piece", "info");
         }
     }
 
@@ -271,7 +269,7 @@ public class GUI extends Game {
      */
     protected void showInvalidMoveMessage() {
         if (parentFrame != null) {
-            parentFrame.displayMessage("Invalid move! Please try a different move.", "warning");
+            parentFrame.displayMessage("Invalid Move: Please try a different move", "info");
         }
     }
 
@@ -280,7 +278,7 @@ public class GUI extends Game {
      */
     protected void showWaitForOpponentMessage() {
         if (parentFrame != null) {
-            parentFrame.displayMessage("Wait for your opponent's move!", "warning");
+            parentFrame.displayMessage("Invalid Move: Not your turn", "info");
         }
     }
 
@@ -330,12 +328,7 @@ public class GUI extends Game {
         String winnerText = (winner == Color.WHITE) ? "White" : "Black";
         String loserText = (winner == Color.WHITE) ? "Black" : "White";
 
-        // Display in message board
-        if (parentFrame != null) {
-            parentFrame.displayMessage(
-                    "Checkmate! " + loserText + " is in checkmate. " + winnerText + " wins! Game Over.", "info");
-        }
-
+        // Show popup for checkmate (no message board entry needed)
         JOptionPane.showMessageDialog(null,
                 "Checkmate!\n\n" + loserText + " is in checkmate.\n" + winnerText + " wins!",
                 "Chess Game - Checkmate!",

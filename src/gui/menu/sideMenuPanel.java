@@ -399,7 +399,7 @@ public class sideMenuPanel extends JPanel {
 
         String difficultyName = (difficulty == 1) ? "Easy" : (difficulty == 3 ? "Hard" : "Medium");
         String humanColorName = (humanColor == utils.Color.WHITE) ? "White" : "Black";
-        displayMessage("Started AI game (" + difficultyName + ") as " + humanColorName, "info");
+        displayMessage("Game Start: Playing as " + humanColorName + " against " + difficultyName + " AI", "info");
 
         // Initialize turn display to WHITE (always starts first)
         parentFrame.updateTurnDisplay(utils.Color.WHITE);
