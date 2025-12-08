@@ -3,19 +3,19 @@ package gui.board;
 import java.awt.BorderLayout;
 import javax.swing.JPanel;
 
-import gui.chessFrame;
+import gui.ChessFrame;
 import gui.utils.UIPalette;
 import gui.utils.UIStyle;
 
 import game.GUI;
 
 public class MainBoardPanel extends JPanel {
-    private chessFrame parentFrame;
+    private ChessFrame parentFrame;
     private JPanel rowLabelsPanel;
     private JPanel columnLabelsPanel;
     private BoardPanel boardPanel;
 
-    public MainBoardPanel(chessFrame parent) {
+    public MainBoardPanel(ChessFrame parent) {
         this.parentFrame = parent;
         initializeComponents();
         updateStyle();

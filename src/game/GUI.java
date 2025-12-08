@@ -8,7 +8,7 @@ import piece.Piece;
 
 public class GUI extends Game {
     private transient gui.board.BoardPanel boardPanel;
-    protected transient gui.chessFrame parentFrame;
+    protected transient gui.ChessFrame parentFrame;
     private boolean aiShouldMakeFirstMove = false;
     private boolean aiIsThinking = false; // Prevent recursive AI moves
     private boolean lastMoveResultedInCheck = false; // Track if the last move put opponent in check
@@ -48,7 +48,7 @@ public class GUI extends Game {
      * 
      * @param frame The parent chessFrame instance
      */
-    public void setParentFrame(gui.chessFrame frame) {
+    public void setParentFrame(gui.ChessFrame frame) {
         this.parentFrame = frame;
     }
 

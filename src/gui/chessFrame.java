@@ -16,7 +16,7 @@ import game.*;
  * It handles theme management, game initialization, and coordinates
  * communication between different UI components.
  */
-public class chessFrame extends JFrame {
+public class ChessFrame extends JFrame {
     private static final int FRAME_WIDTH = 1000; // Increased width for side menu
     private static final int FRAME_HEIGHT = 800;
 
@@ -25,7 +25,7 @@ public class chessFrame extends JFrame {
     private String currentPieceTheme = "classic"; // Track piece theme separately
 
     private MainBoardPanel boardPanel;
-    private sideMenuPanel menuPanel;
+    private SideMenuPanel menuPanel;
 
     private GUI currentGame;
 
@@ -38,7 +38,7 @@ public class chessFrame extends JFrame {
      * 
      * @param palette The UI palette to use for initial styling
      */
-    public chessFrame(UIPalette palette) {
+    public ChessFrame(UIPalette palette) {
         this.masterPalette = palette;
         this.masterStyle = new UIStyle();
         setTitle("Chess Game");
@@ -49,7 +49,7 @@ public class chessFrame extends JFrame {
 
         // Initialize panels
         boardPanel = new MainBoardPanel(this);
-        menuPanel = new sideMenuPanel(this);
+        menuPanel = new SideMenuPanel(this);
 
         // Add panels to frame
         add(boardPanel, BorderLayout.CENTER);
@@ -64,7 +64,7 @@ public class chessFrame extends JFrame {
      * Convenience constructor that uses the classic color scheme
      * for users who don't specify a particular theme preference.
      */
-    public chessFrame() {
+    public ChessFrame() {
         this(UIPalette.CLASSIC);
     }
 
