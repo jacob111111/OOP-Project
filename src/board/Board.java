@@ -274,6 +274,9 @@ public class Board implements Serializable {
         positionIndex.put(toPosition, pieceToMove);
         pieceToMove.setPosition(toPosition);
 
+        // Update attack map to reflect the new board state
+        attackMap.updateAfterMove(pieceToMove, fromPosition, toPosition);
+
         return true;
     }
 
