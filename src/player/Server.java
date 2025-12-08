@@ -75,10 +75,11 @@ public class Server extends Player{
      * @param from The starting position of the move
      * @param to The ending position of the move
      * @param currentTurn The current turn after the move is executed
+     * @param isCheck Whether the move puts the opponent in check
      */
-    public void sendMoveUpdate(utils.Position from, utils.Position to, utils.Color currentTurn) {
+    public void sendMoveUpdate(utils.Position from, utils.Position to, utils.Color currentTurn, Boolean isCheck) {
         try {
-            NetworkMessage moveUpdate = NetworkMessage.moveUpdate(from, to, currentTurn);
+            NetworkMessage moveUpdate = NetworkMessage.moveUpdate(from, to, currentTurn, isCheck);
             out.writeObject(moveUpdate);
             out.flush();
             
@@ -99,7 +100,13 @@ public class Server extends Player{
         }
     }
 
-    public NetworkMessage receiveMoveRequest() {
+    /**
+     * Receives move request from client.
+     * 
+     * @return NetworkMessage of type MOVE_REQUEST, or null if timeout
+     * @throws IOException if disconnected (EOFException or socket closed)
+     */
+    public NetworkMessage receiveMoveRequest() throws IOException {
         try {
             NetworkMessage request = (NetworkMessage) in.readObject();
             if (request.type == NetworkMessageType.MOVE_REQUEST) {
@@ -109,9 +116,13 @@ public class Server extends Player{
         } catch (java.net.SocketTimeoutException e) {
             // Timeout is normal - allows thread to check if it should continue listening
             return null;
+        } catch (java.io.EOFException | java.net.SocketException e) {
+            // Connection lost - propagate to caller
+            throw new IOException("Client disconnected", e);
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println(e);
-            return null;
+            // Other errors - log and propagate
+            System.err.println("Error receiving move request: " + e.getMessage());
+            throw new IOException("Network error", e);
         }
     }
 

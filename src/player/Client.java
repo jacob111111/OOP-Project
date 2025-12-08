@@ -105,19 +105,21 @@ public class Client extends Player{
      * Used by the network listener thread to handle multiple message types.
      * 
      * @return NetworkMessage of any type, or null if error or timeout
+     * @throws IOException if disconnected (EOFException or socket closed)
      */
-    public NetworkMessage receiveMessage() {
+    public NetworkMessage receiveMessage() throws IOException {
         try {
             return (NetworkMessage) in.readObject();
         } catch (java.net.SocketTimeoutException e) {
             // Timeout is normal - allows thread to check if it should continue listening
             return null;
+        } catch (java.io.EOFException | java.net.SocketException e) {
+            // Connection lost - propagate to caller
+            throw new IOException("Server disconnected", e);
         } catch (IOException | ClassNotFoundException e) {
-            // Only show error for non-timeout issues
-            if (!(e instanceof java.net.SocketTimeoutException)) {
-                System.err.println("Error receiving message: " + e.getMessage());
-            }
-            return null;
+            // Other errors - log and propagate
+            System.err.println("Error receiving message: " + e.getMessage());
+            throw new IOException("Network error", e);
         }
     }
 

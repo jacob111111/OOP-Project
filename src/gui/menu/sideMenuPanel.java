@@ -6,6 +6,7 @@ import java.awt.FlowLayout;
 import java.io.*;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.*;
 
 import gui.chessFrame;
 import gui.utils.UIPalette;
@@ -24,7 +25,7 @@ public class sideMenuPanel extends JPanel {
     private JLabel gameTitle, themeLabel, pieceThemeLabel;
     private JComboBox<String> themeSelector, pieceThemeSelector;
     private JPanel settingsPanel, gameControlPanel, messagePanel, gameInfoPanel;
-    private JTextArea messageBoard;
+    private JTextPane messageBoard;
     private JScrollPane messageScrollPane;
     private JLabel hoverInfoLabel, turnIndicatorLabel;
 
@@ -147,10 +148,8 @@ public class sideMenuPanel extends JPanel {
             )
         ));
 
-        messageBoard = new JTextArea(5, 15);
+        messageBoard = new JTextPane();
         messageBoard.setEditable(false);
-        messageBoard.setLineWrap(true);
-        messageBoard.setWrapStyleWord(true);
         messageScrollPane = new JScrollPane(messageBoard);
         messageScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
@@ -400,7 +399,7 @@ public class sideMenuPanel extends JPanel {
 
         String difficultyName = (difficulty == 1) ? "Easy" : (difficulty == 3 ? "Hard" : "Medium");
         String humanColorName = (humanColor == utils.Color.WHITE) ? "White" : "Black";
-        displayMessage("Started AI game (" + difficultyName + ") as " + humanColorName, "info");
+        displayMessage("Game Start: Playing as " + humanColorName + " against " + difficultyName + " AI", "info");
 
         // Initialize turn display to WHITE (always starts first)
         parentFrame.updateTurnDisplay(utils.Color.WHITE);
@@ -698,6 +697,10 @@ public class sideMenuPanel extends JPanel {
                     parentFrame.updateTurnDisplay(utils.Color.WHITE);
 
                     setGameInProgress(true);
+                    
+                    // Show connection success message
+                    finalGame.showConnectionMessage();
+                    
                     JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected",
                             JOptionPane.INFORMATION_MESSAGE);
                 });
@@ -787,6 +790,10 @@ public class sideMenuPanel extends JPanel {
                         parentFrame.updateTurnDisplay(utils.Color.WHITE);
 
                         setGameInProgress(true);
+                        
+                        // Show connection success message
+                        networkGame.showConnectionMessage();
+                        
                         JOptionPane.showMessageDialog(this, "Connected to server! Game started.", "Connected",
                                 JOptionPane.INFORMATION_MESSAGE);
                     });
@@ -935,32 +942,60 @@ public class sideMenuPanel extends JPanel {
     }
 
     /**
-     * Displays a message in the message board.
+     * Displays a message in the message board with format: [TYPE] Issue: Details
+     * Messages appear at the bottom, user scrolls up to see older messages.
+     * Previous INFO messages are grayed out when new messages are added.
      * 
-     * @param message     The message to display
-     * @param messageType The type of message ("error", "warning", "info")
+     * @param message     The message to display (format: "Issue: Details")
+     * @param messageType The type of message ("error" or "info")
      */
     public void displayMessage(String message, String messageType) {
-        String timestamp = new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date());
-        String prefix = "";
-
+        StyledDocument doc = messageBoard.getStyledDocument();
+        
+        // Gray out all previous INFO messages
+        for (int i = 0; i < doc.getLength(); i++) {
+            AttributeSet attrs = doc.getCharacterElement(i).getAttributes();
+            java.awt.Color currentColor = StyleConstants.getForeground(attrs);
+            
+            if (currentColor != null && currentColor.equals(java.awt.Color.BLACK)) {
+                SimpleAttributeSet grayStyle = new SimpleAttributeSet();
+                StyleConstants.setForeground(grayStyle, java.awt.Color.GRAY);
+                doc.setCharacterAttributes(i, 1, grayStyle, false);
+            }
+        }
+        
+        // Determine message type and color
+        String typeTag;
+        java.awt.Color textColor;
+        
         switch (messageType.toLowerCase()) {
             case "error":
-                prefix = "[ERROR] ";
-                break;
-            case "warning":
-                prefix = "[WARNING] ";
+                typeTag = "[ERROR] ";
+                textColor = java.awt.Color.RED;
                 break;
             case "info":
-                prefix = "[INFO] ";
-                break;
             default:
-                prefix = "";
+                typeTag = "[INFO] ";
+                textColor = java.awt.Color.BLACK;
+                break;
         }
-
-        String formattedMessage = timestamp + " " + prefix + message + "\n";
-        messageBoard.append(formattedMessage);
-        messageBoard.setCaretPosition(messageBoard.getDocument().getLength());
+        
+        // Create style for the message
+        SimpleAttributeSet style = new SimpleAttributeSet();
+        StyleConstants.setForeground(style, textColor);
+        
+        // Format: [TYPE] message\n
+        String formattedMessage = typeTag + message + "\n";
+        
+        try {
+            // Insert at the end (new messages at bottom)
+            doc.insertString(doc.getLength(), formattedMessage, style);
+            
+            // Auto-scroll to bottom to show newest message
+            messageBoard.setCaretPosition(doc.getLength());
+        } catch (BadLocationException e) {
+            System.err.println("Error inserting message: " + e.getMessage());
+        }
     }
 
     /**
@@ -1069,7 +1104,7 @@ public class sideMenuPanel extends JPanel {
             )
         ));
         messageBoard.setFont(palette.font);
-        messageBoard.setForeground(palette.labelForeground);
+        // Note: Foreground color is set per-message (black for INFO, red for ERROR)
         messageBoard.setBackground(palette.labelBackground);
 
         // Style turn indicator and hover info labels

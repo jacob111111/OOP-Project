@@ -66,6 +66,18 @@ public class Network extends GUI {
         // Start listening for client moves
         startNetworkListener();
     }
+    
+    /**
+     * Displays connection success message after game setup.
+     * Should be called after parentFrame is set.
+     */
+    public void showConnectionMessage() {
+        if (parentFrame != null) {
+            String role = isHost ? "Host" : "Client";
+            String colorName = (myColor == Color.WHITE) ? "White" : "Black";
+            parentFrame.displayMessage("Connection: Successfully connected as " + colorName + " (" + role + ")", "info");
+        }
+    }
 
     /**
      * Executes a move on the host/server side.
@@ -81,8 +93,8 @@ public class Network extends GUI {
         boolean success = super.executeTurn(from, to, piece);
 
         if (success) {
-            // Send validated move to client using MOVE_UPDATE (include current turn state)
-            server.sendMoveUpdate(from, to, WhosTurn);
+            // Send validated move to client using MOVE_UPDATE (include current turn state and check status)
+            server.sendMoveUpdate(from, to, WhosTurn, isOpponentInCheck());
             // Refresh board to show the move
             refreshBoardPanel();
         }
@@ -110,9 +122,9 @@ public class Network extends GUI {
             boolean success = super.executeTurn(request.from, request.to, piece);
             
             if (success) {
-                // Send success response and move update with current turn state
+                // Send success response and move update with current turn state and check status
                 server.sendMoveResponse(true);
-                server.sendMoveUpdate(request.from, request.to, WhosTurn);
+                server.sendMoveUpdate(request.from, request.to, WhosTurn, isOpponentInCheck());
                 refreshBoardPanel();
             } else {
                 // Send failure response
@@ -229,9 +241,9 @@ public class Network extends GUI {
     private void handleServerMoveUpdate(NetworkMessage update) {
         Piece piece = board.getPieceAt(update.from);
         
-        // Apply the validated move from server (with turn state sync)
+        // Apply the validated move from server (with turn state sync and check status)
         javax.swing.SwingUtilities.invokeLater(() -> {
-            executeRemoteMove(update.from, update.to, piece, update.currentTurn);
+            executeRemoteMove(update.from, update.to, piece, update.currentTurn, update.isCheck);
             refreshBoardPanel();
         });
     }
@@ -274,9 +286,9 @@ public class Network extends GUI {
         // Update GUI to reflect rollback
         refreshBoardPanel();
 
-        // Show error to user
-        if (errorMessage != null && !errorMessage.isEmpty()) {
-            showInvalidMoveMessage();
+        // Show error and rollback message to user
+        if (parentFrame != null) {
+            parentFrame.displayMessage("Rollback: Move rejected by server", "info");
         }
 
         // Clear backup
@@ -307,9 +319,10 @@ public class Network extends GUI {
      * @param to Target position for the move
      * @param piece The piece being moved
      * @param newTurn The turn state after the move (from server)
+     * @param isCheck Whether the move puts the current player in check
      * @return true if move was successfully applied
      */
-    private boolean executeRemoteMove(Position from, Position to, Piece piece, Color newTurn) {
+    private boolean executeRemoteMove(Position from, Position to, Piece piece, Color newTurn, Boolean isCheck) {
         // Move is already validated by server, just apply it
         // attemptMove will handle any captures automatically
         Map<Position, Piece> positionIndex = board.getPositionIndex();
@@ -332,10 +345,23 @@ public class Network extends GUI {
         positionIndex.remove(from);
         positionIndex.put(to, piece);
         piece.setPosition(to);
+        
+        // Update attack map to reflect the new board state
+        board.getAttackMap().updateAfterMove(piece, from, to);
 
         // Sync turn state from server (don't call switchTurn, just update to server's state)
         WhosTurn = newTurn;
         currentPlayer = board.getPlayer(WhosTurn);
+        
+        // Display check message if server indicated the move resulted in check
+        if (isCheck != null && isCheck) {
+            Color checkedColor = (piece.getColor() == utils.Color.WHITE) ? utils.Color.BLACK : utils.Color.WHITE;
+            String checkedColorName = (checkedColor == utils.Color.WHITE) ? "White" : "Black";
+            System.out.println("CHECK DETECTED (from server): " + checkedColorName + " is in check!");
+            if (parentFrame != null) {
+                parentFrame.displayMessage("Check: " + checkedColorName + " is in check", "info");
+            }
+        }
         
         // Update turn indicator in UI
         if (parentFrame != null) {
@@ -373,6 +399,12 @@ public class Network extends GUI {
                             }
                         }
                     }
+                } catch (IOException e) {
+                    // Disconnection detected
+                    if (isListening) {
+                        handleDisconnect(e.getMessage());
+                    }
+                    break; // Exit listener loop
                 } catch (Exception e) {
                     if (isListening) {
                         System.err.println("Network listener error: " + e.getMessage());
@@ -401,6 +433,38 @@ public class Network extends GUI {
         if (client != null) {
             client.close();
         }
+    }
+    
+    /**
+     * Handles network disconnection by displaying error and ending game.
+     * 
+     * @param errorDetails Details about the disconnection
+     */
+    private void handleDisconnect(String errorDetails) {
+        isListening = false; // Stop listening immediately
+        
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            // Determine disconnect message based on role
+            String disconnectType = isHost ? "Client Disconnected" : "Server Disconnected";
+            
+            // Display error message
+            if (parentFrame != null) {
+                parentFrame.displayMessage(disconnectType + ": Ending game", "error");
+            }
+            
+            // Show popup notification
+            javax.swing.JOptionPane.showMessageDialog(null,
+                    "Network connection lost.\n" + disconnectType + "\n\nThe game will now end.",
+                    "Connection Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            
+            // Clean up and end game
+            stopNetworkListener();
+            
+            if (parentFrame != null) {
+                parentFrame.clearGame();
+            }
+        });
     }
 
 

@@ -11,6 +11,7 @@ public class GUI extends Game {
     protected transient gui.chessFrame parentFrame;
     private boolean aiShouldMakeFirstMove = false;
     private boolean aiIsThinking = false; // Prevent recursive AI moves
+    private boolean lastMoveResultedInCheck = false; // Track if the last move put opponent in check
 
     /**
      * Creates a new 1 or 2 player game instance
@@ -27,6 +28,15 @@ public class GUI extends Game {
         if (!isPvP && currentPlayer instanceof player.AI) {
             aiShouldMakeFirstMove = true;
         }
+    }
+
+    /**
+     * Gets whether the last move resulted in putting the opponent in check.
+     * 
+     * @return true if opponent is in check after the last move
+     */
+    public boolean isOpponentInCheck() {
+        return lastMoveResultedInCheck;
     }
 
     // ============================================================================
@@ -124,7 +134,15 @@ public class GUI extends Game {
         if (!moveSuccessful) {
             System.out.println("FAILED at executeTurn: board.attemptMove() returned false");
             System.out.println("========== EXECUTE TURN END (FAILED) ==========\\n");
-            showInvalidMoveMessage();
+            
+            // Check if current player is in check and show appropriate message
+            if (validMoveDetector != null && validMoveDetector.isKingInCheck(currentPlayer.getColor())) {
+                if (parentFrame != null) {
+                    parentFrame.displayMessage("Invalid Move: Must escape check", "info");
+                }
+            } else {
+                showInvalidMoveMessage();
+            }
             return false;
         }
         System.out.println("SUCCESS: board.attemptMove() passed");
@@ -152,6 +170,10 @@ public class GUI extends Game {
         // Step 7: Look for checkmate
         player.Player opponent = getOpponentPlayer();
 
+        System.out.println("DEBUG: Checking for checkmate/check...");
+        System.out.println("  validMoveDetector is null? " + (validMoveDetector == null));
+        System.out.println("  Opponent color: " + opponent.getColor());
+
         if (validMoveDetector != null && validMoveDetector.isCheckmate(opponent.getColor())) {
             winner = currentPlayer.getColor();
             System.out.println("Checkmate! " + winner + " wins!");
@@ -160,12 +182,32 @@ public class GUI extends Game {
         }
 
         // Check if opponent is in check (but not checkmate)
-        if (validMoveDetector != null && validMoveDetector.isKingInCheck(opponent.getColor())) {
-            String opponentColorName = (opponent.getColor() == Color.WHITE) ? "White" : "Black";
-            if (parentFrame != null) {
-                parentFrame.displayMessage(opponentColorName + " is in check!", "warning");
+        boolean opponentInCheck = false;
+        if (validMoveDetector != null) {
+            // Debug: Get opponent king position
+            Position opponentKingPos = opponent.getKingPosition();
+            System.out.println("  Opponent King position: " + opponentKingPos);
+            
+            // Debug: Check if king's position is under attack
+            utils.AttackMap attackMap = board.getAttackMap();
+            Color attackerColor = currentPlayer.getColor(); // The player who just moved
+            boolean kingSquareUnderAttack = attackMap.isSquareAttackedBy(opponentKingPos, attackerColor);
+            System.out.println("  King's square under attack by " + attackerColor + " (from AttackMap)? " + kingSquareUnderAttack);
+            
+            opponentInCheck = validMoveDetector.isKingInCheck(opponent.getColor());
+            System.out.println("  Opponent in check (from CheckmateDetector)? " + opponentInCheck);
+            
+            if (opponentInCheck) {
+                String opponentColorName = (opponent.getColor() == Color.WHITE) ? "White" : "Black";
+                System.out.println("CHECK DETECTED: " + opponentColorName + " is in check!");
+                if (parentFrame != null) {
+                    parentFrame.displayMessage("Check: " + opponentColorName + " is in check", "info");
+                }
             }
         }
+        
+        // Store check status for network games
+        lastMoveResultedInCheck = opponentInCheck;
 
         // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
         switchTurn();
@@ -260,9 +302,7 @@ public class GUI extends Game {
      */
     protected void showWrongColorError() {
         if (parentFrame != null) {
-            String currentColor = (currentPlayer.getColor() == Color.WHITE) ? "White" : "Black";
-            parentFrame.displayMessage("You cannot move your opponent's pieces! It is " + currentColor + "'s turn.",
-                    "error");
+            parentFrame.displayMessage("Invalid Move: Not your piece", "info");
         }
     }
 
@@ -271,7 +311,7 @@ public class GUI extends Game {
      */
     protected void showInvalidMoveMessage() {
         if (parentFrame != null) {
-            parentFrame.displayMessage("Invalid move! Please try a different move.", "warning");
+            parentFrame.displayMessage("Invalid Move: Please try a different move", "info");
         }
     }
 
@@ -280,7 +320,7 @@ public class GUI extends Game {
      */
     protected void showWaitForOpponentMessage() {
         if (parentFrame != null) {
-            parentFrame.displayMessage("Wait for your opponent's move!", "warning");
+            parentFrame.displayMessage("Waiting: Opponent's turn", "info");
         }
     }
 
@@ -330,12 +370,7 @@ public class GUI extends Game {
         String winnerText = (winner == Color.WHITE) ? "White" : "Black";
         String loserText = (winner == Color.WHITE) ? "Black" : "White";
 
-        // Display in message board
-        if (parentFrame != null) {
-            parentFrame.displayMessage(
-                    "Checkmate! " + loserText + " is in checkmate. " + winnerText + " wins! Game Over.", "info");
-        }
-
+        // Show popup for checkmate (no message board entry needed)
         JOptionPane.showMessageDialog(null,
                 "Checkmate!\n\n" + loserText + " is in checkmate.\n" + winnerText + " wins!",
                 "Chess Game - Checkmate!",
