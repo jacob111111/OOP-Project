@@ -241,7 +241,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
             System.out.println("Color: " + piece.getColor());
             System.out.println("Position: " + pos);
             System.out.println("Display symbol: " + piece.getDisplaySymbol());
-            Set<Position> possibleMoves = piece.getPossibleMoves(instance.getBoard());
+            Set<Position> possibleMoves = piece.getLegalMoves(instance.getBoard());
             System.out.println("Possible moves (" + possibleMoves.size() + "): " + possibleMoves);
 
             // Show attack map information

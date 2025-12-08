@@ -56,7 +56,7 @@ public class King extends Piece {
         int x = position.getX();
         int y = position.getY();
 
-        // All 8 adjacent squares
+        // All 8 adjacent squares - basic king movement only
         int[][] kingMoves = {
                 { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 },
                 { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 }
@@ -77,19 +77,31 @@ public class King extends Piece {
             }
         }
 
-        // Castling logic
+        // NOTE: Castling is NOT included here to avoid circular dependency
+        // during AttackMap generation. Use getLegalMoves() for castling.
+        return validMoves;
+    }
+
+    @Override
+    public Set<Position> getLegalMoves(board.Board board) {
+        // Start with basic king moves
+        Set<Position> legalMoves = new HashSet<>(getPossibleMoves(board));
+        int x = position.getX();
+        int y = position.getY();
+
+        // Add castling moves (safe to access AttackMap here)
         if (!hasMoved) {
             // King-side castling (O-O)
             if (canCastle(board, true)) {
-                validMoves.add(new Position(x + 2, y));
+                legalMoves.add(new Position(x + 2, y));
             }
             // Queen-side castling (O-O-O)
             if (canCastle(board, false)) {
-                validMoves.add(new Position(x - 2, y));
+                legalMoves.add(new Position(x - 2, y));
             }
         }
 
-        return validMoves;
+        return legalMoves;
     }
 
     /**

@@ -325,6 +325,11 @@ public class CheckmateDetector {
             }
         }
 
+        // If no pieces are giving check, the king is not in check
+        if (piecesGivingCheck.isEmpty()) {
+            return true; // No check means no need to block/capture
+        }
+
         // Special case: Double check means ONLY king can move
         if (piecesGivingCheck.size() > 1) {
             return false; // No blocking/capturing possible in double check
