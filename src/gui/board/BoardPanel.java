@@ -93,6 +93,11 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         // Clear drag state properly (removes from layered pane)
         removeDragVisual();
 
+        // Set the back-reference so game can refresh this panel
+        if (game != null) {
+            game.setBoardPanel(this);
+        }
+
         drawPieces();
     }
 

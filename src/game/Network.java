@@ -81,6 +81,8 @@ public class Network extends GUI {
         if (success) {
             // Send validated move to client using MOVE_UPDATE
             server.sendMoveUpdate(from, to);
+            // Refresh board to show the move
+            refreshBoardPanel();
         }
         return success;
     }
@@ -164,6 +166,8 @@ public class Network extends GUI {
         boolean success = super.executeTurn(from, to, piece);
 
         if (success) {
+            // Refresh board to show the optimistic move
+            refreshBoardPanel();
             // Send move to server for authoritative validation (async)
             // Server will respond via network listener which triggers handleMoveApproval() or handleMoveRejection()
             Thread sendThread = new Thread(() -> {

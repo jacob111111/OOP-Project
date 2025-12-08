@@ -323,12 +323,11 @@ public class GUI extends Game {
 
     /**
      * Refreshes the board panel display.
-     * Used for updating GUI after state changes (e.g., rollback).
+     * Used for updating GUI after state changes (e.g., rollback, sucessful turn).
      */
     protected void refreshBoardPanel() {
         if (boardPanel != null) {
-            boardPanel.repaint();
-            boardPanel.revalidate();
+            boardPanel.drawPieces();
         }
     }
 
