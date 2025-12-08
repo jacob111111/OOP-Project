@@ -111,80 +111,15 @@ public class SideMenuPanel extends JPanel {
 
     /**
      * Displays game mode selection dialog for starting a new game.
-     * 
-     * Creates a dialog with three buttons: 1-Player (AI), Co-op, and Online.
-     * Each button triggers relevant game initialization logic.
+     * Delegates to GameModeDialog.
      */
     private void showGameModeSelection() {
-        // Create custom dialog
-        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "New Game", true);
-        dialog.setLayout(new BorderLayout());
-        dialog.setSize(300, 200);
-        dialog.setLocationRelativeTo(this);
-
-        // Create panel for buttons
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        // Create buttons
-        JButton aiButton = new JButton("1-Player (AI)");
-        JButton coopButton = new JButton("Co-op");
-        JButton onlineButton = new JButton("Online");
-
-        // Style buttons
-        Dimension buttonSize = new Dimension(200, 40);
-        aiButton.setAlignmentX(CENTER_ALIGNMENT);
-        aiButton.setMaximumSize(buttonSize);
-        coopButton.setAlignmentX(CENTER_ALIGNMENT);
-        coopButton.setMaximumSize(buttonSize);
-        onlineButton.setAlignmentX(CENTER_ALIGNMENT);
-        onlineButton.setMaximumSize(buttonSize);
-
-        // AI button action
-        aiButton.addActionListener(e -> {
-            dialog.dispose();
-            showAIDifficultyDialog();
-        });
-
-        // Co-op button action
-        coopButton.addActionListener(e -> {
-            dialog.dispose();
-            // Check if game is currently active
-            if (parentFrame.getCurrentGame() != null) {
-                int result = JOptionPane.showConfirmDialog(
-                        this,
-                        "This will override the current game. Are you sure?",
-                        "Warning",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.WARNING_MESSAGE);
-
-                if (result == JOptionPane.YES_OPTION) {
-                    parentFrame.startTwoPlayerGame();
-                    setGameInProgress(true);
-                }
-            } else {
-                // No game active, create new game
-                parentFrame.startTwoPlayerGame();
-                setGameInProgress(true);
-            }
-        });
-
-        // Online button action
-        onlineButton.addActionListener(e -> {
-            dialog.dispose();
-            showOnlineGameDialog();
-        });
-
-        // Add buttons to panel
-        buttonPanel.add(aiButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        buttonPanel.add(coopButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        buttonPanel.add(onlineButton);
-
-        dialog.add(buttonPanel, BorderLayout.CENTER);
-        dialog.setVisible(true);
+        GameModeDialog.show(
+            this, 
+            parentFrame,
+            this::showAIDifficultyDialog,
+            this::showOnlineGameDialog
+        );
     }
 
     /**
