@@ -278,7 +278,7 @@ public class GUI extends Game {
      */
     protected void showWaitForOpponentMessage() {
         if (parentFrame != null) {
-            parentFrame.displayMessage("Invalid Move: Not your turn", "info");
+            parentFrame.displayMessage("Waiting: Opponent's turn", "info");
         }
     }
 

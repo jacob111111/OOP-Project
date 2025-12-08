@@ -66,6 +66,18 @@ public class Network extends GUI {
         // Start listening for client moves
         startNetworkListener();
     }
+    
+    /**
+     * Displays connection success message after game setup.
+     * Should be called after parentFrame is set.
+     */
+    public void showConnectionMessage() {
+        if (parentFrame != null) {
+            String role = isHost ? "Host" : "Client";
+            String colorName = (myColor == Color.WHITE) ? "White" : "Black";
+            parentFrame.displayMessage("Connection: Successfully connected as " + colorName + " (" + role + ")", "info");
+        }
+    }
 
     /**
      * Executes a move on the host/server side.
@@ -274,9 +286,9 @@ public class Network extends GUI {
         // Update GUI to reflect rollback
         refreshBoardPanel();
 
-        // Show error to user
-        if (errorMessage != null && !errorMessage.isEmpty()) {
-            showInvalidMoveMessage();
+        // Show error and rollback message to user
+        if (parentFrame != null) {
+            parentFrame.displayMessage("Rollback: Move rejected by server", "info");
         }
 
         // Clear backup

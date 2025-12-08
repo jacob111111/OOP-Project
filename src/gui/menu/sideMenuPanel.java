@@ -697,6 +697,10 @@ public class sideMenuPanel extends JPanel {
                     parentFrame.updateTurnDisplay(utils.Color.WHITE);
 
                     setGameInProgress(true);
+                    
+                    // Show connection success message
+                    finalGame.showConnectionMessage();
+                    
                     JOptionPane.showMessageDialog(this, "Opponent connected! Game started.", "Connected",
                             JOptionPane.INFORMATION_MESSAGE);
                 });
@@ -786,6 +790,10 @@ public class sideMenuPanel extends JPanel {
                         parentFrame.updateTurnDisplay(utils.Color.WHITE);
 
                         setGameInProgress(true);
+                        
+                        // Show connection success message
+                        networkGame.showConnectionMessage();
+                        
                         JOptionPane.showMessageDialog(this, "Connected to server! Game started.", "Connected",
                                 JOptionPane.INFORMATION_MESSAGE);
                     });
