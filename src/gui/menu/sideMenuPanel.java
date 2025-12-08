@@ -944,12 +944,26 @@ public class sideMenuPanel extends JPanel {
     /**
      * Displays a message in the message board with new format: [TYPE] Issue: Details
      * Messages appear at the bottom, user scrolls up to see older messages.
+     * Previous INFO messages are grayed out when new messages are added.
      * 
      * @param message     The message to display (format: "Issue: Details")
      * @param messageType The type of message ("error" or "info")
      */
     public void displayMessage(String message, String messageType) {
         StyledDocument doc = messageBoard.getStyledDocument();
+        
+        // Gray out all previous INFO messages (not ERROR messages)
+        for (int i = 0; i < doc.getLength(); i++) {
+            AttributeSet attrs = doc.getCharacterElement(i).getAttributes();
+            java.awt.Color currentColor = StyleConstants.getForeground(attrs);
+            
+            // Only gray out black text (INFO messages), leave red text (ERROR) unchanged
+            if (currentColor != null && currentColor.equals(java.awt.Color.BLACK)) {
+                SimpleAttributeSet grayStyle = new SimpleAttributeSet();
+                StyleConstants.setForeground(grayStyle, java.awt.Color.GRAY);
+                doc.setCharacterAttributes(i, 1, grayStyle, false);
+            }
+        }
         
         // Determine message type and color
         String typeTag;
