@@ -168,6 +168,11 @@ public class MoveValidator {
         positionIndex.remove(toPosition);
         positionIndex.put(fromPosition, piece);
         piece.setPosition(fromPosition);
+        
+        // CRITICAL: If this was a capture simulation, restore the captured piece to the board
+        if (isCapture) {
+            positionIndex.put(toPosition, capturedPiece);
+        }
 
         if (!kingIsSafe) {
             // Move leaves king in check - restore captured piece to player list

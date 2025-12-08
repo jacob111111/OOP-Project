@@ -176,7 +176,9 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                     ImageIcon icon = getIcon(piece);
                     if (icon != null) {
                         cellButton.setIcon(icon);
+                        cellButton.setText(""); // Clear any text when icon is set
                     } else {
+                        cellButton.setIcon(null);
                         cellButton.setText(piece.getDisplaySymbol());
                     }
                 } else {
@@ -185,6 +187,10 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                 }
             }
         }
+        
+        // Force repaint to ensure visual update
+        revalidate();
+        repaint();
     }
 
     private ImageIcon getIcon(Piece piece) {
@@ -370,6 +376,13 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                     currentMove.getSelectedPiece());
 
             if (moveSuccessful) {
+                // Remove drag visual first to avoid visual conflicts
+                removeDragVisual();
+                currentMove = null;
+                
+                // Immediately redraw pieces to show the move result
+                drawPieces();
+                
                 // Only flip board for local games, NOT network games
                 // Network games maintain fixed perspective per player
                 if (!(instance instanceof game.Network)) {
@@ -378,6 +391,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                     timer.setRepeats(false);
                     timer.start();
                 }
+                return; // Early return after successful move
             }
         }
 
@@ -409,10 +423,18 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                         currentMove.getSelectedPiece());
 
                 if (moveSuccessful) {
-                    // Delay clearing highlights by 150ms for smoother visual transition
+                    // Immediately redraw to show move result
+                    drawPieces();
+                    
+                    // Delay clearing highlights and flipping board by 150ms for smoother visual transition
                     Timer timer = new Timer(150, evt -> {
                         clearHighlights();
-                        drawPieces();
+                        // Only flip board for local games, NOT network games
+                        if (!(instance instanceof game.Network)) {
+                            flipBoard();
+                        } else {
+                            drawPieces();
+                        }
                     });
                     timer.setRepeats(false);
                     timer.start();
