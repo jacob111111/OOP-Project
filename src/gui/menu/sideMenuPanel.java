@@ -24,9 +24,8 @@ public class SideMenuPanel extends JPanel {
     private JButton newGameButton, saveGameButton, loadGameButton;
     private JLabel gameTitle, themeLabel, pieceThemeLabel;
     private JComboBox<String> themeSelector, pieceThemeSelector;
-    private JPanel settingsPanel, gameControlPanel, messagePanel, gameInfoPanel;
-    private JTextPane messageBoard;
-    private JScrollPane messageScrollPane;
+    private JPanel settingsPanel, gameControlPanel, gameInfoPanel;
+    private MessageBoardPanel messageBoardPanel;
     private JLabel hoverInfoLabel, turnIndicatorLabel;
 
     /**
@@ -137,30 +136,15 @@ public class SideMenuPanel extends JPanel {
         hoverInfoLabel.setPreferredSize(new Dimension(200, 25));
         hoverInfoLabel.setMaximumSize(new Dimension(200, 25));
 
-        // Message board panel (with border and label)
-        messagePanel = new JPanel();
-        messagePanel.setLayout(new BorderLayout());
-        messagePanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createEmptyBorder(10, 0, 0, 0),
-            BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(java.awt.Color.BLACK, 1),
-                "Messages"
-            )
-        ));
-
-        messageBoard = new JTextPane();
-        messageBoard.setEditable(false);
-        messageScrollPane = new JScrollPane(messageBoard);
-        messageScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-
-        messagePanel.add(messageScrollPane, BorderLayout.CENTER);
+        // Message board panel
+        messageBoardPanel = new MessageBoardPanel();
 
         // Add components to game info panel
         gameInfoPanel.add(turnIndicatorLabel);
         gameInfoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
         gameInfoPanel.add(hoverInfoLabel);
         gameInfoPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        gameInfoPanel.add(messagePanel);
+        gameInfoPanel.add(messageBoardPanel);
 
         // Create container for game controls and game info
         JPanel centerContainer = new JPanel();
@@ -861,67 +845,22 @@ public class SideMenuPanel extends JPanel {
     }
 
     /**
-     * Displays a message in the message board with format: [TYPE] Issue: Details
-     * Messages appear at the bottom, user scrolls up to see older messages.
-     * Previous INFO messages are grayed out when new messages are added.
+     * Displays a message in the message board.
+     * Delegates to MessageBoardPanel.
      * 
-     * @param message     The message to display (format: "Issue: Details")
+     * @param message     The message to display
      * @param messageType The type of message ("error" or "info")
      */
     public void displayMessage(String message, String messageType) {
-        StyledDocument doc = messageBoard.getStyledDocument();
-        
-        // Gray out all previous INFO messages
-        for (int i = 0; i < doc.getLength(); i++) {
-            AttributeSet attrs = doc.getCharacterElement(i).getAttributes();
-            java.awt.Color currentColor = StyleConstants.getForeground(attrs);
-            
-            if (currentColor != null && currentColor.equals(java.awt.Color.BLACK)) {
-                SimpleAttributeSet grayStyle = new SimpleAttributeSet();
-                StyleConstants.setForeground(grayStyle, java.awt.Color.GRAY);
-                doc.setCharacterAttributes(i, 1, grayStyle, false);
-            }
-        }
-        
-        // Determine message type and color
-        String typeTag;
-        java.awt.Color textColor;
-        
-        switch (messageType.toLowerCase()) {
-            case "error":
-                typeTag = "[ERROR] ";
-                textColor = java.awt.Color.RED;
-                break;
-            case "info":
-            default:
-                typeTag = "[INFO] ";
-                textColor = java.awt.Color.BLACK;
-                break;
-        }
-        
-        // Create style for the message
-        SimpleAttributeSet style = new SimpleAttributeSet();
-        StyleConstants.setForeground(style, textColor);
-        
-        // Format: [TYPE] message\n
-        String formattedMessage = typeTag + message + "\n";
-        
-        try {
-            // Insert at the end (new messages at bottom)
-            doc.insertString(doc.getLength(), formattedMessage, style);
-            
-            // Auto-scroll to bottom to show newest message
-            messageBoard.setCaretPosition(doc.getLength());
-        } catch (BadLocationException e) {
-            System.err.println("Error inserting message: " + e.getMessage());
-        }
+        messageBoardPanel.displayMessage(message, messageType);
     }
 
     /**
      * Clears all messages from the message board.
+     * Delegates to MessageBoardPanel.
      */
     public void clearMessages() {
-        messageBoard.setText("");
+        messageBoardPanel.clearMessages();
     }
 
     /**
@@ -1009,22 +948,8 @@ public class SideMenuPanel extends JPanel {
         pieceThemeSelector.setForeground(palette.labelForeground);
         pieceThemeSelector.setBackground(palette.labelBackground);
 
-        // Style message panel with themed border
-        messagePanel.setBackground(palette.labelBackground);
-        messagePanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createEmptyBorder(10, 0, 0, 0),
-            BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(palette.labelForeground, 1),
-                "Messages",
-                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-                javax.swing.border.TitledBorder.DEFAULT_POSITION,
-                palette.font,
-                palette.labelForeground
-            )
-        ));
-        messageBoard.setFont(palette.font);
-        // Note: Foreground color is set per-message (black for INFO, red for ERROR)
-        messageBoard.setBackground(palette.labelBackground);
+        // Style message board panel
+        messageBoardPanel.updateStyle(palette);
 
         // Style turn indicator and hover info labels
         turnIndicatorLabel.setFont(palette.font.deriveFont(java.awt.Font.BOLD, 18f));
