@@ -2,6 +2,8 @@ package gui;
 
 import javax.swing.JFrame;
 import java.awt.BorderLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import gui.board.MainBoardPanel;
 import gui.menu.*;
@@ -54,6 +56,14 @@ public class ChessFrame extends JFrame {
         // Add panels to frame
         add(boardPanel, BorderLayout.CENTER);
         add(menuPanel, BorderLayout.EAST);
+
+        // Add window listener to cleanup AI engine on close
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                cleanupAIEngine();
+            }
+        });
 
         setVisible(true);
     }
@@ -244,6 +254,27 @@ public class ChessFrame extends JFrame {
     public void flipBoard() {
         if (boardPanel != null) {
             boardPanel.flipBoard();
+        }
+    }
+
+    /**
+     * Cleans up AI engine resources when closing the application.
+     * Called automatically when the window is closing.
+     */
+    private void cleanupAIEngine() {
+        if (currentGame != null) {
+            board.Board gameBoard = currentGame.getBoard();
+            if (gameBoard != null) {
+                player.Player white = gameBoard.getPlayer(utils.Color.WHITE);
+                player.Player black = gameBoard.getPlayer(utils.Color.BLACK);
+
+                if (white instanceof player.AI) {
+                    ((player.AI) white).shutdown();
+                }
+                if (black instanceof player.AI) {
+                    ((player.AI) black).shutdown();
+                }
+            }
         }
     }
 }

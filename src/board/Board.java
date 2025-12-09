@@ -175,8 +175,6 @@ public class Board implements Serializable {
         return positionIndex;
     }
 
-
-
     /**
      * Handles piece capture mechanics while maintaining position index consistency.
      * 
@@ -269,7 +267,8 @@ public class Board implements Serializable {
             ((Rook) pieceToMove).setHasMoved(true);
         }
 
-        // Update piece position and board index (this overwrites the captured piece in index)
+        // Update piece position and board index (this overwrites the captured piece in
+        // index)
         positionIndex.remove(fromPosition);
         positionIndex.put(toPosition, pieceToMove);
         pieceToMove.setPosition(toPosition);
@@ -422,6 +421,99 @@ public class Board implements Serializable {
         int y = rank - '1'; // 1=0, 2=1, ..., 8=7
 
         return new Position(x, y);
+    }
+
+    /**
+     * Converts the current board state to FEN (Forsyth-Edwards Notation).
+     * FEN is the standard notation for describing board positions in chess.
+     * 
+     * Note: This implementation provides a simplified FEN string containing
+     * only piece placement. Full FEN includes active color, castling rights,
+     * en passant, halfmove clock, and fullmove number which would need to be
+     * tracked separately if needed.
+     * 
+     * @param activeColor The color whose turn it is (WHITE or BLACK)
+     * @return FEN string representing the current board state
+     */
+    public String toFEN(Color activeColor) {
+        StringBuilder fen = new StringBuilder();
+
+        // Build piece placement (starting from rank 8 down to rank 1)
+        for (int rank = 7; rank >= 0; rank--) {
+            int emptyCount = 0;
+
+            for (int file = 0; file < 8; file++) {
+                Position pos = new Position(file, rank);
+                Piece piece = getPieceAt(pos);
+
+                if (piece == null) {
+                    emptyCount++;
+                } else {
+                    // Add empty squares count if any
+                    if (emptyCount > 0) {
+                        fen.append(emptyCount);
+                        emptyCount = 0;
+                    }
+
+                    // Add piece symbol (uppercase for white, lowercase for black)
+                    char pieceChar = getPieceFENChar(piece);
+                    fen.append(pieceChar);
+                }
+            }
+
+            // Add remaining empty squares count
+            if (emptyCount > 0) {
+                fen.append(emptyCount);
+            }
+
+            // Add rank separator (except after last rank)
+            if (rank > 0) {
+                fen.append('/');
+            }
+        }
+
+        // Add active color (w or b)
+        fen.append(' ');
+        fen.append(activeColor == Color.WHITE ? 'w' : 'b');
+
+        // Simplified FEN - no castling rights, en passant, or move counters
+        // Full implementation would track these in game state
+        fen.append(" - - 0 1");
+
+        return fen.toString();
+    }
+
+    /**
+     * Helper method to get the FEN character for a piece.
+     * 
+     * @param piece The piece to convert
+     * @return FEN character (K/Q/R/B/N/P for white, k/q/r/b/n/p for black)
+     */
+    private char getPieceFENChar(Piece piece) {
+        char baseChar;
+
+        if (piece instanceof King) {
+            baseChar = 'K';
+        } else if (piece instanceof Queen) {
+            baseChar = 'Q';
+        } else if (piece instanceof Rook) {
+            baseChar = 'R';
+        } else if (piece instanceof Bishop) {
+            baseChar = 'B';
+        } else if (piece instanceof Knight) {
+            baseChar = 'N';
+        } else if (piece instanceof Pawn) {
+            baseChar = 'P';
+        } else {
+            baseChar = '?';
+        }
+
+        // Lowercase for black pieces
+        if (piece.getColor() == Color.BLACK) {
+            baseChar = Character.toLowerCase(baseChar);
+        }
+
+        return baseChar;
     }
 
     /**
