@@ -43,11 +43,18 @@ A Java-based chess game implementation developed as part of CS3354 Object-Orient
 - **CheckmateDetector**: Sophisticated checkmate detection with king escape analysis
 - **Position Index**: O(1) piece position lookups using hash map
 - **Serializable game state**: Support for save/load functionality
-- **Flexible player system**: Player vs Player with AI framework in place
+- **Flexible player system**: Player vs Player and Player vs AI modes
+- **Stockfish API Integration**: Cloud-based professional chess engine
+  - Easy: Depth 5 search for quick moves
+  - Medium: Depth 10 search for balanced play
+  - Hard: Depth 15 search for strong analysis
+  - **No local setup required** - uses lichess.org API
+  - Internet connection required for AI opponent
+  - FEN (Forsyth-Edwards Notation) board state conversion
 
 ### Planned Features 📋
 
-- Full AI opponent with move evaluation algorithms
+- Castling move implementation
 - Network-based multiplayer (LAN)
 - En passant capture
 - Castling moves
@@ -55,6 +62,37 @@ A Java-based chess game implementation developed as part of CS3354 Object-Orient
 - Stalemate detection
 - Move history and undo functionality
 - Chess clock/timer
+
+## Quick Start
+
+### Requirements
+
+- Java JDK 8 or higher
+- Internet connection (for AI opponent)
+
+### Compile and Run
+
+```cmd
+# Navigate to source directory
+cd src
+
+# Compile
+javac Main.java
+
+# Run
+java Main
+```
+
+Choose option 1 for GUI mode or option 2 for Console mode.
+
+### Playing Against AI
+
+1. Start a new game and select "vs Computer"
+2. Choose difficulty: Easy (depth 5), Medium (depth 10), or Hard (depth 15)
+3. Select your color
+4. The AI uses Stockfish via lichess.org cloud API - no setup required!
+
+**Note:** AI requires an internet connection to work.
 
 ## Project Structure
 
@@ -67,14 +105,14 @@ src/
 │   ├── Console.java    # Console-based gameplay implementation
 │   └── GUI.java        # GUI game controller and event handler
 ├── gui/                # Swing-based graphical interface
-│   ├── chessFrame.java # Main application window
+│   ├── ChessFrame.java # Main application window
 │   ├── board/          # Board rendering and interaction
 │   │   ├── BoardPanel.java       # Core board rendering and piece display
 │   │   ├── MainBoardPanel.java   # Main board container
 │   │   ├── LabelPanel.java       # Board coordinate labels
 │   │   └── MoveState.java        # Move state tracking for GUI
 │   ├── menu/           # Menu panels and controls
-│   │   ├── sideMenuPanel.java    # Game controls and settings
+│   │   ├── SideMenuPanel.java    # Game controls and settings
 │   │   ├── mainMenuPanel.java    # Main menu interface
 │   │   └── settingsPanel.java    # Settings configuration
 │   ├── utils/          # GUI utilities and styling

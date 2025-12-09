@@ -134,7 +134,7 @@ public class GUI extends Game {
         if (!moveSuccessful) {
             System.out.println("FAILED at executeTurn: board.attemptMove() returned false");
             System.out.println("========== EXECUTE TURN END (FAILED) ==========\\n");
-            
+
             // Check if current player is in check and show appropriate message
             if (validMoveDetector != null && validMoveDetector.isKingInCheck(currentPlayer.getColor())) {
                 if (parentFrame != null) {
@@ -187,16 +187,17 @@ public class GUI extends Game {
             // Debug: Get opponent king position
             Position opponentKingPos = opponent.getKingPosition();
             System.out.println("  Opponent King position: " + opponentKingPos);
-            
+
             // Debug: Check if king's position is under attack
             utils.AttackMap attackMap = board.getAttackMap();
             Color attackerColor = currentPlayer.getColor(); // The player who just moved
             boolean kingSquareUnderAttack = attackMap.isSquareAttackedBy(opponentKingPos, attackerColor);
-            System.out.println("  King's square under attack by " + attackerColor + " (from AttackMap)? " + kingSquareUnderAttack);
-            
+            System.out.println(
+                    "  King's square under attack by " + attackerColor + " (from AttackMap)? " + kingSquareUnderAttack);
+
             opponentInCheck = validMoveDetector.isKingInCheck(opponent.getColor());
             System.out.println("  Opponent in check (from CheckmateDetector)? " + opponentInCheck);
-            
+
             if (opponentInCheck) {
                 String opponentColorName = (opponent.getColor() == Color.WHITE) ? "White" : "Black";
                 System.out.println("CHECK DETECTED: " + opponentColorName + " is in check!");
@@ -205,18 +206,18 @@ public class GUI extends Game {
                 }
             }
         }
-        
+
         // Store check status for network games
         lastMoveResultedInCheck = opponentInCheck;
 
         // Step 8: Switch turns on BE (FE board flip handled in BoardPanel)
         switchTurn();
-        
+
         // Update turn indicator in UI
         if (parentFrame != null) {
             parentFrame.updateTurnDisplay(WhosTurn);
         }
-        
+
         System.out.println("Move executed successfully!");
         System.out.println("========== EXECUTE TURN END (SUCCESS) ==========\n");
 
@@ -254,24 +255,54 @@ public class GUI extends Game {
         System.out.println("AI starting to think...");
 
         player.AI ai = (player.AI) currentPlayer;
-        player.AI.Move aiMove = ai.getBestMove(board);
 
-        if (aiMove != null) {
-            // Wait 150ms before executing move so user can see the board state
-            try {
-                Thread.sleep(150);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+        // Retry logic: attempt up to 3 times if move is invalid
+        int maxRetries = 3;
+        int attempts = 0;
+        boolean moveExecuted = false;
+
+        while (attempts < maxRetries && !moveExecuted) {
+            player.AI.Move aiMove = ai.getBestMove(board);
+
+            if (aiMove == null) {
+                System.err.println("AI returned no move");
+                break;
             }
 
-            System.out.println("AI executing move: " + aiMove);
+            // Wait 150ms before executing move so user can see the board state
+            if (attempts == 0) {
+                try {
+                    Thread.sleep(150);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+            System.out.println("AI executing move (attempt " + (attempts + 1) + "): " + aiMove);
             boolean success = executeTurn(aiMove.from, aiMove.to, aiMove.piece);
-            if (success && parentFrame != null) {
+
+            if (success) {
+                moveExecuted = true;
+                if (parentFrame != null) {
+                    parentFrame.refreshDisplay();
+                }
+                System.out.println("AI move successful");
+            } else {
+                attempts++;
+                System.err.println("AI move failed validation (attempt " + attempts + "/" + maxRetries + ")");
+            }
+        }
+
+        // If all retries failed, display error and skip turn
+        if (!moveExecuted) {
+            System.err.println("AI failed to make a valid move after " + maxRetries + " attempts. Skipping turn.");
+            if (parentFrame != null) {
+                parentFrame.displayMessage("AI Error: Unable to make a valid move. Turn skipped.", "error");
+            }
+            // Skip AI's turn by switching to opponent
+            switchTurn();
+            if (parentFrame != null) {
                 parentFrame.refreshDisplay();
-                // Flip board after AI move with slight delay
-                javax.swing.Timer flipTimer = new javax.swing.Timer(150, e -> parentFrame.flipBoard());
-                flipTimer.setRepeats(false);
-                flipTimer.start();
             }
         }
 
