@@ -18,7 +18,7 @@ This project is a GUI-based Chess game developed for our Object-Oriented Program
 
 ## Preview
 ### GUI Preview
-![Chess Game GUI Preview](path/to/your/gui_preview_image.png)
+![Chess Game GUI Preview](GUI_Preview.png)
 
 ### Class Diagram
 ![Class Diagram](path/to/your/class_diagram_image.png)
