@@ -7,12 +7,8 @@ import utils.CheckmateDetector;
 import utils.Color;
 
 /**
- * Abstract base class for different types of chess games.
- * 
- * Provides common structure and functionality for all game modes
- * including turn management, game state tracking, and basic game flow control.
- * Specific game implementations (Console, PVE, Lan) extend this class to
- * provide their own user interface and game logic while sharing common functionality.
+ * Abstract base class for chess game modes.
+ * Provides common turn management and game state tracking.
  */
 public abstract class Game implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -33,10 +29,10 @@ public abstract class Game implements Serializable {
     protected transient CheckmateDetector validMoveDetector;
 
     /**
-     * Creates a new Game with the specified parameters.
+     * Creates a new game with specified parameters.
      * 
-     * @param isPvP   true for Player vs Player mode, false for other modes
-     * @param p1Color the color that player 1 will play
+     * @param isPvP   true for Player vs Player
+     * @param p1Color player 1's color
      */
     public Game(boolean isPvP, Color p1Color) {
         this.board = new Board(isPvP, p1Color);
@@ -64,7 +60,6 @@ public abstract class Game implements Serializable {
 
     /**
      * Switches to the next player's turn.
-     * Updates both WhosTurn and currentPlayer.
      */
     protected void switchTurn() {
         WhosTurn = (WhosTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
@@ -91,9 +86,8 @@ public abstract class Game implements Serializable {
 
     /**
      * Sets the move validator and checkmate detector.
-     * Should be called by subclasses after board initialization.
      * 
-     * @param detector The CheckmateDetector instance to use
+     * @param detector CheckmateDetector instance to use
      */
     protected void setValidMoveDetector(CheckmateDetector detector) {
         this.validMoveDetector = detector;
@@ -121,7 +115,8 @@ public abstract class Game implements Serializable {
 
     /**
      * Custom deserialization method to reinitialize transient fields.
-     * Called automatically during deserialization to restore non-serializable objects.
+     * Called automatically during deserialization to restore non-serializable
+     * objects.
      */
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
         in.defaultReadObject();

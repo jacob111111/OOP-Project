@@ -8,13 +8,8 @@ import piece.*;
 import player.Player;
 
 /**
- * checkmate detection using pre-computed attack maps and optimized algorithms.
- * 
- * Checkmate Detection Algorithm:
- * 1. Quick check: Is the king actually in check? (Exit early if not)
- * 2. King escape analysis: Can the king move to any safe square?
- * 3. Blocking analysis: Can any piece block the attack?
- * 4. Capture analysis: Can any piece capture the attacking piece?
+ * Detects checkmate using pre-computed attack maps.
+ * Checks: (1) king in check, (2) king can't escape, (3) can't block/capture.
  */
 public class CheckmateDetector {
     private Board board;
@@ -28,30 +23,21 @@ public class CheckmateDetector {
     }
 
     /**
-     * Sets the move validator for this detector.
-     * Must be called after board initialization to avoid circular dependency.
+     * Sets the move validator (called after board init to avoid circular
+     * dependency).
      * 
-     * @param validator the MoveValidator instance
+     * @param validator MoveValidator instance
      */
     public void setMoveValidator(MoveValidator validator) {
         this.moveValidator = validator;
     }
 
     /**
-     * Determines if the specified color is in checkmate.
+     * Determines if specified color is in checkmate.
+     * Checks if king is in check, can't escape, and check can't be resolved.
      * 
-     * This method implements a fast checkmate detection algorithm that evaluates
-     * the three conditions for checkmate in order of computational efficiency:
-     * 1. Check validation: King must be in check (quick exit if not)
-     * 2. King escape: King has no legal moves to safety
-     * 3. Resolution: No piece can block or capture the attacker
-     * 
-     * @param kingColor the color of the king to check for checkmate (WHITE or
-     *                  BLACK)
-     * @return true if the specified color is in checkmate, false otherwise
-     * @throws IllegalArgumentException if kingColor is null
-     * @throws IllegalStateException    if no king is found for the specified color
-     * 
+     * @param kingColor color to check for checkmate
+     * @return true if in checkmate
      */
     public boolean isCheckmate(Color kingColor) {
         // First, is the king even in check?
@@ -86,20 +72,11 @@ public class CheckmateDetector {
     }
 
     /**
-     * Determines if the king can escape to any safe square.
+     * Checks if king can escape to any safe adjacent square.
      * 
-     * This method checks all 8 adjacent squares around the king to see if any
-     * provide a safe escape route. It's much more efficient than generating
-     * full move lists because it only examines the relevant squares.
-     * 
-     * @param kingPos   the current position of the king
-     * @param kingColor the color of the king being analyzed
-     * @return true if the king can move to at least one safe square, false if
-     *         trapped
-     * 
-     * @implNote This method simulates king movement to account for pieces that
-     *           would no longer be attacking after the king moves (e.g., discovered
-     *           attacks)
+     * @param kingPos   king's current position
+     * @param kingColor king's color
+     * @return true if king can escape
      */
     private boolean canKingEscape(Position kingPos, Color kingColor) {
         int x = kingPos.getX();
@@ -144,19 +121,12 @@ public class CheckmateDetector {
     }
 
     /**
-     * Checks if a piece can attack a specific square, considering king movement
-     * simulation.
+     * Checks if piece can attack target square, handling king position simulation.
      * 
-     * This method handles different piece types appropriately:
-     * - Knights and Kings: Use standard move patterns (no blocking)
-     * - Pawns: Only diagonal attack patterns
-     * - Linear pieces: Check line-of-sight with king position simulation
-     * 
-     * @param piece          the piece whose attack capability is being checked
-     * @param target         the target square to check for attack
-     * @param currentKingPos the current king position (ignored during line-of-sight
-     *                       calculation)
-     * @return true if the piece can attack the target square, false otherwise
+     * @param piece          piece to check
+     * @param target         target square
+     * @param currentKingPos current king position (for simulation)
+     * @return true if piece can attack target
      */
     private boolean canPieceAttackSquare(Piece piece, Position target, Position currentKingPos) {
         if (piece instanceof Knight || piece instanceof King) {
@@ -172,15 +142,11 @@ public class CheckmateDetector {
     }
 
     /**
-     * Determines if a pawn can attack a specific target square.
+     * Checks if pawn can attack target (diagonal forward one square).
      * 
-     * Pawns attack diagonally forward, one square at a time. This method
-     * validates that the target is exactly one diagonal square forward
-     * from the pawn's current position.
-     * 
-     * @param pawn   the pawn piece to check
-     * @param target the target square
-     * @return true if the pawn can attack the target square
+     * @param pawn   pawn piece
+     * @param target target square
+     * @return true if pawn can attack target
      */
     private boolean canPawnAttack(Piece pawn, Position target) {
         Position pawnPos = pawn.getPosition();
@@ -193,16 +159,12 @@ public class CheckmateDetector {
     }
 
     /**
-     * Determines if a linear piece (Queen, Rook, or Bishop) can attack a target
-     * square.
+     * Checks if linear piece can attack target with clear path.
      * 
-     * This method first validates that the target is on a valid attack line for
-     * the piece type, then checks if the path is clear.
-     * 
-     * @param piece          the linear piece (Queen, Rook, or Bishop)
-     * @param target         the target square
-     * @param currentKingPos king position to ignore during path calculation
-     * @return true if the piece can attack the target
+     * @param piece          linear piece (Queen, Rook, Bishop)
+     * @param target         target square
+     * @param currentKingPos king position to ignore
+     * @return true if piece can attack target
      */
     private boolean canLinearPieceAttack(Piece piece, Position target, Position currentKingPos) {
         Position piecePos = piece.getPosition();
@@ -216,17 +178,12 @@ public class CheckmateDetector {
     }
 
     /**
-     * Checks if the path between two positions is clear of pieces.
+     * Checks if path between positions is clear.
      * 
-     * This method walks along the line from the starting position to the target,
-     * checking each intermediate square for pieces. It can ignore a specific
-     * position (typically the king's current position during simulation).
-     * 
-     * @param from         the starting position (exclusive)
-     * @param to           the ending position (exclusive)
-     * @param ignoreKingAt position to ignore during path checking (for king move
-     *                     simulation)
-     * @return true if the path is clear, false if blocked
+     * @param from         starting position
+     * @param to           ending position
+     * @param ignoreKingAt position to ignore (for king simulation)
+     * @return true if path is clear
      */
     private boolean isPathClear(Position from, Position to, Position ignoreKingAt) {
         int dx = Integer.signum(to.getX() - from.getX());
@@ -253,19 +210,13 @@ public class CheckmateDetector {
     }
 
     /**
-     * Overloaded version of isPathClear that also collects the positions it
-     * traverses.
+     * Checks path and collects traversed positions.
      * 
-     * This method does the same path checking as the original but additionally
-     * adds each position it checks to the provided list. Useful for finding
-     * blocking squares between a checking piece and the king.
-     * 
-     * @param from          the starting position (exclusive)
-     * @param to            the ending position (exclusive)
-     * @param ignoreKingAt  position to ignore during path checking
-     * @param pathPositions list to collect the positions traversed (will be
-     *                      modified)
-     * @return true if the path is clear, false if blocked
+     * @param from          starting position
+     * @param to            ending position
+     * @param ignoreKingAt  position to ignore
+     * @param pathPositions list to collect positions (modified)
+     * @return true if path is clear
      */
     private boolean isPathClear(Position from, Position to, Position ignoreKingAt, List<Position> pathPositions) {
         int dx = Integer.signum(to.getX() - from.getX());

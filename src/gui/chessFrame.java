@@ -11,12 +11,7 @@ import gui.utils.*;
 import game.*;
 
 /**
- * Main application window for the chess game GUI.
- * 
- * This class serves as the primary container for all GUI components,
- * managing the board display, side menu, and overall application state.
- * It handles theme management, game initialization, and coordinates
- * communication between different UI components.
+ * Main chess game window managing board display and side menu.
  */
 public class ChessFrame extends JFrame {
     private static final int FRAME_WIDTH = 1000; // Increased width for side menu
@@ -32,13 +27,9 @@ public class ChessFrame extends JFrame {
     private GUI currentGame;
 
     /**
-     * Creates a new chess frame with the specified UI palette.
+     * Creates a chess frame with specified UI palette.
      * 
-     * Initializes the main window with board and menu panels, sets up
-     * the layout, and makes the window visible. Uses the provided palette
-     * for initial styling.
-     * 
-     * @param palette The UI palette to use for initial styling
+     * @param palette UI palette for styling
      */
     public ChessFrame(UIPalette palette) {
         this.masterPalette = palette;
@@ -69,10 +60,7 @@ public class ChessFrame extends JFrame {
     }
 
     /**
-     * Creates a new chess frame with the default classic palette.
-     * 
-     * Convenience constructor that uses the classic color scheme
-     * for users who don't specify a particular theme preference.
+     * Creates a chess frame with default classic palette.
      */
     public ChessFrame() {
         this(UIPalette.CLASSIC);
@@ -92,12 +80,9 @@ public class ChessFrame extends JFrame {
     }
 
     /**
-     * Sets a new UI palette and updates all components.
+     * Sets new UI palette and updates all components.
      * 
-     * Changes the current color scheme and refreshes all UI components
-     * to use the new palette. This allows for runtime theme switching.
-     * 
-     * @param newPalette The new palette to apply to the interface
+     * @param newPalette new palette to apply
      */
     public void setPalette(UIPalette newPalette) {
         this.masterPalette = newPalette;
@@ -105,10 +90,7 @@ public class ChessFrame extends JFrame {
     }
 
     /**
-     * Updates styling for all panels using the current palette.
-     * 
-     * Forces a refresh of all UI components to ensure they reflect
-     * the current theme settings. Called automatically when themes change.
+     * Refreshes all panels with current palette.
      */
     private void updateAllPanels() {
         menuPanel.updateStyle();
@@ -132,12 +114,9 @@ public class ChessFrame extends JFrame {
     }
 
     /**
-     * Sets the active game instance and updates the display.
+     * Sets active game and updates display.
      * 
-     * Associates a game instance with this frame and updates the board
-     * to reflect the game state. Also updates menu button states.
-     * 
-     * @param game The game instance to set as active, or null to clear
+     * @param game game instance or null to clear
      */
     public void setGame(GUI game) {
         this.currentGame = game;
@@ -187,10 +166,10 @@ public class ChessFrame extends JFrame {
     }
 
     /**
-     * Displays a message in the side menu message board.
+     * Displays message in side menu message board.
      * 
-     * @param message     The message to display
-     * @param messageType The type of message ("error", "warning", "info")
+     * @param message     message text
+     * @param messageType type ("error", "warning", "info")
      */
     public void displayMessage(String message, String messageType) {
         if (menuPanel != null) {

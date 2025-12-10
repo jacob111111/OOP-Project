@@ -16,19 +16,8 @@ import utils.Color;
 import utils.Position;
 
 /**
- * Represents the chess board and manages piece positions and game state.
- * 
- * The Board class is responsible for:
- * - Managing piece positions using an efficient position index for O(1) lookups
- * - Tracking captured pieces for both players
- * - Handling piece movement and capture mechanics
- * - Displaying the board state to players
- * - Managing player instances (human players and AI)
- * 
- * The board uses a coordinate system where positions are represented as
- * (x,y) coordinates with (0,0) at a1 and (7,7) at h8 in standard chess
- * notation.
- * 
+ * Chess board that manages piece positions and game state.
+ * Uses efficient position indexing for O(1) lookups and tracks captured pieces.
  */
 public class Board implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -55,14 +44,10 @@ public class Board implements Serializable {
     private transient MoveValidator moveValidator;
 
     /**
-     * Constructs a new chess board with players based on game mode.
+     * Creates a chess board with players based on game mode.
      * 
-     * Creates appropriate player instances based on whether this is a
-     * Player vs Player game or Player vs AI game. For PvP mode, both
-     * players are human. For PvE mode, one player is human and the other is AI.
-     * 
-     * @param isPvP   true for Player vs Player mode, false for Player vs AI
-     * @param P1Color the color that Player 1 will control (WHITE, BLACK, or RANDOM)
+     * @param isPvP   true for Player vs Player, false for Player vs AI
+     * @param P1Color player 1's color (WHITE, BLACK, or RANDOM)
      */
     public Board(boolean isPvP, Color P1Color) {
         if (isPvP) {
@@ -176,16 +161,13 @@ public class Board implements Serializable {
     }
 
     /**
-     * Handles piece capture mechanics while maintaining position index consistency.
-     * 
-     * This method is called once a valid capture has been confirmed. It removes
-     * the captured piece from the appropriate player's piece collection, adds it
-     * to the capturing player's capture list, and removes from position index.
+     * Handles piece capture mechanics and position index updates.
+     * Removes captured piece from player's collection and adds to capture list.
      * 
      * @param capturingPiece the piece performing the capture
-     * @param capturePos     the position where the capture occurs
-     * @param capturedPiece  the piece being captured
-     * @return true if a King was captured, false otherwise
+     * @param capturePos     position where capture occurs
+     * @param capturedPiece  piece being captured
+     * @return true if King was captured
      */
     public boolean capturePiece(Piece capturingPiece, Position capturePos, Piece capturedPiece) {
         boolean kingCaptured = false;
@@ -213,22 +195,14 @@ public class Board implements Serializable {
     }
 
     /**
-     * Attempts to move a piece to the specified position.
+     * Validates and executes a move if legal.
+     * Checks reachability and king safety, then handles captures and updates board
+     * state.
      * 
-     * Validates the move using MoveValidator which checks:
-     * 1. Can the piece reach the target square?
-     * 2. Does the move leave the king in check?
-     * 
-     * If the move is valid, this method executes it by:
-     * 1. Handling any captures at the destination
-     * 2. Updating both the piece's internal position and the board's position index
-     * 
-     * Note: Ownership validation should be done by the caller (GUI/Game layer).
-     * 
-     * @param fromPosition the starting position of the piece
-     * @param toPosition   the target position for the move
-     * @param pieceToMove  the piece that should be moved
-     * @return true if the move was valid and executed, false if invalid
+     * @param fromPosition starting position
+     * @param toPosition   target position
+     * @param pieceToMove  piece to move
+     * @return true if move was valid and executed
      */
     public boolean attemptMove(Position fromPosition, Position toPosition, Piece pieceToMove) {
         // Validate reachability and king safety using MoveValidator
@@ -280,13 +254,12 @@ public class Board implements Serializable {
     }
 
     /**
-     * Checks if a move is a castling move.
-     * Castling is when the king moves two squares horizontally.
+     * Checks if a move is castling (king moves two squares horizontally).
      * 
-     * @param piece        the piece being moved
-     * @param fromPosition the starting position
-     * @param toPosition   the destination position
-     * @return true if this is a castling move, false otherwise
+     * @param piece        piece being moved
+     * @param fromPosition starting position
+     * @param toPosition   destination position
+     * @return true if this is castling
      */
     public boolean isCastlingMove(Piece piece, Position fromPosition, Position toPosition) {
         if (!(piece instanceof King)) {
@@ -299,11 +272,11 @@ public class Board implements Serializable {
     }
 
     /**
-     * Executes a castling move by moving both king and rook.
+     * Executes castling by moving both king and rook.
      * 
-     * @param king     the king piece
+     * @param king     king piece
      * @param kingFrom king's starting position
-     * @param kingTo   king's destination position
+     * @param kingTo   king's destination
      */
     public void executeCastling(King king, Position kingFrom, Position kingTo) {
         // Determine if king-side or queen-side castling
@@ -334,12 +307,11 @@ public class Board implements Serializable {
     }
 
     /**
-     * Checks if a move results in pawn promotion.
-     * Pawn promotion occurs when a pawn reaches the opposite end of the board.
+     * Checks if a move triggers pawn promotion (pawn reaches opposite end).
      * 
-     * @param piece      the piece being moved
-     * @param toPosition the destination position
-     * @return true if this move should trigger pawn promotion, false otherwise
+     * @param piece      piece being moved
+     * @param toPosition destination
+     * @return true if pawn promotion should occur
      */
     public boolean isPawnPromotion(Piece piece, Position toPosition) {
         if (!(piece instanceof Pawn)) {
@@ -353,10 +325,10 @@ public class Board implements Serializable {
     /**
      * Promotes a pawn to the specified piece type.
      * 
-     * @param pawn          the pawn to promote
-     * @param position      the position where the pawn is located
-     * @param promotionType the type of piece to promote to (Q, R, B, N)
-     * @return the newly created piece
+     * @param pawn          pawn to promote
+     * @param position      pawn's position
+     * @param promotionType piece type (Q, R, B, N)
+     * @return newly created piece
      */
     public Piece promotePawn(Pawn pawn, Position position, String promotionType) {
         Piece newPiece = null;
@@ -397,11 +369,10 @@ public class Board implements Serializable {
     }
 
     /**
-     * Converts chess notation (like "e4") to a Position object
-     * Chess board: a-h columns (0-7), 1-8 rows (0-7)
+     * Converts chess notation (e.g., "e4") to a Position object.
      * 
-     * @param notation Chess notation string (e.g., "e4")
-     * @return Position object or null if invalid notation
+     * @param notation chess notation string
+     * @return Position object or null if invalid
      */
     public Position chessNotationToPosition(String notation) {
         if (notation == null || notation.length() != 2) {
@@ -424,16 +395,39 @@ public class Board implements Serializable {
     }
 
     /**
-     * Converts the current board state to FEN (Forsyth-Edwards Notation).
-     * FEN is the standard notation for describing board positions in chess.
+     * Converts a Position object to chess notation (e.g., "e4").
      * 
-     * Note: This implementation provides a simplified FEN string containing
-     * only piece placement. Full FEN includes active color, castling rights,
-     * en passant, halfmove clock, and fullmove number which would need to be
-     * tracked separately if needed.
+     * @param position Position object to convert
+     * @return chess notation string or null if invalid
+     */
+    public String positionToChessNotation(Position position) {
+        if (position == null || position.getX() < 0 || position.getX() > 7
+                || position.getY() < 0 || position.getY() > 7) {
+            return null;
+        }
+
+        // Convert 0-based coordinates to chess notation
+        char file = (char) ('a' + position.getX()); // 0=a, 1=b, ..., 7=h
+        char rank = (char) ('1' + position.getY()); // 0=1, 1=2, ..., 7=8
+
+        return "" + file + rank;
+    }
+
+    /**
+     * Checks if this is a Player vs Player game or Player vs AI.
      * 
-     * @param activeColor The color whose turn it is (WHITE or BLACK)
-     * @return FEN string representing the current board state
+     * @return true if both players are human, false if playing against AI
+     */
+    public boolean isPvP() {
+        return !(white instanceof AI) && !(black instanceof AI);
+    }
+
+    /**
+     * Converts board state to FEN (Forsyth-Edwards Notation).
+     * Returns simplified FEN with piece placement only.
+     * 
+     * @param activeColor whose turn it is
+     * @return FEN string representing board state
      */
     public String toFEN(Color activeColor) {
         StringBuilder fen = new StringBuilder();
@@ -484,10 +478,10 @@ public class Board implements Serializable {
     }
 
     /**
-     * Helper method to get the FEN character for a piece.
+     * Gets the FEN character for a piece.
      * 
-     * @param piece The piece to convert
-     * @return FEN character (K/Q/R/B/N/P for white, k/q/r/b/n/p for black)
+     * @param piece piece to convert
+     * @return FEN character (K/Q/R/B/N/P for white, lowercase for black)
      */
     private char getPieceFENChar(Piece piece) {
         char baseChar;
@@ -520,6 +514,8 @@ public class Board implements Serializable {
      * Custom deserialization method to reinitialize transient fields.
      * Called automatically during deserialization to restore non-serializable
      * helper objects.
+     * 
+     * this is english ^
      */
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
         in.defaultReadObject();

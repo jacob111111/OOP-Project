@@ -9,27 +9,8 @@ import piece.*;
 import player.Player;
 
 /**
- * Efficiently calculates and caches which squares are under attack by each
- * color.
- * 
- * This class pre-computes all attacked squares once per board state, then
- * provides
- * O(1) lookup for attack queries. It focuses solely on tracking attacks - move
- * validation logic has been moved to MoveValidator for better separation of
- * concerns.
- * 
- * Responsibilities:
- * - Track which squares are attacked by each color
- * - Identify which pieces are attacking specific squares
- * - Provide fast check detection
- * - Regenerate attack data after moves
- * 
- * Usage Pattern:
- * AttackMap attackMap = new AttackMap(board);
- * boolean isUnderAttack = attackMap.isSquareAttackedBy(position, Color.WHITE);
- * boolean kingInCheck = attackMap.isKingInCheck(Color.BLACK);
- * 
- * @see MoveValidator for move validation logic
+ * Efficiently calculates and caches attacked squares for O(1) lookups.
+ * Focuses on tracking attacks; move validation is handled by MoveValidator.
  */
 public class AttackMap {
     private Board board;
@@ -48,12 +29,7 @@ public class AttackMap {
     }
 
     /**
-     * Pre-computes all squares attacked by both colors.
-     * 
-     * This method performs the expensive calculation of determining which squares
-     * each piece can attack, storing the results in hash sets for fast lookup.
-     * The calculation is performed once per board state and cached until the
-     * board changes.
+     * Pre-computes all attacked squares for both colors and caches results.
      */
     private void generateAttackMaps() {
         Player whitePlayer = board.getPlayer(Color.WHITE);
@@ -90,18 +66,11 @@ public class AttackMap {
     }
 
     /**
-     * Regenerates the entire attack map after a move.
+     * Regenerates attack map after a move.
      * 
-     * Instead of complex incremental updates, this simply recalculates all attacks
-     * from scratch. With a maximum of 32 pieces, this is actually faster and much
-     * simpler than tracking which linear pieces were blocked/unblocked.
-     * 
-     * @param pieceThatMoved the piece that was moved (unused, kept for API
-     *                       compatibility)
-     * @param oldPosition    where the piece was before the move (unused, kept for
-     *                       API compatibility)
-     * @param newPosition    where the piece is after the move (unused, kept for API
-     *                       compatibility)
+     * @param pieceThatMoved piece that moved (unused)
+     * @param oldPosition    old position (unused)
+     * @param newPosition    new position (unused)
      */
     public void updateAfterMove(Piece pieceThatMoved, Position oldPosition, Position newPosition) {
         // Simple regeneration - fast enough with max 32 pieces
@@ -109,18 +78,11 @@ public class AttackMap {
     }
 
     /**
-     * Gets all squares attacked by a specific piece for check/threat detection.
-     * Uses the piece's own getPossibleMoves() method which knows its movement
-     * rules.
+     * Gets all squares attacked by a piece.
+     * Special handling for pawns (diagonal attacks only).
      * 
-     * This method calculates attack squares differently from legal moves:
-     * - For pawns, ONLY includes diagonal attack squares (for threat detection)
-     * - For linear pieces, stops at first piece but includes that square
-     * - For knights and kings, includes all reachable squares
-     * 
-     * @param piece the piece whose attack squares should be calculated
-     * @return a Set of Position objects representing squares under attack by this
-     *         piece
+     * @param piece piece whose attacks to calculate
+     * @return set of attacked positions
      */
     private Set<Position> getAttackSquares(Piece piece) {
         // For most pieces, attacks = possible moves
@@ -149,14 +111,11 @@ public class AttackMap {
     }
 
     /**
-     * This is the primary interface for attack queries.
+     * Checks if position is under attack by specified color.
      * 
-     * @param pos   the position to check for attacks
-     * @param color the color whose attacks to check for (WHITE or BLACK)
-     * @return True if the specified position is under attack by the specified color
-     * @throws NullPointerException if pos or color is null
-     * @implNote If the attack maps are invalid, this method will automatically
-     *           regenerate them before performing the lookup
+     * @param pos   position to check
+     * @param color attacking color
+     * @return true if position is attacked
      */
     public boolean isSquareAttackedBy(Position pos, Color color) {
         if (!isValid)
@@ -165,12 +124,11 @@ public class AttackMap {
     }
 
     /**
-     * Gets all pieces of the specified color that are attacking the given position.
-     * Perfect for finding which pieces are giving check!
+     * Gets all pieces of specified color attacking a position.
      * 
-     * @param pos            the position being attacked
-     * @param attackingColor the color of pieces doing the attacking
-     * @return Set of pieces attacking that position (empty set if none)
+     * @param pos            position being attacked
+     * @param attackingColor color of attacking pieces
+     * @return set of pieces attacking position
      */
     public Set<Piece> getPiecesAttacking(Position pos, Color attackingColor) {
         if (!isValid)
@@ -181,15 +139,10 @@ public class AttackMap {
     }
 
     /**
-     * Fast check if the king of specified color is in check.
+     * Fast check if king is in check.
      * 
-     * This convenience method combines king position lookup with attack detection
-     * to provide a simple interface for check detection.
-     * 
-     * @param kingColor the color of the king to check (WHITE or BLACK)
-     * @return True if the king of the specified color is currently in check
-     * @throws IllegalStateException if no king is found for the specified color
-     * @see #isSquareAttackedBy(Position, Color)
+     * @param kingColor king's color
+     * @return true if king is in check
      */
     public boolean isKingInCheck(Color kingColor) {
         Player player = board.getPlayer(kingColor);

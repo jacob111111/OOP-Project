@@ -3,28 +3,17 @@ import game.*;
 import utils.Color;
 
 /**
- * Main application entry point for the Chess Game.
- * 
- * This class provides the initial user interface for selecting between
- * GUI and console modes of play. It handles the initial setup and launches
- * the appropriate game interface based on user selection.
- * 
- * The application supports two main interfaces:
- * - GUI mode with combined board and menu interface
- * - Console mode for text-based gameplay
+ * Main entry point for the Chess Game application.
+ * Allows users to choose between GUI and console modes.
  * 
  * @author Jordan Atchison, Jacob Atchison
  */
 public class Main {
 
     /**
-     * Application entry point.
+     * Launches the chess game with user-selected interface (GUI or console).
      * 
-     * Presents the user with interface selection options and launches
-     * the chosen game mode. For GUI mode, creates a Swing interface.
-     * For console mode, creates a text-based game with player configuration.
-     * 
-     * @param args Command line arguments (currently unused)
+     * @param args Command line arguments (unused)
      */
     public static void main(String[] args) {
         Scanner scnr = new Scanner(System.in);

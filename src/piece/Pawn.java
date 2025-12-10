@@ -7,26 +7,18 @@ import utils.Color;
 import utils.Position;
 
 /**
- * Represents the Pawn piece in chess.
- * 
- * Pawns have unique movement rules: they move forward one square, capture
- * diagonally,
- * can move two squares on their first move, and have special rules for en
- * passant
- * capture and promotion (not yet fully implemented). White pawns move "up" the
- * board
- * (increasing y) while black pawns move "down" (decreasing y).
- * 
+ * Pawn piece - moves forward one square, captures diagonally.
+ * Can move two squares on first move. Subject to promotion at opposite end.
  */
 public class Pawn extends Piece {
     /** Tracks whether this pawn has moved from its starting position */
     private boolean hasMoved = false;
 
     /**
-     * Creates a new Pawn piece with the specified color and position.
+     * Creates a Pawn piece.
      * 
-     * @param color    The color of the pawn (WHITE or BLACK)
-     * @param position The initial position of the pawn on the board
+     * @param color    pawn's color
+     * @param position initial position
      */
     public Pawn(Color color, Position position) {
         super(color, position);

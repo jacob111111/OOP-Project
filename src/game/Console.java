@@ -6,29 +6,19 @@ import utils.Position;
 import piece.Piece;
 
 /**
- * Console-based implementation of the chess game.
- * 
- * This class provides a text-based user interface for playing chess in the
- * console.
- * It handles user input for moves, displays the board, validates moves, and
- * manages
- * turn progression. Players enter moves using standard chess notation (e.g.,
- * "e2 e4").
- * 
- * The class extends the Game base class and implements the console-specific
- * versions of the abstract methods for game flow and turn management.
- * 
+ * Console-based chess game with text interface.
+ * Handles user input via chess notation (e.g., "e2 e4").
  */
 public class Console extends Game {
-    /** Scanner for reading user input */
+    // Scanner for reading user input
     protected Scanner scnr;
 
     /**
-     * Creates a new Console game instance.
+     * Creates a console game.
      * 
-     * @param isPvP   true for Player vs Player mode, false for single player
-     * @param p1Color the color that player 1 will control
-     * @param scnr    Scanner for reading user input from console
+     * @param isPvP   true for Player vs Player
+     * @param p1Color player 1's color
+     * @param scnr    Scanner for user input
      */
     public Console(boolean isPvP, Color p1Color, Scanner scnr) {
         super(isPvP, p1Color);
@@ -39,19 +29,10 @@ public class Console extends Game {
     }
 
     /**
-     * Displays the chess board from the perspective of the current player.
+     * Displays the board from current player's perspective.
+     * White sees rank 1 at bottom, black sees rank 8 at bottom.
      * 
-     * Shows the board with file letters (a-h) and rank numbers (1-8).
-     * The board orientation changes based on whose turn it is:
-     * - White players see the board with rank 1 at bottom, rank 8 at top
-     * - Black players see the board with rank 8 at bottom, rank 1 at top
-     * 
-     * Pieces are displayed using their symbolic representation (e.g., "wK" for
-     * white king),
-     * and empty squares are shown as "##".
-     * 
-     * @param whosMove the color of the current player (determines board
-     *                 orientation)
+     * @param whosMove current player's color (determines orientation)
      */
     public void displayBoard(Color whosMove) {
         System.out.println("  a  b  c  d  e  f  g  h");
@@ -79,10 +60,7 @@ public class Console extends Game {
     }
 
     /**
-     * Starts and manages the main game loop for console play.
-     * 
-     * Displays startup message and continues processing turns until
-     * a winner is determined, then displays the end game message.
+     * Main game loop - processes turns until game ends.
      */
     public void play() {
         System.out.println("Starting console game...");
@@ -97,20 +75,9 @@ public class Console extends Game {
         // TODO
     }
 
-
     /**
-     * Processes a single turn in the console game.
-     * 
-     * Displays the current player's turn, shows the board, prompts for move input,
-     * validates the move, executes it if valid, and switches to the next player.
-     * Handles move validation including:
-     * - Chess notation format validation
-     * - Piece existence at source position
-     * - Piece ownership verification
-     * - Move legality checking
-     * 
-     * If an invalid move is entered, the player is prompted to try again without
-     * switching turns.
+     * Processes one turn: display board, get input, validate and execute move.
+     * Checks for checkmate after move and switches turns if successful.
      */
     public void turn() {
         System.out.println(WhosTurn + "'s turn");

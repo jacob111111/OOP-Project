@@ -17,17 +17,10 @@ import utils.MoveValidator;
 import utils.Position;
 
 /**
- * Represents an AI (computer) player in the chess game using Stockfish API.
+ * AI player using Stockfish via lichess.org cloud API.
+ * No local installation required.
  * 
- * This AI uses the lichess.org cloud API to get moves from Stockfish.
- * No local installation required - all analysis happens in the cloud.
- * 
- * Difficulty levels:
- * - Easy (1): Depth 5 - Quick, weaker moves
- * - Medium (2): Depth 10 - Balanced play
- * - Hard (3): Depth 15 - Strong, deep analysis
- * 
- * @see Player
+ * Difficulty: 1=Easy (depth 5), 2=Medium (depth 10), 3=Hard (depth 15)
  */
 public class AI extends Player {
     private int difficulty; // 1=Easy, 2=Medium, 3=Hard
@@ -53,10 +46,10 @@ public class AI extends Player {
     }
 
     /**
-     * Gets the best move from Stockfish API for the current board position.
+     * Gets best move from Stockfish API for current board.
      * 
-     * @param board The current board state
-     * @return The best move according to Stockfish, or null if unavailable
+     * @param board current board state
+     * @return best move or null if unavailable
      */
     public Move getBestMove(Board board) {
         try {
@@ -91,11 +84,11 @@ public class AI extends Player {
     }
 
     /**
-     * Queries the lichess.org cloud evaluation API.
+     * Queries lichess cloud evaluation API.
      * 
-     * @param fen   The board position in FEN notation
-     * @param depth The search depth
-     * @return The best move in UCI format, or null if unavailable
+     * @param fen   board position in FEN
+     * @param depth search depth
+     * @return best move in UCI format or null
      */
     private String queryLichessAPI(String fen, int depth) {
         try {

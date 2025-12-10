@@ -65,7 +65,8 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
     /**
      * Override to maintain square aspect ratio for the chess board.
-     * This ensures buttons maintain their square shape and piece images don't get squished.
+     * This ensures buttons maintain their square shape and piece images don't get
+     * squished.
      */
     @Override
     public Dimension getPreferredSize() {
@@ -101,7 +102,24 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 
     public void setGame(GUI game) {
         this.instance = game;
-        whiteAtBottom = true; // Reset board orientation for new game
+
+        // For AI games, set board orientation based on human player's color
+        if (game != null && !game.getBoard().isPvP()) {
+            // Check which player is human (not AI)
+            player.Player whitePlayer = game.getBoard().getPlayer(utils.Color.WHITE);
+            player.Player blackPlayer = game.getBoard().getPlayer(utils.Color.BLACK);
+
+            if (whitePlayer instanceof player.AI) {
+                // Human is black, so black at bottom
+                whiteAtBottom = false;
+            } else {
+                // Human is white, so white at bottom
+                whiteAtBottom = true;
+            }
+        } else {
+            // For PvP games, reset to default (white at bottom)
+            whiteAtBottom = true;
+        }
 
         // Clear any ongoing move state from previous game
         currentMove = null;
@@ -187,7 +205,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                 }
             }
         }
-        
+
         // Force repaint to ensure visual update
         revalidate();
         repaint();
@@ -379,13 +397,13 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                 // Remove drag visual first to avoid visual conflicts
                 removeDragVisual();
                 currentMove = null;
-                
+
                 // Immediately redraw pieces to show the move result
                 drawPieces();
-                
-                // Only flip board for local games, NOT network games
-                // Network games maintain fixed perspective per player
-                if (!(instance instanceof game.Network)) {
+
+                // Only flip board for local PvP games, NOT AI or network games
+                // AI and network games maintain fixed perspective per player
+                if (!(instance instanceof game.Network) && instance.getBoard().isPvP()) {
                     // Delay board flip by 150ms for smoother visual transition
                     Timer timer = new Timer(150, evt -> flipBoard());
                     timer.setRepeats(false);
@@ -425,12 +443,13 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
                 if (moveSuccessful) {
                     // Immediately redraw to show move result
                     drawPieces();
-                    
-                    // Delay clearing highlights and flipping board by 150ms for smoother visual transition
+
+                    // Delay clearing highlights and flipping board by 150ms for smoother visual
+                    // transition
                     Timer timer = new Timer(150, evt -> {
                         clearHighlights();
-                        // Only flip board for local games, NOT network games
-                        if (!(instance instanceof game.Network)) {
+                        // Only flip board for local PvP games, NOT AI or network games
+                        if (!(instance instanceof game.Network) && instance.getBoard().isPvP()) {
                             flipBoard();
                         } else {
                             drawPieces();

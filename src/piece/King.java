@@ -7,24 +7,18 @@ import utils.Color;
 import utils.Position;
 
 /**
- * Represents the King piece in chess.
- * 
- * The King can move one square in any direction (horizontal, vertical, or
- * diagonal).
- * This is the most important piece in chess - the game is lost when the king is
- * checkmated. The king also participates in the special castling move (not yet
- * implemented).
- * 
+ * King piece - can move one square in any direction.
+ * Most important piece; losing it ends the game.
  */
 public class King extends Piece {
     /** Tracks whether this king has moved (used for castling rules) */
     private boolean hasMoved = false;
 
     /**
-     * Creates a new King piece with the specified color and position.
+     * Creates a King piece.
      * 
-     * @param color    The color of the king (WHITE or BLACK)
-     * @param position The initial position of the king on the board
+     * @param color    king's color
+     * @param position initial position
      */
     public King(Color color, Position position) {
         super(color, position);
@@ -105,20 +99,12 @@ public class King extends Piece {
     }
 
     /**
-     * Checks if castling is possible in the specified direction.
+     * Checks if castling is possible.
+     * Validates all castling requirements (unmoved pieces, clear path, no check).
      * 
-     * Castling requirements:
-     * 1. King hasn't moved
-     * 2. Rook hasn't moved
-     * 3. No pieces between king and rook
-     * 4. King is not in check
-     * 5. King doesn't pass through check
-     * 6. King doesn't end up in check
-     * 
-     * @param board    the chess board
-     * @param kingside true for king-side (short) castling, false for queen-side
-     *                 (long)
-     * @return true if castling is legal, false otherwise
+     * @param board    chess board
+     * @param kingside true for kingside castling
+     * @return true if castling is legal
      */
     private boolean canCastle(board.Board board, boolean kingside) {
         int x = position.getX();

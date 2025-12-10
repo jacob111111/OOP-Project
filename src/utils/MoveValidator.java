@@ -8,35 +8,21 @@ import piece.*;
 import player.Player;
 
 /**
- * Centralized move validation system for chess.
- * 
- * This class consolidates all move validation logic in one place, separating
- * concerns from the AttackMap (which now only tracks attacks) and Board (which
- * manages state). It handles:
- * 
- * - Basic move validation (can piece reach target?)
- * - Check safety validation (does move expose king?)
- * - Piece-specific movement rules
- * - Turn/ownership validation
- * 
- * Usage:
- * MoveValidator validator = new MoveValidator(board, attackMap);
- * if (validator.isMoveLegal(piece, from, to, currentPlayer)) {
- * // Execute move
- * }
+ * Centralized move validation for chess.
+ * Handles reachability, ownership, and check safety validation.
  */
 public class MoveValidator {
     private Board board;
     private AttackMap attackMap;
-    
+
     // Cached reference to board's position index for move simulation
     private Map<Position, Piece> positionIndex;
 
     /**
-     * Creates a new MoveValidator with references to board and attack map.
+     * Creates a MoveValidator.
      * 
-     * @param board     the chess board to validate moves on
-     * @param attackMap the attack map for checking king safety
+     * @param board     chess board
+     * @param attackMap attack map for king safety checks
      */
     public MoveValidator(Board board, AttackMap attackMap) {
         this.board = board;
@@ -49,18 +35,13 @@ public class MoveValidator {
     // ============================================================================
 
     /**
-     * Validates if a move is completely legal.
+     * Validates if a move is fully legal (ownership, reachability, safety).
      * 
-     * Performs comprehensive validation:
-     * 1. Ownership: Does the current player own this piece?
-     * 2. Reachability: Can the piece reach the target square?
-     * 3. Safety: Does the move leave the king in check?
-     * 
-     * @param piece         the piece attempting to move
-     * @param fromPosition  the piece's current position
-     * @param toPosition    the target position
-     * @param currentPlayer the player attempting the move
-     * @return true if move is fully legal, false otherwise
+     * @param piece         piece attempting to move
+     * @param fromPosition  current position
+     * @param toPosition    target position
+     * @param currentPlayer player attempting the move
+     * @return true if move is legal
      */
     public boolean isMoveLegal(Piece piece, Position fromPosition, Position toPosition, Player currentPlayer) {
         System.out.println("\n=== MOVE VALIDATION START ===");
@@ -112,14 +93,11 @@ public class MoveValidator {
     }
 
     /**
-     * Checks if a piece can physically reach the target square.
+     * Checks if piece can physically reach target square.
      * 
-     * This validates piece-specific movement rules without considering
-     * whether the move would leave the king in check.
-     * 
-     * @param piece  the piece attempting to move
-     * @param target the target position
-     * @return true if piece can reach target, false otherwise
+     * @param piece  piece attempting to move
+     * @param target target position
+     * @return true if piece can reach target
      */
     public boolean isDestinationReachable(Piece piece, Position target) {
         Set<Position> validMoves = getValidMovesForPiece(piece);
@@ -127,15 +105,13 @@ public class MoveValidator {
     }
 
     /**
-     * Validates that a move doesn't leave the player's king in check.
+     * Validates move doesn't leave king in check.
+     * Simulates move, checks king safety, then rolls back.
      * 
-     * Simulates the move, regenerates the attack map, checks if king is safe,
-     * then rolls back if unsafe.
-     * 
-     * @param piece        the piece to move
-     * @param fromPosition the piece's current position
-     * @param toPosition   the target position
-     * @return true if king remains safe after move, false if exposed to check
+     * @param piece        piece to move
+     * @param fromPosition current position
+     * @param toPosition   target position
+     * @return true if king remains safe
      */
     public boolean isMoveKingSafe(Piece piece, Position fromPosition, Position toPosition) {
         // Check if this move captures an enemy piece
@@ -168,8 +144,9 @@ public class MoveValidator {
         positionIndex.remove(toPosition);
         positionIndex.put(fromPosition, piece);
         piece.setPosition(fromPosition);
-        
-        // CRITICAL: If this was a capture simulation, restore the captured piece to the board
+
+        // CRITICAL: If this was a capture simulation, restore the captured piece to the
+        // board
         if (isCapture) {
             positionIndex.put(toPosition, capturedPiece);
         }
@@ -201,17 +178,10 @@ public class MoveValidator {
     // ============================================================================
 
     /**
-     * Gets all squares a piece can legally move to (without check validation).
+     * Gets all squares a piece can move to (without check validation).
      * 
-     * Delegates to the piece's getLegalMoves() method, which handles
-     * piece-specific movement rules including:
-     * - Pawns: Forward movement and diagonal captures
-     * - Knights: L-shaped jumps
-     * - Kings: One square in any direction + castling
-     * - Linear pieces: Sliding along lines until blocked
-     * 
-     * @param piece the piece to get moves for
-     * @return Set of positions the piece can move to
+     * @param piece piece to get moves for
+     * @return set of valid positions
      */
     public Set<Position> getValidMovesForPiece(Piece piece) {
         return piece.getLegalMoves(board);

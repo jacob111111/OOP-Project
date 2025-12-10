@@ -4,23 +4,18 @@ import utils.Color;
 import utils.Position;
 
 /**
- * Represents the Rook piece in chess.
- * 
- * The Rook moves horizontally and vertically any number of squares.
- * It is one of the most valuable pieces after the Queen and participates
- * in the castling move with the King. The Rook extends LinearPiece to
- * inherit linear movement calculation functionality.
- * 
+ * Rook piece - moves any distance horizontally or vertically.
+ * Participates in castling with the King.
  */
 public class Rook extends LinearPiece {
     /** Tracks whether this rook has moved (used for castling rules) */
     private boolean hasMoved = false;
 
     /**
-     * Creates a new Rook piece with the specified color and position.
+     * Creates a Rook piece.
      * 
-     * @param color    The color of the rook (WHITE or BLACK)
-     * @param position The initial position of the rook on the board
+     * @param color    rook's color
+     * @param position initial position
      */
     public Rook(Color color, Position position) {
         super(color, position);

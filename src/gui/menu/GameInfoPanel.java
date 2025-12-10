@@ -39,8 +39,8 @@ public class GameInfoPanel extends JPanel {
         turnIndicatorLabel.setForeground(java.awt.Color.WHITE);
         turnIndicatorLabel.setAlignmentX(CENTER_ALIGNMENT);
         turnIndicatorLabel.setVisible(false); // Hidden until game starts
-        turnIndicatorLabel.setPreferredSize(new Dimension(250, 30));
-        turnIndicatorLabel.setMaximumSize(new Dimension(250, 30));
+        turnIndicatorLabel.setPreferredSize(new Dimension(280, 35));
+        turnIndicatorLabel.setMaximumSize(new Dimension(280, 35));
 
         // Hover info label
         hoverInfoLabel = new JLabel(" ", SwingConstants.CENTER);
@@ -59,7 +59,8 @@ public class GameInfoPanel extends JPanel {
     /**
      * Updates the hover info label to show the currently hovered piece.
      * 
-     * @param pieceName  The name of the piece being hovered over (e.g., "King", "Queen")
+     * @param pieceName  The name of the piece being hovered over (e.g., "King",
+     *                   "Queen")
      * @param pieceColor The color of the piece ("White" or "Black")
      */
     public void updateHoverInfo(String pieceName, String pieceColor) {
@@ -86,7 +87,7 @@ public class GameInfoPanel extends JPanel {
         if (turnIndicatorLabel != null) {
             String turnText = (currentTurn == utils.Color.WHITE) ? "Current Player: WHITE" : "Current Player: BLACK";
             java.awt.Color textColor = (currentTurn == utils.Color.WHITE) ? java.awt.Color.WHITE : java.awt.Color.BLACK;
-            
+
             turnIndicatorLabel.setText(turnText);
             turnIndicatorLabel.setForeground(textColor);
             turnIndicatorLabel.setVisible(true); // Show when game is active
@@ -111,10 +112,10 @@ public class GameInfoPanel extends JPanel {
      */
     public void updateStyle(UIPalette palette) {
         setBackground(palette.labelBackground);
-        
+
         // Style turn indicator and hover info labels
-        turnIndicatorLabel.setFont(palette.font.deriveFont(java.awt.Font.BOLD, 18f));
-        
+        turnIndicatorLabel.setFont(palette.font.deriveFont(java.awt.Font.BOLD, 16f));
+
         hoverInfoLabel.setFont(palette.font);
         hoverInfoLabel.setForeground(palette.labelForeground);
     }

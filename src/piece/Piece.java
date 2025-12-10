@@ -8,10 +8,6 @@ import utils.Position;
 
 /**
  * Abstract base class for all chess pieces.
- * 
- * This class provides the common functionality and properties shared by all
- * chess pieces
- * 
  */
 public abstract class Piece implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -23,13 +19,10 @@ public abstract class Piece implements Serializable {
     protected StringBuilder displaySymbol = new StringBuilder();
 
     /**
-     * Constructs a new chess piece with the specified color and position.
+     * Creates a chess piece with color and position.
      * 
-     * Initializes the piece's color, position, and display symbol. 
-     * The display symbol starts with 'w' for white pieces or 'b' for black pieces.
-     * 
-     * @param color    The color of the piece (WHITE or BLACK)
-     * @param position The initial position of the piece on the board
+     * @param color    piece color (WHITE or BLACK)
+     * @param position initial position on board
      */
     public Piece(Color color, Position position) {
         this.color = color;
@@ -60,28 +53,28 @@ public abstract class Piece implements Serializable {
     }
 
     /**
-     * Gets the display symbol for this piece used in board representation.
+     * Gets the display symbol for board representation.
      * 
-     * @return String representation of this piece (e.g., "wK" for white king)
+     * @return piece representation (e.g., "wK" for white king)
      */
     public String getDisplaySymbol() {
         return displaySymbol.toString();
     }
 
     /**
-     * Gets the simple class name of this piece.
+     * Gets the piece's class name.
      * 
-     * @return The name of this piece's class (e.g., "King", "Queen", "Pawn")
+     * @return piece name (e.g., "King", "Queen")
      */
     public String getName() {
         return this.getClass().getSimpleName();
     }
 
     /**
-     * Moves piece to a new position.
+     * Moves piece to new position.
      * 
-     * @param newPos The target position to move to
-     * @return always returns true (validation handled by Board/AttackMap)
+     * @param newPos target position
+     * @return always true (validation handled elsewhere)
      */
     public boolean move(Position newPos) {
         this.position = newPos;
@@ -102,17 +95,20 @@ public abstract class Piece implements Serializable {
      * This method calculates where the piece can move based on its movement rules,
      * but does NOT validate check safety or turn ownership.
      * 
-     * This is used primarily by AttackMap to determine which squares are under attack.
+     * This is used primarily by AttackMap to determine which squares are under
+     * attack.
      * For UI and move validation, use getLegalMoves() instead.
      * 
      * @param board The board to calculate moves on (needed to check for pieces
      *              blocking paths)
-     * @return Set of all positions this piece can potentially move to (basic moves only)
+     * @return Set of all positions this piece can potentially move to (basic moves
+     *         only)
      */
     public abstract Set<Position> getPossibleMoves(Object board);
 
     /**
-     * Gets all legal moves for this piece, including special moves and rule constraints.
+     * Gets all legal moves for this piece, including special moves and rule
+     * constraints.
      * 
      * This method builds on getPossibleMoves() and adds:
      * - Special moves (e.g., castling for King, en passant for Pawn)

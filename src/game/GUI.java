@@ -14,10 +14,10 @@ public class GUI extends Game {
     private boolean lastMoveResultedInCheck = false; // Track if the last move put opponent in check
 
     /**
-     * Creates a new 1 or 2 player game instance
+     * Creates a game instance.
      * 
-     * @param isPvP
-     * @param p1Color The color the 1st player
+     * @param isPvP   true for Player vs Player
+     * @param p1Color player 1's color
      */
     public GUI(boolean isPvP, Color p1Color) {
         super(isPvP, p1Color);
@@ -31,9 +31,9 @@ public class GUI extends Game {
     }
 
     /**
-     * Gets whether the last move resulted in putting the opponent in check.
+     * Checks if opponent is in check after last move.
      * 
-     * @return true if opponent is in check after the last move
+     * @return true if opponent is in check
      */
     public boolean isOpponentInCheck() {
         return lastMoveResultedInCheck;
@@ -44,18 +44,18 @@ public class GUI extends Game {
     // ============================================================================
 
     /**
-     * Sets the parent frame reference for clearing the game.
+     * Sets parent frame reference.
      * 
-     * @param frame The parent chessFrame instance
+     * @param frame parent ChessFrame
      */
     public void setParentFrame(gui.ChessFrame frame) {
         this.parentFrame = frame;
     }
 
     /**
-     * Sets the board panel reference for frontend updates.
+     * Sets board panel reference for updates.
      * 
-     * @param panel The BoardPanel instance
+     * @param panel BoardPanel instance
      */
     public void setBoardPanel(gui.board.BoardPanel panel) {
         this.boardPanel = panel;
@@ -66,18 +66,18 @@ public class GUI extends Game {
     // ============================================================================
 
     /**
-     * Checks if the game has ended due to King capture.
+     * Checks if game has ended.
      * 
-     * @return true if a King has been captured, false otherwise
+     * @return true if game is over
      */
     public boolean isGameOver() {
         return winner != null;
     }
 
     /**
-     * Determines the winner of the Lan game.
+     * Gets the winner.
      * 
-     * @return The winning color, or null if game is ongoing
+     * @return winning color or null if ongoing
      */
     public Color getWinner() {
         return winner;
@@ -283,6 +283,10 @@ public class GUI extends Game {
 
             if (success) {
                 moveExecuted = true;
+                if (boardPanel != null) {
+                    // Force board to redraw pieces to show AI's move
+                    boardPanel.drawPieces();
+                }
                 if (parentFrame != null) {
                     parentFrame.refreshDisplay();
                 }

@@ -3,25 +3,19 @@ package utils;
 import java.io.Serializable;
 
 /**
- * Represents a position on the chess board using x,y coordinates.
- * 
- * This class encapsulates the coordinate system used throughout the chess game,
- * where positions are represented as integer coordinates on an 8x8 grid.
- * The class provides proper equals() and hashCode() implementations for
- * use in collections and comparison operations.
- * 
+ * Chess board position using x,y coordinates (0-7 for 8x8 board).
  */
 public class Position implements Serializable {
     private static final long serialVersionUID = 1L;
-    
+
     private int x;
     private int y;
 
     /**
-     * Constructs a new Position with the specified coordinates.
+     * Creates a position.
      * 
-     * @param x The x-coordinate (column) on the chess board
-     * @param y The y-coordinate (row) on the chess board
+     * @param x column (0-7)
+     * @param y row (0-7)
      */
     public Position(int x, int y) {
         this.x = x;
@@ -33,29 +27,37 @@ public class Position implements Serializable {
      * 
      * @return The x-coordinate (column)
      */
-    public int getX() {return x; }
-    
+    public int getX() {
+        return x;
+    }
+
     /**
      * Gets the y-coordinate of this position.
      * 
      * @return The y-coordinate (row)
      */
-    public int getY() {return y; }
+    public int getY() {
+        return y;
+    }
 
     /**
      * Sets the x-coordinate of this position.
      * 
      * @param x The new x-coordinate (column)
      */
-    public void setX(int x) {this.x = x; }
-    
+    public void setX(int x) {
+        this.x = x;
+    }
+
     /**
      * Sets the y-coordinate of this position.
      * 
      * @param y The new y-coordinate (row)
      */
-    public void setY(int y) {this.y = y; }
-    
+    public void setY(int y) {
+        this.y = y;
+    }
+
     /**
      * Compares this position with another object for equality.
      * 
@@ -66,8 +68,10 @@ public class Position implements Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj)
+            return true;
+        if (obj == null || getClass() != obj.getClass())
+            return false;
         Position position = (Position) obj;
         return x == position.x && y == position.y;
     }
