@@ -1,91 +1,68 @@
-# Chess Game - OOP Project
+# GUI Chess Game Project
 
 A Java-based chess game implementation demonstrating core OOP principles including inheritance, polymorphism, encapsulation, and abstraction through a fully functional chess game with both GUI and console interfaces.
 
-## Team Members
-
+## Team Information
+- **Team Name**: Lukewarm Bread
 - Jordan Atchison
 - Jacob Atchison
+- **Semester**: Fall 2024
+- **Course Number and Section**: CS3354 - Section XYZ
 
-## Quick Start
+---
 
-### Requirements
+## Project Overview
+This project is a GUI-based Chess game developed for our Object-Oriented Programming course. It combines backend logic from our console-based Phase 1 implementation with a graphical interface built in Phase 2, creating a complete chess game experience with full gameplay functionality.
 
-- Java JDK 8 or higher
-- Internet connection (for AI opponent)
+---
 
-### Compile and Run
+## Preview
+### GUI Preview
+![Chess Game GUI Preview](path/to/your/gui_preview_image.png)
 
-```cmd
-# Navigate to source directory
-cd src
+### Class Diagram
+![Class Diagram](path/to/your/class_diagram_image.png)
 
-# Compile
-javac Main.java
+---
 
-# Run
-java Main
-```
+## How to Run the Project
+Follow these instructions to compile and run the project:
+
+1. **Clone the Repository**:  
+   ```bash
+   git clone [repository link]
+   cd [repository folder]
+   ```
+
+2. **Compile the Code**:  
+   ```bash
+   javac -d bin src/*.java
+   ```
+
+3. **Run the Game**:  
+   ```bash
+   java -cp bin ChessGame
+   ```
 
 Choose option 1 for GUI mode or option 2 for Console mode.
+   
+---
 
-## How to Play
+## Features Checklist
+- [x] GUI with an 8x8 Chessboard
+- [x] Piece Movement with Mouse Interaction
+- [x] Move Validation Based on Chess Rules
+- [x] Capture Mechanism
+- [x] Check and Checkmate Detection
+- [x] Turn-Based Play for Two Players
+- [x] Game End Notification on Checkmate
+- [x] Single Player/ AI Game Mode
+- [x] Themes for Chess Board and Pieces
+- [x] LAN/ Online Game Mode 
 
-### Initial Setup
+---
 
-1. Run the application and choose your interface:
-   - **Option 1**: GUI (Combined Board & Menu) - Recommended
-   - **Option 2**: Console (Text-based)
-
-### GUI Mode
-
-1. **Starting a Game**:
-
-   - Click "2-Player" button to start a local game
-   - Click "vs Computer" to play against the AI
-
-2. **Making Moves**:
-
-   - **Drag and Drop**: Click and drag a piece to its destination
-   - **Click to Move**: Click a piece to select it (highlighted border), then click the destination square
-   - Invalid moves will show a warning popup
-
-3. **Game Controls**:
-
-   - **New Game**: Reset the board and start a new game
-   - **Save Game**: Save the current game state to a file
-   - **Load Game**: Load a previously saved game
-
-4. **Customization**:
-
-   - **Board Theme**: Switch between Classic and Modern board colors
-   - **Piece Theme**: Switch between Classic and Modern piece graphics
-
-5. **Winning**:
-   - The game automatically detects checkmate
-   - A popup will announce the winner
-
-### Console Mode
-
-1. **Game Setup**:
-
-   - Choose 1-Player (vs AI) or 2-Player
-   - Select Player 1's color (White or Black)
-
-2. **Making Moves**:
-
-   - Enter moves using algebraic notation
-   - Format: `[from_square]` then `[to_square]`
-   - Example: Type `e2` (press Enter), then type `e4` (press Enter)
-
-3. **Board Display**:
-
-   - Board shows current position
-   - Pieces displayed as: `wK` (white king), `bP` (black pawn), etc.
-   - Empty squares shown as `##`
-   - Board orientation flips based on whose turn it is
-
-### Playing Against AI
+### Playing Against AI ###
 
 1. Start a new game and select "1-Player (AI)"
 2. Choose difficulty: Easy (depth 5), Medium (depth 10), or Hard (depth 15)
@@ -94,7 +71,21 @@ Choose option 1 for GUI mode or option 2 for Console mode.
 
 **Note:** AI requires an internet connection to work.
 
-## Project Structure
+---
+
+## Architecture Overview
+
+The project follows a clear separation of concerns with the **Board** class serving as the central authority for game logic:
+
+- **Board**: Handles all move validation using AttackMap, manages piece positions, tracks captures, and coordinates with CheckmateDetector for game-ending conditions
+- **Game**: Manages turn flow and delegates move requests to the Board for validation
+- **Player**: Manages piece collections and provides piece lookup functionality
+- **Piece**: Individual pieces handle their own position updates after the Board validates moves
+- **AttackMap**: Provides O(1) lookup for which squares are under attack, accounting for blocked paths
+- **CheckmateDetector**: Uses AttackMap to determine checkmate conditions efficiently
+
+
+## Full Project Structure ##
 
 ```
 src/
@@ -151,13 +142,12 @@ src/
     └── NetworkMessageType.java # Network message types
 ```
 
-## Architecture Overview
+---
 
-The project follows a clear separation of concerns with the **Board** class serving as the central authority for game logic:
+## Additional Information
+For details on Phases 1 and 2, please refer to the [branches/folders] designated for those implementations. Detailed documentation for those phases is not included in this README.
 
-- **Board**: Handles all move validation using AttackMap, manages piece positions, tracks captures, and coordinates with CheckmateDetector for game-ending conditions
-- **Game**: Manages turn flow and delegates move requests to Board for validation
-- **Player**: Manages piece collections and provides piece lookup functionality
-- **Piece**: Individual pieces handle their own position updates after Board validates moves
-- **AttackMap**: Provides O(1) lookup for which squares are under attack, accounting for blocked paths
-- **CheckmateDetector**: Uses AttackMap to efficiently determine checkmate conditions
+---
+
+## Acknowledgements
+Special thanks to Professor Xiaomin Li and our team members for their support and collaboration.
